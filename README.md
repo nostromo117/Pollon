@@ -1,0 +1,51 @@
+# Pollon
+
+Pollon is a modern, distributed Content Management System (CMS) and Delivery platform built with **.NET Aspire**. It demonstrates a decoupled architecture between content management (Backoffice) and content delivery (Frontend).
+
+## Architecture
+
+The project is composed of several microservices coordinated by **.NET Aspire**:
+
+- **Pollon.AppHost**: The orchestration project that manages service discovery and infrastructure.
+- **Pollon.Backoffice.Api**: A REST API built with **Marten** and **PostgreSQL** for managing dynamic content types and items.
+- **Pollon.Backoffice.Web**: A **Blazor** application for administrative tasks (managing content).
+- **Pollon.Content.Api**: A delivery API using **SQL Server** and **EntityFramework Core** for high-performance read models. It synchronizes with the backoffice via events.
+- **Pollon.Frontend.Web**: A customer-facing **Blazor** site with SEO-friendly routing and hierarchical slugs.
+- **Pollon.Contracts**: Shared models and events used for communication between services.
+- **Pollon.ServiceDefaults**: Standard Aspire service defaults (observability, health checks).
+
+## Technologies
+
+- **System Orchestration**: .NET Aspire
+- **Database (Backoffice)**: PostgreSQL + Marten (Document Database)
+- **Database (Content)**: SQL Server (Read Models)
+- **Messaging**: Wolverine + RabbitMQ (Event-driven synchronization)
+- **UI**: Blazor Server / WebAssembly
+
+## Prerequisites
+
+To run this project, you need the following installed:
+
+1. **.NET 10 SDK** (or the latest version compatible with the project).
+2. **.NET Aspire Workload**: Install via `dotnet workload install aspire`.
+3. **Docker Desktop**: Required to run SQL Server, PostgreSQL, and RabbitMQ containers.
+4. **Git**: For version control.
+5. **EF Core Tooling**: `dotnet tool install --global dotnet-ef`.
+
+## Getting Started
+
+1. Clone the repository.
+2. Ensure Docker Desktop is running.
+3. Open the solution in **Visual Studio 2022** (17.10+) or **VS Code**.
+4. Set `Pollon.AppHost` as the startup project and run (F5).
+5. Alternatively, run from the command line:
+   ```bash
+   dotnet run --project Pollon.AppHost/Pollon.AppHost.csproj
+   ```
+
+## Key Features
+
+- **Dynamic Content Types**: Create custom content structures via UI.
+- **Business Validation**: Server-side validation for slugs and system names.
+- **SEO Optimization**: Automatic and manual slug generation for content items.
+- **Event Sourcing**: Changes in the backoffice are published to RabbitMQ and consumed by the Content API to update read models.

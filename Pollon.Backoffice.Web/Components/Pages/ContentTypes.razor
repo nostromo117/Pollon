@@ -1,0 +1,75 @@
+@page "/content-types"
+@rendermode InteractiveServer
+@inject BackofficeApiClient ApiClient
+@attribute [StreamRendering]
+
+<PageTitle>Content Types</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Content Types</h1>
+    <a href="content-types/new" class="btn btn-primary">New Content Type</a>
+</div>
+
+@if (contentTypes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Name</th>
+                        <th>System Name</th>
+                        <th>Slug</th>
+                        <th>Fields</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (contentTypes.Length == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No content types found. Click "New Content Type" to create one.</td>
+                        </tr>
+                    }
+                    @foreach (var type in contentTypes)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">@type.DisplayName</td>
+                            <td><span class="badge bg-secondary">@type.SystemName</span></td>
+                            <td><span class="text-muted">/content/</span>@type.Slug</td>
+                            <td>@type.Fields?.Count</td>
+                            <td class="text-end pe-4">
+                                <a href="content-types/edit/@type.Id" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteType(type.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private ContentType[]? contentTypes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        contentTypes = await ApiClient.GetContentTypesAsync();
+    }
+
+    private async Task DeleteType(string id)
+    {
+        await ApiClient.DeleteContentTypeAsync(id);
+        await LoadDataAsync();
+    }
+}

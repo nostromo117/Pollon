@@ -1,0 +1,94 @@
+@page "/"
+@inject ContentApiClient ContentApi
+
+<PageTitle>Pollon - Benvenuti</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="display-4 fw-bold">Scopri i nostri contenuti</h1>
+            <p class="lead text-muted">Tutte le ultime novità pubblicate dal nostro team.</p>
+        </div>
+    </div>
+
+    @if (_pagedResult == null)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Caricamento...</span>
+            </div>
+        </div>
+    }
+    else if (!_pagedResult.Items.Any())
+    {
+        <div class="alert alert-info text-center" role="alert">
+            Non ci sono ancora contenuti pubblicati. Torna a trovarci presto!
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in _pagedResult.Items)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 transition-hover">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@item.Slug</h5>
+                            <p class="card-text text-muted small">Pubblicato il @item.PublishedAt.ToString("dd MMM yyyy")</p>
+                            <a href="/article/@item.Slug" class="btn btn-outline-primary btn-sm stretched-link">Leggi di più</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex justify-content-center mt-5">
+            <nav aria-label="Paginazione">
+                <ul class="pagination">
+                    <li class="page-item @(_currentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(_currentPage - 1)">Precedente</button>
+                    </li>
+                    @for (int i = 1; i <= _pagedResult.TotalPages; i++)
+                    {
+                        var pageNumber = i;
+                        <li class="page-item @(_currentPage == pageNumber ? "active" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(pageNumber)">@pageNumber</button>
+                        </li>
+                    }
+                    <li class="page-item @(_currentPage == _pagedResult.TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(_currentPage + 1)">Successivo</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+@code {
+    private PagedResult<PublishedContent>? _pagedResult;
+    private int _currentPage = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _pagedResult = await ContentApi.GetLatestContentAsync(_currentPage);
+    }
+
+    private async Task ChangePage(int page)
+    {
+        _currentPage = page;
+        await LoadData();
+    }
+}

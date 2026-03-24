@@ -1,0 +1,193 @@
+@page "/content-types/new"
+@page "/content-types/edit/{Id}"
+@rendermode InteractiveServer
+@inject BackofficeApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>@(IsEdit ? "Edit Content Type" : "New Content Type")</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>@(IsEdit ? "Edit Content Type" : "New Content Type")</h1>
+    <a href="content-types" class="btn btn-outline-secondary">Back to List</a>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="contentType" OnValidSubmit="HandleSubmit" FormName="ModifyContentType">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">General Information</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Display Name</label>
+                        <input type="text" @bind="contentType.DisplayName" @bind:event="oninput" @onkeyup="HandleDisplayNameInput" class="form-control" placeholder="e.g. Blog Post" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">System Name</label>
+                        <InputText @bind-Value="contentType.SystemName" class="form-control" placeholder="e.g. BlogPost" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Slug</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted small">/</span>
+                            <InputText @bind-Value="contentType.Slug" class="form-control" placeholder="seo-slug" required />
+                        </div>
+                        <div class="form-text small text-muted">Required as fallback for content items.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <InputText @bind-Value="contentType.Description" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Fields</span>
+                <button type="button" class="btn btn-sm btn-light" @onclick="AddField">Add Field</button>
+            </div>
+            <ul class="list-group list-group-flush">
+                @if (contentType.Fields.Count == 0)
+                {
+                    <li class="list-group-item text-muted">No fields added yet.</li>
+                }
+                
+                @foreach (var field in contentType.Fields)
+                {
+                    <li class="list-group-item">
+                        <div class="row align-items-end">
+                            <div class="col-md-4 mb-2 mb-md-0">
+                                <label class="form-label small">Name</label>
+                                <InputText @bind-Value="field.Name" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-md-3 mb-2 mb-md-0">
+                                <label class="form-label small">Type</label>
+                                <InputSelect @bind-Value="field.FieldType" class="form-select form-select-sm">
+                                    <option value="text">Text</option>
+                                    <option value="richtext">Rich Text</option>
+                                    <option value="number">Number</option>
+                                    <option value="date">Date</option>
+                                    <option value="boolean">Boolean</option>
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-2 mb-2 mb-md-0 d-flex align-items-center h-100">
+                                <div class="form-check mt-auto mb-1">
+                                    <InputCheckbox @bind-Value="field.IsRequired" class="form-check-input" id="@($"req_{field.Name}")" />
+                                    <label class="form-check-label small" for="@($"req_{field.Name}")">Required</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-2 mb-md-0 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger w-100" @onclick="() => RemoveField(field)">Remove</button>
+                            </div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <button type="submit" class="btn btn-success px-4 py-2">Save Content Type</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private bool IsEdit => !string.IsNullOrEmpty(Id);
+    private bool isLoading = true;
+
+    private ContentType contentType = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEdit)
+        {
+            var existing = await ApiClient.GetContentTypeByIdAsync(Id!);
+            if (existing != null)
+            {
+                contentType = existing;
+            }
+        }
+        else
+        {
+            contentType.Fields = new List<ContentField>();
+        }
+        
+        isLoading = false;
+    }
+
+    private void AddField()
+    {
+        contentType.Fields.Add(new ContentField { FieldType = "text" });
+    }
+
+    private void RemoveField(ContentField field)
+    {
+        contentType.Fields.Remove(field);
+    }
+
+    private void HandleDisplayNameInput()
+    {
+        if (!IsEdit)
+        {
+            if (string.IsNullOrWhiteSpace(contentType.SystemName) || contentType.SystemName == GenerateSystemName(oldDisplayName))
+            {
+                contentType.SystemName = GenerateSystemName(contentType.DisplayName);
+            }
+            
+            if (string.IsNullOrWhiteSpace(contentType.Slug) || contentType.Slug == GenerateSlug(oldDisplayName))
+            {
+                contentType.Slug = GenerateSlug(contentType.DisplayName);
+            }
+            
+            oldDisplayName = contentType.DisplayName;
+        }
+    }
+
+    private string oldDisplayName = string.Empty;
+
+    private string GenerateSystemName(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        var str = System.Text.RegularExpressions.Regex.Replace(text, @"[^a-zA-Z0-9]", "");
+        return str;
+    }
+
+    private string GenerateSlug(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        var str = text.ToLowerInvariant();
+        str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", "-");
+        str = System.Text.RegularExpressions.Regex.Replace(str, @"[^a-z0-9\-]", "");
+        return str.Trim('-');
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(contentType.Slug))
+        {
+            // Fallback safety if validation bypassed
+            return;
+        }
+
+        if (IsEdit)
+        {
+            await ApiClient.UpdateContentTypeAsync(Id!, contentType);
+        }
+        else
+        {
+            contentType.Id = Guid.NewGuid().ToString(); // Assuming string ID format handling
+            await ApiClient.CreateContentTypeAsync(contentType);
+        }
+        
+        Navigation.NavigateTo("content-types");
+    }
+}

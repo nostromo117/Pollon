@@ -1,0 +1,138 @@
+@page "/content-items"
+@rendermode InteractiveServer
+@inject BackofficeApiClient ApiClient
+@attribute [StreamRendering]
+
+<PageTitle>Content Items</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Content Items</h1>
+    <div class="d-flex gap-3">
+        <select class="form-select w-auto" @bind:get="selectedStatus" @bind:set="OnStatusChanged">
+            <option value="">All Statuses</option>
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+            <option value="Archived">Archived</option>
+        </select>
+        <a href="content-items/new" class="btn btn-primary">New Content</a>
+    </div>
+</div>
+
+@if (contentItems == null || contentTypes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">ContentType</th>
+                        <th style="cursor: pointer" @onclick='() => Sort("Status")'>
+                            Status @GetSortIcon("Status")
+                        </th>
+                        <th style="cursor: pointer" @onclick='() => Sort("CreatedAt")'>
+                            Created @GetSortIcon("CreatedAt")
+                        </th>
+                        <th style="cursor: pointer" @onclick='() => Sort("PublishedAt")'>
+                            Published @GetSortIcon("PublishedAt")
+                        </th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (contentItems.Length == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No content items found. Click "New Content" to create one.</td>
+                        </tr>
+                    }
+                    @foreach (var item in contentItems)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">@GetContentTypeName(item.ContentTypeId)</td>
+                            <td>
+                                <span class="badge @GetStatusClass(item.Status)">@item.Status</span>
+                            </td>
+                            <td><span class="text-muted small">@item.CreatedAt.ToLocalTime().ToString("g")</span></td>
+                            <td><span class="text-muted small">@(item.PublishedAt?.ToLocalTime().ToString("g") ?? "-")</span></td>
+                            <td class="text-end pe-4">
+                                <a href="content-items/edit/@item.Id" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteItem(item.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private ContentItem[]? contentItems;
+    private ContentType[]? contentTypes;
+    
+    private string? selectedStatus;
+    private string selectedSortBy = "CreatedAt";
+    private bool sortDescending = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task OnStatusChanged(string? value)
+    {
+        selectedStatus = string.IsNullOrEmpty(value) ? null : value;
+        await LoadDataAsync();
+    }
+
+    private async Task Sort(string column)
+    {
+        if (selectedSortBy == column)
+        {
+            sortDescending = !sortDescending;
+        }
+        else
+        {
+            selectedSortBy = column;
+            sortDescending = true;
+        }
+        await LoadDataAsync();
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (selectedSortBy != column) return "↕";
+        return sortDescending ? "↓" : "↑";
+    }
+
+    private async Task LoadDataAsync()
+    {
+        contentTypes = await ApiClient.GetContentTypesAsync();
+        contentItems = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+    }
+
+    private string GetContentTypeName(string id)
+    {
+        if (contentTypes == null) return id;
+        var ct = contentTypes.FirstOrDefault(c => c.Id == id);
+        return ct != null ? ct.DisplayName : id;
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Published" => "bg-success",
+        "Draft" => "bg-secondary",
+        "Archived" => "bg-warning text-dark",
+        _ => "bg-info text-dark"
+    };
+
+    private async Task DeleteItem(string id)
+    {
+        await ApiClient.DeleteContentItemAsync(id);
+        await LoadDataAsync();
+    }
+}

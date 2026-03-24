@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pollon.ServiceDefaults\Pollon.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Pollon.Contracts\Pollon.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

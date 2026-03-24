@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Pollon.Backoffice.Web</AssemblyName>
+    <RootNamespace>Pollon.Backoffice.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pollon.ServiceDefaults\Pollon.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Pollon.Backoffice\Pollon.Backoffice.csproj" />
+  </ItemGroup>
+
+</Project>

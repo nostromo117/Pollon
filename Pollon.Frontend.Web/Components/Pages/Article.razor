@@ -1,0 +1,81 @@
+@page "/article/{*slug}"
+@using System.Text.Json
+@inject ContentApiClient ContentApi
+
+@if (_item == null)
+{
+    <div class="container mt-5 text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Caricamento...</span>
+        </div>
+    </div>
+}
+else
+{
+    <PageTitle>@_item.Slug</PageTitle>
+
+    <div class="container mt-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@_item.Slug</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <header class="mb-5">
+                    <h1 class="display-4 fw-bold">@_item.Slug</h1>
+                    <div class="text-muted mb-3">
+                        <span class="me-3"><i class="bi bi-calendar"></i> @_item.PublishedAt.ToString("dd MMMM yyyy")</span>
+                        <span><i class="bi bi-tag"></i> @_item.SystemName</span>
+                    </div>
+                    <hr />
+                </header>
+
+                <article class="content-body">
+                    @* Per ora mostriamo il JSON formattato poiché non conosciamo la struttura esatta dei campi *@
+                    <div class="bg-light p-4 rounded shadow-sm">
+                        <h4 class="mb-3">Dati Contenuto</h4>
+                        <pre class="mb-0">@FormatJson(_item.JsonData)</pre>
+                    </div>
+                </article>
+
+                <footer class="mt-5 pt-5 border-top text-center">
+                    <a href="/" class="btn btn-secondary">Torna alla lista</a>
+                </footer>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+
+@code {
+    [Parameter] public string Slug { get; set; } = string.Empty;
+    private PublishedContent? _item;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _item = await ContentApi.GetContentBySlugAsync(Slug);
+    }
+
+    private string FormatJson(string json)
+    {
+        try 
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            using var document = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(document, options);
+        }
+        catch 
+        {
+            return json;
+        }
+    }
+}

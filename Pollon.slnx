@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="Pollon.Content.Api/Pollon.Content.Api.csproj" />
+  <Project Path="Pollon.AppHost/Pollon.AppHost.csproj" />
+  <Project Path="Pollon.Backoffice.Api/Pollon.Backoffice.Api.csproj" />
+  <Project Path="Pollon.Backoffice/Pollon.Backoffice.csproj" />
+  <Project Path="Pollon.Contracts/Pollon.Contracts.csproj" />
+  <Project Path="Pollon.ServiceDefaults/Pollon.ServiceDefaults.csproj" />
+  <Project Path="Pollon.Backoffice.Web/Pollon.Backoffice.Web.csproj" />
+  <Project Path="Pollon.Frontend.Web/Pollon.Frontend.Web.csproj" />
+</Solution>

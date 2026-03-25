@@ -46,10 +46,7 @@ else
                             @foreach (var property in ParseJson(_item.JsonData))
                             {
                                 <div class="col">
-                                    <div class="property-pill d-flex align-items-center p-2 rounded-pill shadow-sm bg-white border">
-                                        <div class="property-icon me-2 rounded-circle bg-primary-subtle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                            <i class="bi bi-info-circle text-primary small"></i>
-                                        </div>
+                                    <div class="property-box p-2 rounded bg-light border">
                                         <div class="overflow-hidden">
                                             <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">@property.Key</div>
                                             <div class="text-dark fw-semibold text-truncate" title="@property.Value" style="font-size: 0.9rem;">@property.Value</div>
@@ -72,14 +69,6 @@ else
 }
 
 <style>
-    .property-pill {
-        transition: all 0.2s ease-in-out;
-    }
-    .property-pill:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
-        border-color: var(--bs-primary) !important;
-    }
     .transition-all {
         transition: all 0.3s ease;
     }

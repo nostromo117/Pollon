@@ -5,69 +5,60 @@
 
 <PageTitle>Content Items</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Content Items</h1>
-    <div class="d-flex gap-3">
-        <select class="form-select w-auto" @bind:get="selectedStatus" @bind:set="OnStatusChanged">
-            <option value="">All Statuses</option>
-            <option value="Draft">Draft</option>
-            <option value="Published">Published</option>
-            <option value="Archived">Archived</option>
-        </select>
-        <a href="content-items/new" class="btn btn-primary">New Content</a>
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <MudText Typo="Typo.h4" GutterBottom="true">Content Items</MudText>
+    <div class="d-flex gap-4 align-center">
+        <MudSelect T="string" Label="Status" Value="selectedStatus" ValueChanged="OnStatusChanged" Dense="true" Margin="Margin.Dense" Class="mud-width-full" Style="min-width: 150px;">
+            <MudSelectItem Value="@((string?)null)">All Statuses</MudSelectItem>
+            <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+            <MudSelectItem Value="@("Published")">Published</MudSelectItem>
+            <MudSelectItem Value="@("Archived")">Archived</MudSelectItem>
+        </MudSelect>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="content-items/new">
+            New Content
+        </MudButton>
     </div>
 </div>
 
 @if (contentItems == null || contentTypes == null)
 {
-    <p><em>Loading...</em></p>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4">ContentType</th>
-                        <th style="cursor: pointer" @onclick='() => Sort("Status")'>
-                            Status @GetSortIcon("Status")
-                        </th>
-                        <th style="cursor: pointer" @onclick='() => Sort("CreatedAt")'>
-                            Created @GetSortIcon("CreatedAt")
-                        </th>
-                        <th style="cursor: pointer" @onclick='() => Sort("PublishedAt")'>
-                            Published @GetSortIcon("PublishedAt")
-                        </th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (contentItems.Length == 0)
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No content items found. Click "New Content" to create one.</td>
-                        </tr>
-                    }
-                    @foreach (var item in contentItems)
-                    {
-                        <tr>
-                            <td class="ps-4 fw-bold">@GetContentTypeName(item.ContentTypeId)</td>
-                            <td>
-                                <span class="badge @GetStatusClass(item.Status)">@item.Status</span>
-                            </td>
-                            <td><span class="text-muted small">@item.CreatedAt.ToLocalTime().ToString("g")</span></td>
-                            <td><span class="text-muted small">@(item.PublishedAt?.ToLocalTime().ToString("g") ?? "-")</span></td>
-                            <td class="text-end pe-4">
-                                <a href="content-items/edit/@item.Id" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteItem(item.Id)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <MudTable Items="@contentItems" Hover="true" Elevation="1" Dense="true" Class="mt-4">
+        <HeaderContent>
+            <MudTh>ContentType</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.CreatedAt)" InitialDirection="SortDirection.Descending">Created</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.PublishedAt!)">Published</MudTableSortLabel></MudTh>
+            <MudTh Style="text-align: right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ContentType">
+                <MudText Typo="Typo.body2" Style="font-weight: 600">@GetContentTypeName(context.ContentTypeId)</MudText>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Text">@context.Status</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Created">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.CreatedAt.ToLocalTime().ToString("g")</MudText>
+            </MudTd>
+            <MudTd DataLabel="Published">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@(context.PublishedAt?.ToLocalTime().ToString("g") ?? "-")</MudText>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Href="@($"content-items/edit/{context.Id}")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteItem(context.Id)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="pa-4">No content items found. Click "New Content" to create one.</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
 }
 
 @code {
@@ -85,28 +76,8 @@ else
 
     private async Task OnStatusChanged(string? value)
     {
-        selectedStatus = string.IsNullOrEmpty(value) ? null : value;
+        selectedStatus = value;
         await LoadDataAsync();
-    }
-
-    private async Task Sort(string column)
-    {
-        if (selectedSortBy == column)
-        {
-            sortDescending = !sortDescending;
-        }
-        else
-        {
-            selectedSortBy = column;
-            sortDescending = true;
-        }
-        await LoadDataAsync();
-    }
-
-    private string GetSortIcon(string column)
-    {
-        if (selectedSortBy != column) return "↕";
-        return sortDescending ? "↓" : "↑";
     }
 
     private async Task LoadDataAsync()
@@ -122,12 +93,12 @@ else
         return ct != null ? ct.DisplayName : id;
     }
 
-    private string GetStatusClass(string status) => status switch
+    private Color GetStatusColor(string status) => status switch
     {
-        "Published" => "bg-success",
-        "Draft" => "bg-secondary",
-        "Archived" => "bg-warning text-dark",
-        _ => "bg-info text-dark"
+        "Published" => Color.Success,
+        "Draft" => Color.Default,
+        "Archived" => Color.Warning,
+        _ => Color.Info
     };
 
     private async Task DeleteItem(string id)

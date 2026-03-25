@@ -5,53 +5,52 @@
 
 <PageTitle>Content Types</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Content Types</h1>
-    <a href="content-types/new" class="btn btn-primary">New Content Type</a>
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <MudText Typo="Typo.h4" GutterBottom="true">Content Types</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="content-types/new">
+        New Content Type
+    </MudButton>
 </div>
 
 @if (contentTypes == null)
 {
-    <p><em>Loading...</em></p>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4">Name</th>
-                        <th>System Name</th>
-                        <th>Slug</th>
-                        <th>Fields</th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (contentTypes.Length == 0)
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No content types found. Click "New Content Type" to create one.</td>
-                        </tr>
-                    }
-                    @foreach (var type in contentTypes)
-                    {
-                        <tr>
-                            <td class="ps-4 fw-bold">@type.DisplayName</td>
-                            <td><span class="badge bg-secondary">@type.SystemName</span></td>
-                            <td><span class="text-muted">/content/</span>@type.Slug</td>
-                            <td>@type.Fields?.Count</td>
-                            <td class="text-end pe-4">
-                                <a href="content-types/edit/@type.Id" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteType(type.Id)">Delete</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <MudTable Items="@contentTypes" Hover="true" Elevation="1" Dense="true" Class="mt-4">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<ContentType, object>(x=>x.DisplayName)">Name</MudTableSortLabel></MudTh>
+            <MudTh>System Name</MudTh>
+            <MudTh>Slug</MudTh>
+            <MudTh>Fields</MudTh>
+            <MudTh Style="text-align: right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">
+                <MudText Typo="Typo.body2" Style="font-weight: 600">@context.DisplayName</MudText>
+            </MudTd>
+            <MudTd DataLabel="System Name">
+                <MudChip T="string" Color="Color.Default" Size="Size.Small">@context.SystemName</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Slug">
+                <MudText Typo="Typo.body2" Color="Color.Secondary"><span style="opacity: 0.5">/content/</span>@context.Slug</MudText>
+            </MudTd>
+            <MudTd DataLabel="Fields">
+                <MudAvatar Color="Color.Info" Size="Size.Small" Style="font-size: 0.75rem;">@context.Fields?.Count</MudAvatar>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Href="@($"content-types/edit/{context.Id}")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteType(context.Id)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="pa-4">No content types found. Click "New Content Type" to create one.</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
 }
 
 @code {

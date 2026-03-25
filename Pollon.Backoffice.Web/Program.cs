@@ -1,5 +1,6 @@
 using Pollon.Backoffice.Web;
 using Pollon.Backoffice.Web.Components;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddOutputCache();
+builder.Services.AddMudServices();
 
 builder.Services.AddHttpClient<BackofficeApiClient>(client =>
     {

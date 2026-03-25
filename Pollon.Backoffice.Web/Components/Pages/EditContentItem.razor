@@ -7,197 +7,167 @@
 
 <PageTitle>@(IsEdit ? "Edit Content Item" : "New Content Item")</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>@(IsEdit ? "Edit Content Item" : "New Content Item")</h1>
-    <a href="content-items" class="btn btn-outline-secondary">Back to List</a>
-</div>
+<PageTitle>@(IsEdit ? "Edit Content Item" : "New Content Item")</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">@(IsEdit ? "Edit Content Item" : "New Content Item")</MudText>
 
 @if (isLoading)
 {
-    <p><em>Loading...</em></p>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
 else
 {
     <EditForm Model="item" OnValidSubmit="HandleSubmit" FormName="ModifyContentItem">
-        <div class="row">
+        <MudGrid>
             <!-- Left column: Main Content Fields -->
-            <div class="col-md-8">
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-white fw-bold">Configuration</div>
-                    <div class="card-body">
-                        
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase">Content Type</label>
+            <MudItem xs="12" md="8">
+                <MudCard Elevation="1">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Configuration</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <div class="mb-4">
                             @if (IsEdit)
                             {
-                                <input type="text" class="form-control" value="@GetContentTypeName(item.ContentTypeId)" disabled />
+                                <MudTextField Value="@GetContentTypeName(item.ContentTypeId)" Label="Content Type" ReadOnly="true" Variant="Variant.Outlined" />
                             }
                             else
                             {
-                                <InputSelect @bind-Value="item.ContentTypeId" class="form-select" @bind-Value:after="OnContentTypeChanged">
-                                    <option value="">-- Select Content Type --</option>
+                                <MudSelect T="string" Label="Content Type" @bind-Value="item.ContentTypeId" Variant="Variant.Outlined" @bind-Value:after="OnContentTypeChanged">
+                                    <MudSelectItem Value="@("")">-- Select Content Type --</MudSelectItem>
                                     @foreach(var ct in contentTypes)
                                     {
-                                        <option value="@ct.Id">@ct.DisplayName (@ct.SystemName)</option>
+                                        <MudSelectItem Value="@ct.Id">@ct.DisplayName (@ct.SystemName)</MudSelectItem>
                                     }
-                                </InputSelect>
+                                </MudSelect>
                             }
                         </div>
 
                         <!-- Dynamic Fields -->
                         @if (selectedContentType != null && selectedContentType.Fields.Any())
                         {
-                            <hr class="my-4" />
-                            <h5 class="mb-3">Content Data</h5>
+                            <MudDivider Class="my-6" />
+                            <MudText Typo="Typo.h6" Class="mb-4">Content Data</MudText>
 
-                            @foreach (var field in selectedContentType.Fields)
-                            {
-                                <div class="mb-3">
-                                    <label class="form-label">@field.Name @(field.IsRequired ? "*" : "")</label>
-                                    
-                                    @if (field.FieldType == "boolean")
-                                    {
-                                        <div class="form-check form-switch">
-                                            <input type="checkbox" class="form-check-input" checked="@GetBoolValue(field.Name)" @onchange="@(e => SetValue(field.Name, e.Value))" id="@($"field_{field.Name}")" />
-                                        </div>
-                                    }
-                                    else if (field.FieldType == "number")
-                                    {
-                                        <input type="number" class="form-control" value="@GetStringValue(field.Name)" @onchange="@(e => SetValue(field.Name, e.Value))" required="@field.IsRequired" id="@($"field_{field.Name}")" />
-                                    }
-                                    else if (field.FieldType == "date")
-                                    {
-                                        <input type="date" class="form-control" value="@GetStringValue(field.Name)" @onchange="@(e => SetValue(field.Name, e.Value))" required="@field.IsRequired" id="@($"field_{field.Name}")" />
-                                    }
-                                    else if (field.FieldType == "richtext")
-                                    {
-                                        <textarea class="form-control" rows="5" @onchange="@(e => SetValue(field.Name, e.Value))" required="@field.IsRequired" id="@($"field_{field.Name}")">@GetStringValue(field.Name)</textarea>
-                                    }
-                                    else // text
-                                    {
-                                        <input type="text" class="form-control" value="@GetStringValue(field.Name)" @onchange="@(e => SetValue(field.Name, e.Value))" required="@field.IsRequired" id="@($"field_{field.Name}")" />
-                                    }
-                                </div>
-                            }
+                            <MudGrid>
+                                @foreach (var field in selectedContentType.Fields)
+                                {
+                                    <MudItem xs="12">
+                                        @if (field.FieldType == "boolean")
+                                        {
+                                            <MudSwitch T="bool" Color="Color.Primary" Value="@GetBoolValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, (object)v))" Label="@field.Name" />
+                                        }
+                                        else if (field.FieldType == "number")
+                                        {
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Number" />
+                                        }
+                                        else if (field.FieldType == "date")
+                                        {
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Date" />
+                                        }
+                                        else if (field.FieldType == "richtext")
+                                        {
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" />
+                                        }
+                                        else // text
+                                        {
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" />
+                                        }
+                                    </MudItem>
+                                }
+                            </MudGrid>
                         }
-                    </div>
-                </div>
-            </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
             <!-- Right column: Metadata & Publishing -->
-            <div class="col-md-4">
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-white fw-bold">Publishing</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase">Status</label>
-                            <InputSelect @bind-Value="item.Status" class="form-select">
-                                <option value="Draft">Draft</option>
-                                <option value="Published">Published</option>
-                                <option value="Archived">Archived</option>
-                            </InputSelect>
-                        </div>
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="1">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Publishing</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="4">
+                            <MudSelect T="string" Label="Status" @bind-Value="item.Status" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                                <MudSelectItem Value="@("Published")">Published</MudSelectItem>
+                                <MudSelectItem Value="@("Archived")">Archived</MudSelectItem>
+                            </MudSelect>
 
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase">Slug</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted small">/</span>
-                                <InputText @bind-Value="item.Slug" class="form-control" placeholder="seo-friendly-slug" />
-                            </div>
-                            <div class="form-text small text-muted">Used for the item URL.</div>
-                        </div>
+                            <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="/" Variant="Variant.Outlined" HelperText="Used for the item URL." />
 
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase">Icon</label>
-                            <div class="d-flex align-items-center gap-3 border p-2 rounded bg-light">
-                                <div class="bg-white border rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                            <MudPaper Elevation="0" Class="pa-4 bg-light">
+                                <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="mb-2">Icon</MudText>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudPaper Width="48px" Height="48px" Class="d-flex align-center justify-center border bg-white">
+                                        @if (!string.IsNullOrEmpty(item.Icon))
+                                        {
+                                            <MudIcon Icon="@GetMudIcon(item.Icon)" Color="Color.Primary" Size="Size.Large" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Image" Color="Color.Default" Style="opacity: 0.25" Size="Size.Large" />
+                                        }
+                                    </MudPaper>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" OnClick="ShowIconPicker">
+                                        Select
+                                    </MudButton>
                                     @if (!string.IsNullOrEmpty(item.Icon))
                                     {
-                                        <i class="@item.Icon text-primary"></i>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => item.Icon = null" />
                                     }
-                                    else
-                                    {
-                                        <i class="fa-solid fa-image text-muted opacity-25"></i>
-                                    }
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ShowIconPicker">
-                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Seleziona Icona
-                                </button>
-                                @if (!string.IsNullOrEmpty(item.Icon))
+                                </MudStack>
+                            </MudPaper>
+
+                            <MudTextField T="string" Label="Created By" @bind-Value="item.CreatedBy" Variant="Variant.Outlined" />
+
+                            @if (IsEdit)
+                            {
+                                <MudField Label="Created At" Variant="Variant.Text">@item.CreatedAt.ToLocalTime().ToString("g")</MudField>
+                                @if (item.PublishedAt.HasValue)
                                 {
-                                    <button type="button" class="btn btn-sm btn-link text-danger p-0" @onclick="() => item.Icon = null">Rimuovi</button>
+                                    <MudField Label="Published At" Variant="Variant.Text">@item.PublishedAt.Value.ToLocalTime().ToString("g")</MudField>
                                 }
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase">Created By</label>
-                            <InputText @bind-Value="item.CreatedBy" class="form-control" />
-                        </div>
-
-                        @if (IsEdit)
-                        {
-                            <div class="mb-3">
-                                <label class="form-label text-muted small fw-bold text-uppercase">Created At</label>
-                                <input type="text" class="form-control-plaintext" readonly value="@item.CreatedAt.ToLocalTime().ToString("g")" />
-                            </div>
-                            @if (item.PublishedAt.HasValue)
-                            {
-                                <div class="mb-3">
-                                    <label class="form-label text-muted small fw-bold text-uppercase">Published At</label>
-                                    <input type="text" class="form-control-plaintext" readonly value="@item.PublishedAt.Value.ToLocalTime().ToString("g")" />
-                                </div>
+                                @if (item.UpdatedAt.HasValue)
+                                {
+                                    <MudField Label="Last Updated" Variant="Variant.Text">@item.UpdatedAt.Value.ToLocalTime().ToString("g")</MudField>
+                                }
                             }
-                            @if (item.UpdatedAt.HasValue)
-                            {
-                                <div class="mb-3">
-                                    <label class="form-label text-muted small fw-bold text-uppercase">Last Updated</label>
-                                    <input type="text" class="form-control-plaintext" readonly value="@item.UpdatedAt.Value.ToLocalTime().ToString("g")" />
-                                </div>
-                            }
-                        }
-
-                        <hr />
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold" disabled="@(string.IsNullOrEmpty(item.ContentTypeId))">Save Content</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="py-3" Disabled="@(string.IsNullOrEmpty(item.ContentTypeId))">Save Content</MudButton>
+                    </MudCardActions>
+                </MudCard>
+                
+                <MudButton Href="content-items" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4" FullWidth="true">Back to List</MudButton>
+            </MudItem>
+        </MudGrid>
     </EditForm>
 
-    @if (showIconPicker)
-    {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content shadow-lg border-0">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title"><i class="fa-solid fa-icons me-2"></i> Seleziona un'icona</h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="HideIconPicker"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="mb-4">
-                            <input type="text" class="form-control mb-3" placeholder="Cerca icona..." @bind="iconSearch" @bind:event="oninput" />
-                            <div class="row row-cols-6 g-3 overflow-auto" style="max-height: 400px;">
-                                @foreach (var icon in FilteredIcons)
-                                {
-                                    <div class="col">
-                                        <button type="button" class="btn btn-outline-light text-dark w-100 p-3 d-flex flex-column align-items-center gap-2 transition-all icon-btn" @onclick="() => SelectIcon(icon.Val)">
-                                            <i class="@icon.Val fa-2x"></i>
-                                            <span class="small text-truncate w-100 text-muted" style="font-size: 0.7rem;">@icon.Name</span>
-                                        </button>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <style>
-            .icon-btn:hover { background-color: #f8f9fa !important; border-color: #0d6efd !important; transform: scale(1.05); }
-            .transition-all { transition: all 0.2s; }
-        </style>
-    }
+    <MudDialog @bind-Visible="showIconPicker" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Palette" Class="mr-3"/>Seleziona un'icona</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudTextField T="string" Label="Cerca icona..." @bind-Value="iconSearch" Immediate="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+            <MudGrid Style="max-height: 400px; overflow-y: auto;">
+                @foreach (var icon in FilteredIcons)
+                {
+                    <MudItem xs="4" sm="2">
+                        <MudTooltip Text="@icon.Name">
+                            <MudIconButton Icon="@GetMudIcon(icon.Val)" Color="Color.Default" Size="Size.Large" OnClick="() => SelectIcon(icon.Val)" Class="w-100 pa-4 mud-ripple shadow-none border" />
+                        </MudTooltip>
+                    </MudItem>
+                }
+            </MudGrid>
+        </DialogContent>
+    </MudDialog>
 }
 
 @code {
@@ -213,6 +183,16 @@ else
 
     private bool showIconPicker = false;
     private string iconSearch = "";
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private string GetMudIcon(string faClass)
+    {
+        // Simple mapping or just return the fa class if using MudIcon with Font Awesome
+        // MudBlazor supports Font Awesome via the Icon property if you prefix it correctly
+        // but it's easier to just use the string class in a standard <i> if needed.
+        // However, for consistency, I'll return the class string and use it in a custom way if needed.
+        return faClass;
+    }
 
     private readonly List<(string Name, string Val)> AvailableIcons = new()
     {

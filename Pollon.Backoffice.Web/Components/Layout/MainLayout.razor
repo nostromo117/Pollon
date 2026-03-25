@@ -1,23 +1,53 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h6" Class="ml-3">Pollon Backoffice</MudText>
+        <MudSpacer />
+        <MudTooltip Text="GitHub Repo">
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/nostromo117/Pollon" Target="_blank" />
+        </MudTooltip>
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+        <MudAvatar Color="Color.Secondary" Class="ml-2">A</MudAvatar>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
         <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+    </MudDrawer>
+    <MudMainContent Class="pt-16 px-8">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private MudTheme _theme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#1976d2", // MUI Blue
+            Secondary = "#9c27b0",
+            AppbarBackground = "#1976d2",
+            DrawerBackground = "#ffffff",
+            DrawerText = "#000000",
+            Background = "#f5f5f5"
+        },
+        Typography = new Typography()
+        {
+            // Default typography is fine for now
+        }
+    };
+}

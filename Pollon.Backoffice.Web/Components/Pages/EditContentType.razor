@@ -6,94 +6,104 @@
 
 <PageTitle>@(IsEdit ? "Edit Content Type" : "New Content Type")</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>@(IsEdit ? "Edit Content Type" : "New Content Type")</h1>
-    <a href="content-types" class="btn btn-outline-secondary">Back to List</a>
-</div>
+<MudText Typo="Typo.h4" GutterBottom="true">@(IsEdit ? "Edit Content Type" : "New Content Type")</MudText>
 
 @if (isLoading)
 {
-    <p><em>Loading...</em></p>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
 else
 {
     <EditForm Model="contentType" OnValidSubmit="HandleSubmit" FormName="ModifyContentType">
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">General Information</div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Display Name</label>
-                        <input type="text" @bind="contentType.DisplayName" @bind:event="oninput" @onkeyup="HandleDisplayNameInput" class="form-control" placeholder="e.g. Blog Post" required />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">System Name</label>
-                        <InputText @bind-Value="contentType.SystemName" class="form-control" placeholder="e.g. BlogPost" required />
-                    </div>
-                </div>
+        <MudGrid>
+            <!-- Basic Info -->
+            <MudItem xs="12" md="8">
+                <MudCard Elevation="1">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">General Information</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField Label="Display Name" @bind-Value="contentType.DisplayName" Required="true" Variant="Variant.Outlined" @bind-Value:after="OnDisplayNameChanged" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField Label="System Name" @bind-Value="contentType.SystemName" Required="true" Variant="Variant.Outlined" HelperText="Unique internal identifier" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField Label="Slug" @bind-Value="contentType.Slug" Required="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentText="/content/" HelperText="Root URL for content items of this type" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField Label="Description" @bind-Value="contentType.Description" Variant="Variant.Outlined" Lines="2" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Slug</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small">/</span>
-                            <InputText @bind-Value="contentType.Slug" class="form-control" placeholder="seo-slug" required />
-                        </div>
-                        <div class="form-text small text-muted">Required as fallback for content items.</div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Description</label>
-                        <InputText @bind-Value="contentType.Description" class="form-control" />
-                    </div>
-                </div>
-            </div>
-        </div>
+                <!-- Fields Management -->
+                <MudCard Elevation="1" Class="mt-6">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Fields Definition</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Text" OnClick="AddField">Add Field</MudButton>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTable Items="@contentType.Fields" Elevation="0" Dense="true" Hover="true">
+                            <HeaderContent>
+                                <MudTh>Label</MudTh>
+                                <MudTh>Type</MudTh>
+                                <MudTh>Required</MudTh>
+                                <MudTh Style="text-align: right">Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="field">
+                                <MudTd>
+                                    <MudTextField @bind-Value="field.Name" Margin="Margin.Dense" Variant="Variant.Outlined" Placeholder="e.g. Title" />
+                                </MudTd>
+                                <MudTd>
+                                    <MudSelect @bind-Value="field.FieldType" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                        <MudSelectItem Value="@("text")">Text</MudSelectItem>
+                                        <MudSelectItem Value="@("richtext")">Rich Text</MudSelectItem>
+                                        <MudSelectItem Value="@("number")">Number</MudSelectItem>
+                                        <MudSelectItem Value="@("boolean")">Boolean</MudSelectItem>
+                                        <MudSelectItem Value="@("date")">Date</MudSelectItem>
+                                    </MudSelect>
+                                </MudTd>
+                                <MudTd>
+                                    <MudCheckBox @bind-Value="field.IsRequired" Color="Color.Primary" Dense="true" />
+                                </MudTd>
+                                <MudTd Style="text-align: right">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => RemoveField(field)" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                        @if (!contentType.Fields.Any())
+                        {
+                            <MudAlert Severity="Severity.Info" Class="mt-4">Nessun campo definito. Aggiungi almeno un campo per questo Content Type.</MudAlert>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                <span>Fields</span>
-                <button type="button" class="btn btn-sm btn-light" @onclick="AddField">Add Field</button>
-            </div>
-            <ul class="list-group list-group-flush">
-                @if (contentType.Fields.Count == 0)
-                {
-                    <li class="list-group-item text-muted">No fields added yet.</li>
-                }
-                
-                @foreach (var field in contentType.Fields)
-                {
-                    <li class="list-group-item">
-                        <div class="row align-items-end">
-                            <div class="col-md-4 mb-2 mb-md-0">
-                                <label class="form-label small">Name</label>
-                                <InputText @bind-Value="field.Name" class="form-control form-control-sm" />
-                            </div>
-                            <div class="col-md-3 mb-2 mb-md-0">
-                                <label class="form-label small">Type</label>
-                                <InputSelect @bind-Value="field.FieldType" class="form-select form-select-sm">
-                                    <option value="text">Text</option>
-                                    <option value="richtext">Rich Text</option>
-                                    <option value="number">Number</option>
-                                    <option value="date">Date</option>
-                                    <option value="boolean">Boolean</option>
-                                </InputSelect>
-                            </div>
-                            <div class="col-md-2 mb-2 mb-md-0 d-flex align-items-center h-100">
-                                <div class="form-check mt-auto mb-1">
-                                    <InputCheckbox @bind-Value="field.IsRequired" class="form-check-input" id="@($"req_{field.Name}")" />
-                                    <label class="form-check-label small" for="@($"req_{field.Name}")">Required</label>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-2 mb-md-0 text-end">
-                                <button type="button" class="btn btn-sm btn-outline-danger w-100" @onclick="() => RemoveField(field)">Remove</button>
-                            </div>
-                        </div>
-                    </li>
-                }
-            </ul>
-        </div>
-
-        <button type="submit" class="btn btn-success px-4 py-2">Save Content Type</button>
+            <!-- Sidebar Actions -->
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="1">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Actions</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="py-3">Save Content Type</MudButton>
+                    </MudCardContent>
+                </MudCard>
+                <MudButton Href="content-types" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4" FullWidth="true">Back to List</MudButton>
+            </MudItem>
+        </MudGrid>
     </EditForm>
 }
 
@@ -124,17 +134,7 @@ else
         isLoading = false;
     }
 
-    private void AddField()
-    {
-        contentType.Fields.Add(new ContentField { FieldType = "text" });
-    }
-
-    private void RemoveField(ContentField field)
-    {
-        contentType.Fields.Remove(field);
-    }
-
-    private void HandleDisplayNameInput()
+    private void OnDisplayNameChanged()
     {
         if (!IsEdit)
         {
@@ -150,6 +150,16 @@ else
             
             oldDisplayName = contentType.DisplayName;
         }
+    }
+
+    private void AddField()
+    {
+        contentType.Fields.Add(new ContentField { FieldType = "text" });
+    }
+
+    private void RemoveField(ContentField field)
+    {
+        contentType.Fields.Remove(field);
     }
 
     private string oldDisplayName = string.Empty;

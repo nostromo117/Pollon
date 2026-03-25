@@ -1,29 +1,11 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Pollon</a>
-    </div>
-</div>
+<MudNavMenu>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3 text-muted">MAIN</MudText>
+    <MudNavLink href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+    
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3 text-muted">CONTENT</MudText>
+    <MudNavLink href="content-items" Icon="@Icons.Material.Filled.Article">Content Items</MudNavLink>
+    <MudNavLink href="content-types" Icon="@Icons.Material.Filled.Category">Content Types</MudNavLink>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="content-items">
-                <span class="bi bi-list-columns" aria-hidden="true"></span> Content Items
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="content-types">
-                <span class="bi bi-tags-fill" aria-hidden="true"></span> Content Types
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3 text-muted">SETTINGS</MudText>
+    <MudNavLink href="settings" Icon="@Icons.Material.Filled.Settings" Disabled="true">General Settings</MudNavLink>
+</MudNavMenu>

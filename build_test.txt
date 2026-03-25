@@ -1,0 +1,11 @@
+  Individuazione dei progetti da ripristinare...
+  Tutti i progetti sono aggiornati per il ripristino.
+  Pollon.ServiceDefaults -> C:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\bin\Debug\net10.0\Pollon.ServiceDefaults.dll
+  Pollon.Backoffice -> C:\Users\user\source\repos\Pollon\Pollon.Backoffice\bin\Debug\net10.0\Pollon.Backoffice.dll
+  Pollon.Backoffice.Web -> C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\bin\Debug\net10.0\Pollon.Backoffice.Web.dll
+
+Compilazione completata.
+    Avvisi: 0
+    Errori: 0
+
+Tempo trascorso 00:00:06.11

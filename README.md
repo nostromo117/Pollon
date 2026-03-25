@@ -20,7 +20,8 @@ The project is composed of several microservices coordinated by **.NET Aspire**:
 - **Database (Backoffice)**: PostgreSQL + Marten (Document Database)
 - **Database (Content)**: SQL Server (Read Models)
 - **Messaging**: Wolverine + RabbitMQ (Event-driven synchronization)
-- **UI**: Blazor Server / WebAssembly
+- **UI (Backoffice)**: [MudBlazor](https://mudblazor.com/) (Material Design for Blazor)
+- **UI (Frontend)**: Blazor Server / WebAssembly
 
 ## Prerequisites
 

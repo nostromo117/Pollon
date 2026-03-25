@@ -61,19 +61,19 @@ else
                                         }
                                         else if (field.FieldType == "number")
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Number" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Number" />
                                         }
                                         else if (field.FieldType == "date")
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Date" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Date" />
                                         }
                                         else if (field.FieldType == "richtext")
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" />
                                         }
                                         else // text
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Required="@field.IsRequired" Variant="Variant.Outlined" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" />
                                         }
                                     </MudItem>
                                 }

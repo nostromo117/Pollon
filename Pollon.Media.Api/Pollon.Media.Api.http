@@ -1,0 +1,6 @@
+@Pollon.Media.Api_HostAddress = http://localhost:5170
+
+GET {{Pollon.Media.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

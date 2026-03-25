@@ -1,0 +1,23 @@
+  Individuazione dei progetti da ripristinare...
+  c:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\Pollon.ServiceDefaults.csproj ripristinato (in 465 ms).
+  c:\Users\user\source\repos\Pollon\Pollon.Backoffice\Pollon.Backoffice.csproj ripristinato (in 519 ms).
+  c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj ripristinato (in 516 ms).
+  Pollon.ServiceDefaults -> c:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\bin\Debug\net10.0\Pollon.ServiceDefaults.dll
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice\Repositories\MartenRepository.cs(21,16): warning CS8603: Possibile restituzione di riferimento Null. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice\Pollon.Backoffice.csproj]
+  Pollon.Backoffice -> c:\Users\user\source\repos\Pollon\Pollon.Backoffice\bin\Debug\net10.0\Pollon.Backoffice.dll
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(83,53): warning RZ10012: Found markup element with unexpected name 'ButtonTemplate'. If this is intended to be a component, add a @using directive for its namespace. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(84,98): error CS1061: 'EditContext' non contiene una definizione di 'Id' e non ├¿ stato trovato alcun metodo di estensione accessibile 'Id' che accetta un primo argomento di tipo 'EditContext'. Probabilmente manca una direttiva using o un riferimento all'assembly. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\obj\Debug\net10.0\Microsoft.CodeAnalysis.Razor.Compiler\Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator\Components_Pages_EditContentItem_razor.g.cs(321,185): error CS1662: Non ├¿ possibile convertire 'espressione lambda' nel tipo delegato previsto perch├® alcuni dei tipi restituiti nel blocco non sono convertibili in modo implicito nel tipo restituito del delegato [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(1,1): warning MUD0002: Illegal Attribute 'ChildContent' on 'MudFileUpload' using pattern 'LowerCase' source location '(1422,40)-(1501,42)' (https://mudblazor.com/features/analyzers) [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+
+Compilazione NON RIUSCITA.
+
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice\Repositories\MartenRepository.cs(21,16): warning CS8603: Possibile restituzione di riferimento Null. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice\Pollon.Backoffice.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(83,53): warning RZ10012: Found markup element with unexpected name 'ButtonTemplate'. If this is intended to be a component, add a @using directive for its namespace. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(1,1): warning MUD0002: Illegal Attribute 'ChildContent' on 'MudFileUpload' using pattern 'LowerCase' source location '(1422,40)-(1501,42)' (https://mudblazor.com/features/analyzers) [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(84,98): error CS1061: 'EditContext' non contiene una definizione di 'Id' e non ├¿ stato trovato alcun metodo di estensione accessibile 'Id' che accetta un primo argomento di tipo 'EditContext'. Probabilmente manca una direttiva using o un riferimento all'assembly. [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\obj\Debug\net10.0\Microsoft.CodeAnalysis.Razor.Compiler\Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator\Components_Pages_EditContentItem_razor.g.cs(321,185): error CS1662: Non ├¿ possibile convertire 'espressione lambda' nel tipo delegato previsto perch├® alcuni dei tipi restituiti nel blocco non sono convertibili in modo implicito nel tipo restituito del delegato [c:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+    Avvisi: 3
+    Errori: 2
+
+Tempo trascorso 00:00:10.24

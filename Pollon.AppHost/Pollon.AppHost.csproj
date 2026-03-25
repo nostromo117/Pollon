@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj" />
     <ProjectReference Include="..\Pollon.Backoffice.Api\Pollon.Backoffice.Api.csproj" />
     <ProjectReference Include="..\Pollon.Frontend.Web\Pollon.Frontend.Web.csproj" />
+    <ProjectReference Include="..\Pollon.Media.Api\Pollon.Media.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

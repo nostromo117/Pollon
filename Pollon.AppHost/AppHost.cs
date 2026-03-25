@@ -5,7 +5,12 @@ var postgres = builder.AddPostgres("postgres").AddDatabase("backofficedb");
 var keycloak = builder.AddKeycloak("keycloak", 8080);
 var messaging = builder.AddRabbitMQ("messaging");
 
+var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
+    .WithReference(postgres)
+    .WaitFor(postgres);
+
 var backofficeApi = builder.AddProject<Projects.Pollon_Backoffice_Api>("backofficeapi")
+    .WithExternalHttpEndpoints()
     .WithReference(sql)
     .WithReference(postgres)
     .WithReference(messaging)
@@ -24,12 +29,16 @@ var backofficeWeb = builder.AddProject<Projects.Pollon_Backoffice_Web>("backoffi
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(backofficeApi)
-    .WaitFor(backofficeApi);
+    .WithReference(mediaApi)
+    .WaitFor(backofficeApi)
+    .WaitFor(mediaApi);
 
 var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(contentApi)
+    .WithReference(backofficeApi)
+    .WithReference(mediaApi)
     .WaitFor(contentApi);
 
 builder.Build().Run();

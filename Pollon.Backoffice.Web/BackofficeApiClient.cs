@@ -63,4 +63,19 @@ public class BackofficeApiClient(HttpClient httpClient)
     {
         await httpClient.DeleteAsync($"/api/content-items/{id}", cancellationToken);
     }
+
+    public async Task<MediaAsset?> UploadMediaAsync(MultipartFormDataContent content, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync("/api/media", content, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<MediaAsset>(cancellationToken: cancellationToken);
+        }
+        return null;
+    }
+
+    public async Task<HttpResponseMessage> GetMediaResponseAsync(string id, CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetAsync($"/api/media/{id}", cancellationToken);
+    }
 }

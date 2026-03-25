@@ -2,6 +2,7 @@
 @page "/content-items/edit/{Id}"
 @rendermode InteractiveServer
 @inject BackofficeApiClient ApiClient
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
 @using System.Text.Json
 
@@ -55,23 +56,39 @@ else
                                 @foreach (var field in selectedContentType.Fields)
                                 {
                                     <MudItem xs="12">
-                                        @if (field.FieldType == "boolean")
+                                        @if (field.FieldType == ContentFieldType.Boolean)
                                         {
-                                            <MudSwitch T="bool" Color="Color.Primary" Value="@GetBoolValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, (object)v))" Label="@field.Name" />
+                                            <MudSwitch T="bool" Value="@GetBoolValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Color="Color.Primary" Label="@field.Name" Class="mt-2" />
                                         }
-                                        else if (field.FieldType == "number")
+                                        else if (field.FieldType == ContentFieldType.Number)
                                         {
                                             <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Number" />
                                         }
-                                        else if (field.FieldType == "date")
+                                        else if (field.FieldType == ContentFieldType.Date)
                                         {
                                             <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Date" />
                                         }
-                                        else if (field.FieldType == "richtext")
+                                        else if (field.FieldType == ContentFieldType.RichText)
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" HelperText="Supports HTML content" />
                                         }
-                                        else // text
+                                        else if (field.FieldType == ContentFieldType.Image)
+                                        {
+                                            <div class="d-flex flex-column gap-2 mb-4">
+                                                <MudText Typo="Typo.subtitle2">@field.Name</MudText>
+                                                @if (!string.IsNullOrEmpty(GetStringValue(field.Name)))
+                                                {
+                                                    <MudImage Src="@GetStringValue(field.Name)" Alt="@field.Name" Elevation="2" Class="rounded" Style="max-width: 200px; max-height: 200px; object-fit: cover;" />
+                                                }
+                                                <div>
+                                                    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                                        Upload Image
+                                                        <InputFile OnChange="@(e => UploadImageAsync(field.Name, e.File))" accept=".jpg,.jpeg,.png,.webp,.gif" style="display:none;" />
+                                                    </MudButton>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
                                         {
                                             <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" />
                                         }
@@ -319,5 +336,33 @@ else
         }
         
         Navigation.NavigateTo("content-items");
+    }
+
+    private async Task UploadImageAsync(string fieldName, IBrowserFile file)
+    {
+        if (file is null) return;
+        
+        // Prevent SignalR stream deadlocks by fully downloading the file into memory 
+        // before passing it to the synchronous/blocking HttpClient request pipeline.
+        using var memoryStream = new MemoryStream();
+        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+
+        using var content = new MultipartFormDataContent();
+        var fileContent = new StreamContent(memoryStream);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+        content.Add(fileContent, "file", file.Name);
+
+        var client = HttpClientFactory.CreateClient("MediaApi");
+        var response = await client.PostAsync("/api/media", content);
+        if (response.IsSuccessStatusCode)
+        {
+            var asset = await response.Content.ReadFromJsonAsync<MediaAsset>();
+            if (asset != null && !string.IsNullOrEmpty(asset.Url))
+            {
+                SetValue(fieldName, asset.Url);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
     }
 }

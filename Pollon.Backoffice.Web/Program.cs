@@ -19,6 +19,11 @@ builder.Services.AddHttpClient<BackofficeApiClient>(client =>
         client.BaseAddress = new("https+http://backofficeapi");
     });
 
+builder.Services.AddHttpClient("MediaApi", client =>
+{
+    client.BaseAddress = new("https+http://mediaapi");
+});
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -40,5 +45,16 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapDefaultEndpoints();
+
+app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, CancellationToken ct) =>
+{
+    var client = factory.CreateClient("MediaApi");
+    var response = await client.GetAsync($"/api/media/{id}", ct);
+    if (!response.IsSuccessStatusCode) return Results.NotFound();
+    
+    var stream = await response.Content.ReadAsStreamAsync(ct);
+    var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+    return Results.File(stream, contentType);
+}).ExcludeFromDescription();
 
 app.Run();

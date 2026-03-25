@@ -65,12 +65,11 @@ else
                                     <MudTextField @bind-Value="field.Name" Immediate="true" Margin="Margin.Dense" Variant="Variant.Outlined" Placeholder="e.g. Title" />
                                 </MudTd>
                                 <MudTd>
-                                    <MudSelect @bind-Value="field.FieldType" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                        <MudSelectItem Value="@("text")">Text</MudSelectItem>
-                                        <MudSelectItem Value="@("richtext")">Rich Text</MudSelectItem>
-                                        <MudSelectItem Value="@("number")">Number</MudSelectItem>
-                                        <MudSelectItem Value="@("boolean")">Boolean</MudSelectItem>
-                                        <MudSelectItem Value="@("date")">Date</MudSelectItem>
+                                    <MudSelect T="ContentFieldType" @bind-Value="field.FieldType" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                        @foreach (var type in Enum.GetValues<ContentFieldType>())
+                                        {
+                                            <MudSelectItem Value="@type">@type.ToString()</MudSelectItem>
+                                        }
                                     </MudSelect>
                                 </MudTd>
                                 <MudTd>
@@ -158,7 +157,7 @@ else
         if (contentType.Fields == null)
             contentType.Fields = new List<ContentField>();
             
-        contentType.Fields.Add(new ContentField { FieldType = "text" });
+        contentType.Fields.Add(new ContentField { FieldType = ContentFieldType.Text });
         contentType.Fields = contentType.Fields.ToList(); 
         await InvokeAsync(StateHasChanged);
     }

@@ -43,6 +43,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Content Types Endpoints
 var contentTypes = app.MapGroup("/api/content-types").WithTags("Content Types");
 
 contentTypes.MapGet("/", async (IRepository<ContentType> repo) =>

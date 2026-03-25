@@ -9,6 +9,7 @@ public class MediaAsset
     public string MimeType { get; set; } = string.Empty;
     public long SizeInBytes { get; set; }
     public string Url { get; set; } = string.Empty;
+    public byte[] Data { get; set; } = Array.Empty<byte>();
     public string? AltText { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -1,0 +1,12 @@
+  Individuazione dei progetti da ripristinare...
+  c:\Users\user\source\repos\Pollon\Pollon.Frontend.Web\Pollon.Frontend.Web.csproj ripristinato (in 375 ms).
+  2 di 3 progetti sono aggiornati per il ripristino.
+  Pollon.ServiceDefaults -> c:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\bin\Debug\net10.0\Pollon.ServiceDefaults.dll
+  Pollon.Contracts -> c:\Users\user\source\repos\Pollon\Pollon.Contracts\bin\Debug\net10.0\Pollon.Contracts.dll
+  Pollon.Frontend.Web -> c:\Users\user\source\repos\Pollon\Pollon.Frontend.Web\bin\Debug\net10.0\Pollon.Frontend.Web.dll
+
+Compilazione completata.
+    Avvisi: 0
+    Errori: 0
+
+Tempo trascorso 00:00:04.74

@@ -49,7 +49,14 @@ else
                                     <div class="property-box p-2 rounded bg-light border">
                                         <div class="overflow-hidden">
                                             <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">@property.Key</div>
-                                            <div class="text-dark fw-semibold text-truncate" title="@property.Value" style="font-size: 0.9rem;">@property.Value</div>
+                                            @if (property.Value.StartsWith("/api/media/") || property.Value.StartsWith("http"))
+                                            {
+                                                <img src="@property.Value" class="img-fluid rounded mt-2" style="max-height: 200px; object-fit: contain;" alt="@property.Key" />
+                                            }
+                                            else
+                                            {
+                                                <div class="text-dark fw-semibold text-truncate" title="@property.Value" style="font-size: 0.9rem;">@property.Value</div>
+                                            }
                                         </div>
                                     </div>
                                 </div>

@@ -61,6 +61,7 @@ public class ContentPublishedConsumer
                     Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
                            ? $"{contentType.Slug}/{contentItem.Id}" 
                            : contentItem.Slug,
+                    Icon = contentItem.Icon,
                     PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
                     JsonData = json
                 };
@@ -74,6 +75,7 @@ public class ContentPublishedConsumer
                 existingContent.Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
                                        ? $"{contentType.Slug}/{contentItem.Id}" 
                                        : contentItem.Slug;
+                existingContent.Icon = contentItem.Icon;
                 existingContent.PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow;
                 existingContent.JsonData = json;
                 _dbContext.PublishedContents.Update(existingContent);

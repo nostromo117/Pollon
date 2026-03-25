@@ -9,6 +9,7 @@ public class ContentItem
 
     public string Status { get; set; } = "Draft"; // Draft, Published, Archived
     public string Slug { get; set; } = string.Empty;
+    public string? Icon { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PublishedAt { get; set; }

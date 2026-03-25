@@ -33,7 +33,13 @@
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-0 transition-hover">
                         <div class="card-body">
-                            <h5 class="card-title fw-bold">@item.Slug</h5>
+                            <h5 class="card-title fw-bold">
+                                @if (!string.IsNullOrEmpty(item.Icon))
+                                {
+                                    <i class="@item.Icon text-primary me-2"></i>
+                                }
+                                @item.Slug
+                            </h5>
                             <p class="card-text text-muted small">Pubblicato il @item.PublishedAt.ToString("dd MMM yyyy")</p>
                             <a href="/article/@item.Slug" class="btn btn-outline-primary btn-sm stretched-link">Leggi di più</a>
                         </div>

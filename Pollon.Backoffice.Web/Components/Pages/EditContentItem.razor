@@ -108,6 +108,29 @@ else
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Icon</label>
+                            <div class="d-flex align-items-center gap-3 border p-2 rounded bg-light">
+                                <div class="bg-white border rounded d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                                    @if (!string.IsNullOrEmpty(item.Icon))
+                                    {
+                                        <i class="@item.Icon text-primary"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-image text-muted opacity-25"></i>
+                                    }
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ShowIconPicker">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Seleziona Icona
+                                </button>
+                                @if (!string.IsNullOrEmpty(item.Icon))
+                                {
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-0" @onclick="() => item.Icon = null">Rimuovi</button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Created By</label>
                             <InputText @bind-Value="item.CreatedBy" class="form-control" />
                         </div>
@@ -141,6 +164,40 @@ else
             </div>
         </div>
     </EditForm>
+
+    @if (showIconPicker)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fa-solid fa-icons me-2"></i> Seleziona un'icona</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="HideIconPicker"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-4">
+                            <input type="text" class="form-control mb-3" placeholder="Cerca icona..." @bind="iconSearch" @bind:event="oninput" />
+                            <div class="row row-cols-6 g-3 overflow-auto" style="max-height: 400px;">
+                                @foreach (var icon in FilteredIcons)
+                                {
+                                    <div class="col">
+                                        <button type="button" class="btn btn-outline-light text-dark w-100 p-3 d-flex flex-column align-items-center gap-2 transition-all icon-btn" @onclick="() => SelectIcon(icon.Val)">
+                                            <i class="@icon.Val fa-2x"></i>
+                                            <span class="small text-truncate w-100 text-muted" style="font-size: 0.7rem;">@icon.Name</span>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+            .icon-btn:hover { background-color: #f8f9fa !important; border-color: #0d6efd !important; transform: scale(1.05); }
+            .transition-all { transition: all 0.2s; }
+        </style>
+    }
 }
 
 @code {
@@ -153,6 +210,32 @@ else
     private ContentItem item = new() { Status = "Draft", CreatedBy = "System Admin", Data = new() };
     private ContentType[] contentTypes = Array.Empty<ContentType>();
     private ContentType? selectedContentType;
+
+    private bool showIconPicker = false;
+    private string iconSearch = "";
+
+    private readonly List<(string Name, string Val)> AvailableIcons = new()
+    {
+        ("Casa", "fa-solid fa-home"), ("Utente", "fa-solid fa-user"), ("Articolo", "fa-solid fa-file-lines"),
+        ("Immagine", "fa-solid fa-image"), ("Video", "fa-solid fa-video"), ("Musica", "fa-solid fa-music"),
+        ("Prezzo", "fa-solid fa-tag"), ("Carrello", "fa-solid fa-cart-shopping"), ("Stella", "fa-solid fa-star"),
+        ("Cuore", "fa-solid fa-heart"), ("Check", "fa-solid fa-check"), ("X", "fa-solid fa-xmark"),
+        ("Info", "fa-solid fa-info-circle"), ("Attenzione", "fa-solid fa-warning"), ("Razzo", "fa-solid fa-rocket"),
+        ("Mappa", "fa-solid fa-map"), ("Telefono", "fa-solid fa-phone"), ("Email", "fa-solid fa-envelope"),
+        ("Calendario", "fa-solid fa-calendar"), ("Orologio", "fa-solid fa-clock"), ("Impostazioni", "fa-solid fa-gear"),
+        ("Chiave", "fa-solid fa-key"), ("Lucchetto", "fa-solid fa-lock"), ("Grafico", "fa-solid fa-chart-line"),
+        ("Nuvola", "fa-solid fa-cloud"), ("Fulmine", "fa-solid fa-bolt"), ("Fuoco", "fa-solid fa-fire"),
+        ("Acqua", "fa-solid fa-droplet"), ("Foglia", "fa-solid fa-leaf"), ("Sole", "fa-solid fa-sun")
+    };
+
+    private IEnumerable<(string Name, string Val)> FilteredIcons => 
+        string.IsNullOrWhiteSpace(iconSearch) 
+            ? AvailableIcons 
+            : AvailableIcons.Where(i => i.Name.Contains(iconSearch, StringComparison.OrdinalIgnoreCase) || i.Val.Contains(iconSearch, StringComparison.OrdinalIgnoreCase));
+
+    private void ShowIconPicker() => showIconPicker = true;
+    private void HideIconPicker() { showIconPicker = false; iconSearch = ""; }
+    private void SelectIcon(string icon) { item.Icon = icon; HideIconPicker(); }
 
     protected override async Task OnInitializedAsync()
     {

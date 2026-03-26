@@ -28,6 +28,7 @@ else
 {
     <MudTable Items="@contentItems" Hover="true" Elevation="1" Dense="true" Class="mt-4">
         <HeaderContent>
+            <MudTh>Name</MudTh>
             <MudTh>ContentType</MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.CreatedAt)" InitialDirection="SortDirection.Descending">Created</MudTableSortLabel></MudTh>
@@ -35,6 +36,13 @@ else
             <MudTh Style="text-align: right">Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
+            <MudTd DataLabel="Name">
+                <MudText Typo="Typo.body1" Style="font-weight: 500">@GetItemDisplayName(context)</MudText>
+                @if (!string.IsNullOrEmpty(context.ParentId))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Primary"><MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" Class="mr-1 mt-n1" />Sub-item</MudText>
+                }
+            </MudTd>
             <MudTd DataLabel="ContentType">
                 <MudText Typo="Typo.body2" Style="font-weight: 600">@GetContentTypeName(context.ContentTypeId)</MudText>
             </MudTd>
@@ -105,5 +113,17 @@ else
     {
         await ApiClient.DeleteContentItemAsync(id);
         await LoadDataAsync();
+    }
+
+    private string GetItemDisplayName(ContentItem ci)
+    {
+        if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
+            ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
+        {
+            if (t is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
+                return el.GetString() ?? ci.Id;
+            return t.ToString() ?? ci.Id;
+        }
+        return ci.Id;
     }
 }

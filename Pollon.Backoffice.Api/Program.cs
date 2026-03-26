@@ -13,6 +13,12 @@ builder.AddServiceDefaults();
 // Add services to the container.
 builder.Services.AddOpenApi();
 
+// Configure JSON to ignore cycles for hierarchical data
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
+
 // Setup Marten
 builder.Services.AddMarten(opts => 
 {

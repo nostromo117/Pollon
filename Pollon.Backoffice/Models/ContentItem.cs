@@ -16,6 +16,9 @@ public class ContentItem
     public DateTime? UpdatedAt { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
 
+    public string? ParentId { get; set; }
+    public List<ContentItem> Children { get; set; } = new();
+
     // Flessibile dictionary per contenere i campi dinamici
     public Dictionary<string, object> Data { get; set; } = new();
 }

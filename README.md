@@ -51,4 +51,7 @@ To run this project, you need the following installed:
 - **Media Management**: Upload images directly from the Backoffice. Files are stored in the dedicated `Pollon.Media.Api` and served transparently to both the Backoffice and Frontend via lightweight reverse proxies.
 - **Business Validation**: Server-side validation for slugs and system names.
 - **SEO Optimization**: Automatic and manual slug generation for content items.
-- **Event Sourcing**: Changes in the backoffice are published to RabbitMQ and consumed by the Content API to update read models.
+- [x] **Event Sourcing**: Changes in the backoffice are published to RabbitMQ and consumed by the Content API to update read models.
+
+## Documentation
+- [Marten Database Schema](docs/marten_db_schema.md)

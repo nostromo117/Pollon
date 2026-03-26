@@ -52,16 +52,39 @@ public class ContentItemService : IContentItemService
             query = query.OrderByDescending(x => x.CreatedAt);
         }
 
-        return await query.ToListAsync();
+        var list = await query.ToListAsync();
+
+        // Populate Children dynamically without persisting them
+        var lookup = list.ToLookup(x => x.ParentId);
+        foreach (var item in list)
+        {
+            item.Children = lookup[item.Id].ToList();
+        }
+
+        return list;
     }
 
-    public async Task<ContentItem> GetByIdAsync(string id)
+    public async Task<ContentItem?> GetByIdAsync(string id)
     {
-        return await _repository.GetByIdAsync(id);
+        var batch = _session.CreateBatchQuery();
+        var itemTask = batch.Load<ContentItem>(id);
+        var childrenTask = batch.Query<ContentItem>().Where(x => x.ParentId == id).ToList();
+
+        await batch.Execute();
+
+        var item = await itemTask;
+        if (item != null)
+        {
+            var children = await childrenTask;
+            item.Children = children.ToList();
+        }
+        return item;
     }
 
     public async Task<ContentItem> CreateAndPublishAsync(ContentItem item)
     {
+        // Non salvare i figli annidati
+        item.Children = new();
         // Validation: Verify ContentType exists
         var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
         if (contentType == null)
@@ -111,6 +134,9 @@ public class ContentItemService : IContentItemService
 
     public async Task<ContentItem?> UpdateAndPublishAsync(string id, ContentItem item)
     {
+        // Non salvare i figli annidati
+        item.Children = new();
+
         var existingItem = await _repository.GetByIdAsync(id);
         if (existingItem == null)
             return null;

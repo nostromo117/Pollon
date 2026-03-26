@@ -118,6 +118,14 @@ else
 
                             <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="/" Variant="Variant.Outlined" HelperText="Used for the item URL." />
 
+                            <MudSelect T="string" Label="Parent Item" @bind-Value="item.ParentId" Variant="Variant.Outlined" Clearable="true" HelperText="Select a parent to nest this content item under it.">
+                                <MudSelectItem T="string" Value="@((string?)null)">-- Nessuno --</MudSelectItem>
+                                @foreach (var parent in availableParents.Where(p => p.Id != item.Id))
+                                {
+                                    <MudSelectItem T="string" Value="@parent.Id">@GetItemDisplayName(parent)</MudSelectItem>
+                                }
+                            </MudSelect>
+
                             <MudPaper Elevation="0" Class="pa-4 bg-light">
                                 <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="mb-2">Icon</MudText>
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
@@ -196,6 +204,7 @@ else
 
     private ContentItem item = new() { Status = "Draft", CreatedBy = "System Admin", Data = new() };
     private ContentType[] contentTypes = Array.Empty<ContentType>();
+    private ContentItem[] availableParents = Array.Empty<ContentItem>();
     private ContentType? selectedContentType;
 
     private bool showIconPicker = false;
@@ -237,6 +246,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         contentTypes = await ApiClient.GetContentTypesAsync();
+        availableParents = await ApiClient.GetContentItemsAsync();
 
         if (IsEdit)
         {
@@ -265,6 +275,18 @@ else
     {
         var ct = contentTypes.FirstOrDefault(c => c.Id == id);
         return ct != null ? $"{ct.DisplayName} ({ct.SystemName})" : id;
+    }
+
+    private string GetItemDisplayName(ContentItem ci)
+    {
+        if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
+            ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
+        {
+            if (t is JsonElement el && el.ValueKind == JsonValueKind.String)
+                return el.GetString() ?? ci.Id;
+            return t.ToString() ?? ci.Id;
+        }
+        return ci.Id;
     }
 
     private string GetStringValue(string fieldName)

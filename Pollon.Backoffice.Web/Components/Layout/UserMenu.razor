@@ -1,0 +1,22 @@
+@inject NavigationManager Navigation
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" Color="Color.Inherit">
+            <ActivatorContent>
+                <div class="d-flex align-center px-2 py-1" style="cursor:pointer">
+                    <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
+                    <MudAvatar Color="Color.Secondary" Size="Size.Small">
+                        @(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")
+                    </MudAvatar>
+                </div>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("login", true))">Accedi</MudButton>
+    </NotAuthorized>
+</AuthorizeView>

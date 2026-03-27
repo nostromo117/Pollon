@@ -32,37 +32,41 @@ erDiagram
 
 ## Come gestisce i dati Marten?
 
-### 1. Zero Migrazioni e Zero Schema Rigid! 
-Se tu domani volessi aggiungere a `ContentItem` un nuovo campo `public string? SEO_Title { get; set; }`, in Entity Framework (SQL Server / Database tradizionali), saresti forzato a fare `Add-Migration`, poi `Update-Database`, aggiungere una colonna "SEO_Title", bloccare l'I/O su chiusure stringenti (lock), ecc.  
-Con Marten tu modifichi semplicemente la classe in C#! Al prossimo salvataggio, PostgreSQL aggiorna l'intero malloppo JSON `data` per includere quel campo testuale in tutta scioltezza.
+### 1. Schema-less e Flessibilità (JSONB)
+A differenza dei database relazionali tradizionali (come Entity Framework su SQL Server), Marten permette di evolvere il domain model senza costose migrazioni SQL. Se aggiungi una proprietà a `ContentItem`, PostgreSQL aggiorna semplicemente il blob `jsonb` alla successiva operazione di scrittura. Questo elimina il rischio di lock sulla tabella durante l'I/O e accelera drasticamente il ciclo di sviluppo.
 
-### 2. LINQ supportato a livello di Engine JSON
-Quando fai _una_ query LINQ strutturata su C# come questa nel Backoffice:
+### 2. Query ad Alte Prestazioni (Indexing & LINQ)
+Marten traduce le query LINQ in C# direttamente in query SQL ottimizzate per il tipo JSONB.
+Esempio di query nel Backoffice:
 ```csharp
-var id = "my-parent-id";
+var id = "parent-123";
 _session.Query<ContentItem>().Where(x => x.ParentId == id).ToListAsync();
 ```
-
-Marten la traduce, usando la potenza del JSONB (`jsonb`) PostgreSQL, nativamente così:
+Traduzione SQL nativa:
 ```sql
 SELECT d.id, d.data, d.mt_last_modified, d.mt_version
 FROM public.mt_doc_contentitem d
-WHERE d.data ->> 'ParentId' = 'my-parent-id';
+WHERE d.data ->> 'ParentId' = 'parent-123';
 ```
-Questo avviene *estremamente in fretta*: Postgres è molto fiero e performante sui suoi campi JSONB. Puoi perfino far creare a Marten indici SQL nativi estraendo singoli campi dal JSON e indicizzandoli pesantemente! (ad es. Indice sul ParentId).
+PostgreSQL è in grado di indicizzare campi specifici all'interno del JSON (Functional Indexes), garantendo tempi di risposta inferiori al millisecondo anche con milioni di record.
 
-### 3. Batched Query (Quello che abbiamo implementato noi per l'N+1)
-Con le Batched Queries, Marten raggruppa letteralmente N query SQL all'inizio, apre una singola connessione a PostgreSQL, esegue le interrogazioni sotto lo stesso round-trip e ti restituisce tutti i Set di Ritorno in parallelo.
-Nel nostro caso, invia un *unico pacchetto SQL* simile a questo:
+### 3. Batched Query (Risoluzione del Problema N+1)
+Per ottimizzare il caricamento della gerarchia nel Backoffice, utilizziamo le **Batched Queries**. Questo permette di raggruppare più interrogazioni in un unico round-trip di rete.
+Invece di eseguire query separate per il Genitore e per i Figli (rischiando latenze di rete elevate), Marten invia un singolo pacchetto SQL:
 
 ```sql
 SELECT data FROM mt_doc_contentitem WHERE id = 'padre-123';
 SELECT data FROM mt_doc_contentitem WHERE data->>'ParentId' = 'padre-123';
 ```
-
-E ti mappa i task in C# completati in un solo colpo solo, per evitare latenze di rete. 
+I risultati vengono mappati asincronamente sulle variabili C# corrispondenti, abbattendo il tempo totale di esecuzione.
 
 ---
+
+### Key takeaways per lo Sviluppatore
+- **Transazionalità ACID**: Nonostante il comportamento da NoSQL, Marten garantisce transazioni atomiche e sicure grazie alla robustezza di PostgreSQL.
+- **Relazioni Logiche**: Le relazioni parent-child o i dizionari di dati (usati in `EditContentItem`) vengono serializzati direttamente nel campo `data`, evitando complessi SQL JOIN.
+- **Evoluzione Continua**: La possibilità di modificare il modello dati in C# senza agire sullo schema fisico rende Pollon ideale per progetti in rapida evoluzione.
+
 
 ### In Breve
 - **Sviluppo Rapido**: È potente come MongoDB perché ti libera dal dover fare Migrazioni SQL, Foreign Keys o tabelle multiple complesse.

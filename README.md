@@ -1,81 +1,72 @@
 # Pollon
 
-Pollon is a modern, distributed Content Management System (CMS) and Delivery platform built with **.NET Aspire**. It demonstrates a decoupled architecture between content management (Backoffice) and content delivery (Frontend).
+Pollon è un Content Management System (CMS) moderno e distribuito, progettato per offrire una separazione netta tra la gestione dei contenuti (Backoffice) e la loro erogazione (Delivery). Il progetto è costruito su **.NET Aspire** e sfrutta un'architettura a microservizi altamente scalabile.
 
-## Architecture
+## Architettura del Sistema
 
-The project is composed of several microservices coordinated by **.NET Aspire**:
+Il sistema è orchestrato da **.NET Aspire** ed è composto dai seguenti componenti:
 
-- **Pollon.AppHost**: The orchestration project that manages service discovery and infrastructure.
-- **Pollon.Backoffice.Api**: A REST API built with **Marten** and **PostgreSQL** for managing dynamic content types and items.
-- **Pollon.Backoffice.Web**: A **Blazor** application (with **MudBlazor** Material Design UI) for all administrative tasks.
-- **Pollon.Media.Api**: A dedicated microservice for media asset management. It handles file uploads and serves binary content (images, etc.) stored in **PostgreSQL** via Marten. Acts as an internal CDN, completely decoupled from the Backoffice business logic. The storage layer is abstracted behind `IMediaStorageService`, enabling future migration to cloud providers (AWS S3, Azure Blob Storage) without changing the consumers.
-- **Pollon.Content.Api**: A delivery API using **SQL Server** and **EntityFramework Core** for high-performance read models. It synchronizes with the backoffice via events.
-- **Pollon.Frontend.Web**: A customer-facing **Blazor** site with SEO-friendly routing and hierarchical slugs.
-- **Pollon.Contracts**: Shared models and events used for communication between services.
-- **Pollon.ServiceDefaults**: Standard Aspire service defaults (observability, health checks).
+- **Pollon.AppHost**: Il progetto di orchestrazione che gestisce il service discovery, la configurazione delle risorse (database, messaging, auth) e il ciclo di vita dei container.
+- **Pollon.Backoffice.Api**: REST API core per la gestione di tipi di contenuto dinamici ed elementi. Utilizza **Marten** su **PostgreSQL** come database a documenti, permettendo schemi flessibili senza migrazioni SQL.
+- **Pollon.Backoffice.Web**: Applicazione amministrativa basata su **Blazor Server** e **MudBlazor**. Gestisce la configurazione dei contenuti, il caricamento media e la pubblicazione.
+- **Pollon.Media.Api**: Microservizio dedicato alla gestione degli asset multimediali. Gestisce l'upload e serve i contenuti binari archiviati in PostgreSQL via Marten. Funge da CDN interna, completamente svincolato dalla logica di business del Backoffice.
+- **Pollon.Content.Api**: API di delivery ad alte prestazioni. Utilizza **SQL Server** ed **EntityFramework Core** per i modelli di lettura (Read Models), sincronizzati in tempo reale tramite eventi.
+- **Pollon.Frontend.Web**: Sito consumer basato su Blazor con routing ottimizzato SEO e gestione gerarchica degli slug.
+- **Pollon.Contracts**: Libreria di modelli e record condivisi per la comunicazione cross-service e gli eventi RabbitMQ.
+- **Pollon.ServiceDefaults**: Configurazioni standard per osservabilità, telemetria e health checks.
 
-## Technologies
+## Stack Tecnologico
 
-- **System Orchestration**: .NET Aspire
-- **Database (Backoffice + Media)**: PostgreSQL + Marten (Document Database)
-- **Database (Content)**: SQL Server (Read Models)
-- **Messaging**: Wolverine + RabbitMQ (Event-driven synchronization)
-- **UI (Backoffice)**: [MudBlazor](https://mudblazor.com/) (Material Design for Blazor)
-- **UI (Frontend)**: Blazor Server
+- **Orchestrazione**: .NET Aspire
+- **Database (Backoffice & Media)**: PostgreSQL + Marten (Document Database)
+- **Database (Content/Read Models)**: SQL Server (Entity Framework Core)
+- **Messaggistica**: Wolverine + RabbitMQ (Sincronizzazione event-driven)
+- **Autenticazione**: Keycloak (OIDC / OAuth2)
+- **UI Framework**: MudBlazor & Blazor Server
 
-## Prerequisites
+## Prerequisiti
 
-To run this project, you need the following installed:
+Per eseguire l'ambiente di sviluppo:
 
-1. **.NET 10 SDK** (or the latest version compatible with the project).
-2. **.NET Aspire Workload**: Install via `dotnet workload install aspire`.
-3. **Docker Desktop**: Required to run SQL Server, PostgreSQL, and RabbitMQ containers.
-4. **Git**: For version control.
-5. **EF Core Tooling**: `dotnet tool install --global dotnet-ef`.
+1. **.NET 10 SDK** (o versione superiore)
+2. **Docker Desktop**: Necessario per i container SQL Server, PostgreSQL, RabbitMQ e Keycloak.
+3. **Aspire Workload**: `dotnet workload install aspire`
+4. **EF Core Tooling**: `dotnet tool install --global dotnet-ef`
 
-## Getting Started
+## Avvio Rapido
 
-1. Clone the repository.
-2. Ensure Docker Desktop is running.
-3. Open the solution in **Visual Studio 2022** (17.10+) or **VS Code**.
-4. Set `Pollon.AppHost` as the startup project and run (F5).
-5. Alternatively, run from the command line:
+1. Clona il repository.
+2. Assicurati che Docker Desktop sia attivo.
+3. Imposta `Pollon.AppHost` come progetto di avvio in Visual Studio o lancia da terminale:
    ```bash
    dotnet run --project Pollon.AppHost/Pollon.AppHost.csproj
    ```
 
-## Authentication
+## Autenticazione e Sicurezza
 
-The project uses **Keycloak** for centralized authentication (OIDC).
+Il sistema utilizza **Keycloak** per la gestione centralizzata delle identità.
 
-### Credentials
-- **Keycloak Admin Console**:
+### Credenziali di Sviluppo
+- **Console Admin Keycloak**:
   - **User**: `admin`
   - **Password**: `admin`
-- **Pollon Backoffice (Web)**:
+- **Accesso Backoffice Web**:
   - **User**: `talco`
   - **Password**: `talco`
 
-> [!TIP]
-> To access the Keycloak Admin Console, check the Aspire Dashboard for the `keycloak` resource URI (usually on port 58817 or similar).
+### Gestione dei Volumi
+In caso di modifiche al realm o necessità di reset totale:
+1. Ferma l'applicazione.
+2. Elimina la cartella `./Pollon.AppHost/keycloak-data`.
+3. Al riavvio, il sistema re-importerà automaticamente la configurazione da `realm-export.json`.
 
-### Troubleshooting & Reset
-If you need to reset the authentication data (e.g., if you changed the realm export or credentials):
-1. Stop the application.
-2. Delete the `./Pollon.AppHost/keycloak-data` folder.
-3. Restart the application. Keycloak will re-import the `realm-export.json` on the next start.
+## Funzionalità Core
 
-### Logout Tip
-If the logout doesn't seem to clear the session in the browser, ensure you are redirected back to the app and that your browser hasn't cached the OIDC session. Clearing cookies for `localhost` is a quick way to force a fresh login during development.
+- **Tipi di Contenuto Dinamici**: Definizione di strutture dati (Testo, Numeri, Immagini, etc.) via UI senza modifiche al database fisico.
+- **Media Management**: Upload centralizzato con proxying trasparente verso il microservizio media.
+- **Sincronizzazione Event-Driven**: Ogni modifica nel backoffice produce un evento RabbitMQ che aggiorna asincronamente i modelli di lettura nel Content API.
+- **Gerarchia di Contenuti**: Supporto nativo per relazioni parent-child e gestione slug SEO.
 
-## Key Features
-
-- **Dynamic Content Types**: Create custom content structures (Text, Number, Date, Boolean, RichText, Image) via UI, backed by a strongly-typed `ContentFieldType` enum.
-- **Media Management**: Upload images directly from the Backoffice. Files are stored in the dedicated `Pollon.Media.Api` and served transparently to both the Backoffice and Frontend via lightweight reverse proxies.
-- **Business Validation**: Server-side validation for slugs and system names.
-- **SEO Optimization**: Automatic and manual slug generation for content items.
-- [x] **Event Sourcing**: Changes in the backoffice are published to RabbitMQ and consumed by the Content API to update read models.
-
-## Documentation
-- [Marten Database Schema](docs/marten_db_schema.md)
+## Documentazione Tecnica
+- [Guida allo Schema Database Marten](docs/marten_db_schema.md)
+- [Implementazione Autenticazione (Walkthrough)](walkthrough.md)

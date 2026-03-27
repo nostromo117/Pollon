@@ -5,8 +5,6 @@
 <MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
-<MudPopoverProvider />
-
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Primary">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -18,16 +16,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
         <AuthorizeView Context="authContext">
             <Authorized>
-                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
-                    <ActivatorContent>
-                        <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="px-1">
-                            <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
-                            <MudAvatar Color="Color.Secondary" Size="Size.Small">@(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")</MudAvatar>
-                        </MudButton>
-                    </ActivatorContent>
-                    <ChildContent>
-                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
-                    </ChildContent>
+                <MudMenu Label="@authContext.User.Identity?.Name" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" StartIcon="@Icons.Material.Filled.AccountCircle">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
                 </MudMenu>
             </Authorized>
             <NotAuthorized>
@@ -44,6 +34,8 @@
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+
+<MudPopoverProvider />
 
 @code {
     bool _drawerOpen = true;

@@ -16,17 +16,19 @@
         <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
         <AuthorizeView Context="authContext">
             <Authorized>
-                <MudMenu @ref="_authMenu" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                    <ActivatorContent>
+                        <div class="d-flex align-center px-2 py-1" style="cursor:pointer">
+                            <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
+                            <MudAvatar Color="Color.Secondary" Size="Size.Small">
+                                @(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")
+                            </MudAvatar>
+                        </div>
+                    </ActivatorContent>
                     <ChildContent>
                         <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
-                <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="px-1" Style="text-transform:none" OnClick="OnUserMenuClick">
-                    <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
-                    <MudAvatar Color="Color.Secondary" Size="Size.Small">
-                        @(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")
-                    </MudAvatar>
-                </MudButton>
             </Authorized>
             <NotAuthorized>
                 <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("login", true))">Accedi</MudButton>
@@ -46,13 +48,7 @@
 <MudPopoverProvider />
 
 @code {
-    private MudMenu _authMenu = default!;
     bool _drawerOpen = true;
-
-    private async Task OnUserMenuClick(MouseEventArgs e)
-    {
-        await _authMenu.ToggleMenuAsync(e);
-    }
 
     void DrawerToggle()
     {

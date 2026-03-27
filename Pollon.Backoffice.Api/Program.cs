@@ -58,5 +58,6 @@ app.UseAuthorization();
 // Map Endpoints
 app.MapContentTypeEndpoints();
 app.MapContentItemEndpoints();
+app.MapGalleryEndpoints();
 
 app.Run();

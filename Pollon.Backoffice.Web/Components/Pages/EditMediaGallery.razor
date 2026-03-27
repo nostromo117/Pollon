@@ -1,0 +1,195 @@
+@page "/galleries/new"
+@page "/galleries/edit/{Id}"
+@using Pollon.Backoffice.Models
+@using System.Net.Http.Headers
+@inject BackofficeApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Modifica Galleria" : "Nuova Galleria")</MudText>
+
+@if (_loading && IsEdit)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField @bind-Value="_gallery.Name" Label="Nome Galleria" Required="true" Margin="Margin.Normal" />
+                    <MudSwitch T="bool" @bind-Value="_gallery.IsPublished" Label="Pubblicata" Color="Color.Primary" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGallery" Disabled="@_saving">
+                        @(_saving ? "Salvataggio..." : "Salva")
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel" Class="ml-2">Annulla</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Immagini</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (!IsEdit)
+                    {
+                        <div class="d-flex flex-column gap-2">
+                            <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                Carica Immagini
+                                <InputFile OnChange="OnInputFileChanged" multiple style="display:none;" />
+                            </MudButton>
+                            
+                            @if (_selectedFiles != null && _selectedFiles.Any())
+                            {
+                                <MudList T="string" Class="mt-4">
+                                    @foreach (var file in _selectedFiles)
+                                    {
+                                        <MudListItem Icon="@Icons.Material.Filled.Image">@file.Name (@(file.Size / 1024) KB)</MudListItem>
+                                    }
+                                </MudList>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        @if (_gallery.AssetIds == null || !_gallery.AssetIds.Any())
+                        {
+                            <MudText Color="Color.Info">Nessuna immagine in questa galleria.</MudText>
+                        }
+                        else
+                        {
+                            <MudGrid Spacing="2">
+                                @foreach (var assetId in _gallery.AssetIds)
+                                {
+                                    <MudItem xs="4">
+                                        <MudImage Src="@($"/api/media/{assetId}")" Width="100" Height="100" ObjectFit="ObjectFit.Cover" Class="rounded" />
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    private bool IsEdit => !string.IsNullOrEmpty(Id);
+    
+    private MediaGallery _gallery = new();
+    private bool _loading = true;
+    private bool _saving = false;
+    private IReadOnlyList<IBrowserFile>? _selectedFiles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEdit)
+        {
+            await LoadGallery();
+        }
+        else
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadGallery()
+    {
+        try
+        {
+            var g = await ApiClient.GetGalleryByIdAsync(Id!);
+            if (g != null)
+            {
+                _gallery = g;
+            }
+            else
+            {
+                Snackbar.Add("Galleria non trovata.", Severity.Error);
+                Navigation.NavigateTo("/galleries");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nel caricamento: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        _selectedFiles = e.GetMultipleFiles().ToList();
+    }
+
+    private async Task SaveGallery()
+    {
+        if (string.IsNullOrWhiteSpace(_gallery.Name))
+        {
+            Snackbar.Add("Il nome della galleria è obbligatorio.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                await ApiClient.UpdateGalleryAsync(Id!, _gallery);
+                Snackbar.Add("Galleria aggiornata con successo.", Severity.Success);
+                Navigation.NavigateTo("/galleries");
+            }
+            else
+            {
+                // Multi-upload with gallery creation
+                var content = new MultipartFormDataContent();
+                content.Add(new StringContent(_gallery.Name), "name");
+                content.Add(new StringContent(_gallery.IsPublished.ToString()), "isPublished");
+
+                if (_selectedFiles != null)
+                {
+                    foreach (var file in _selectedFiles)
+                    {
+                        var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)); // 10MB limit
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+                        content.Add(fileContent, "files", file.Name);
+                    }
+                }
+
+                var created = await ApiClient.CreateGalleryWithUploadAsync(content);
+                if (created != null)
+                {
+                    Snackbar.Add("Galleria creata e immagini caricate con successo.", Severity.Success);
+                    Navigation.NavigateTo("/galleries");
+                }
+                else
+                {
+                    Snackbar.Add("Errore durante la creazione della galleria.", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nel salvataggio: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/galleries");
+    }
+}

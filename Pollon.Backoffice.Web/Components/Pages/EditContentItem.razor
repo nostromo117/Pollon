@@ -171,6 +171,36 @@ else
                     </MudCardActions>
                 </MudCard>
                 
+                <MudCard Elevation="1" Class="mt-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Media Gallery</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudSelect T="string" Label="Seleziona Galleria" @bind-Value="item.GalleryId" Variant="Variant.Outlined" Clearable="true" HelperText="Collega una galleria a questo contenuto." @bind-Value:after="OnGalleryChanged">
+                            <MudSelectItem T="string" Value="@((string?)null)">-- Nessuna --</MudSelectItem>
+                            @foreach (var gal in publishedGalleries)
+                            {
+                                <MudSelectItem T="string" Value="@gal.Id">@gal.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        @if (selectedGallery != null && selectedGallery.AssetIds.Any())
+                        {
+                            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">Anteprima Galleria</MudText>
+                            <MudGrid Spacing="1">
+                                @foreach (var assetId in selectedGallery.AssetIds)
+                                {
+                                    <MudItem xs="4">
+                                        <MudImage Src="@($"/api/media/{assetId}")" Width="60" Height="60" ObjectFit="ObjectFit.Cover" Class="rounded" />
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    </MudCardContent>
+                </MudCard>
+                
                 <MudButton Href="content-items" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4" FullWidth="true">Back to List</MudButton>
             </MudItem>
         </MudGrid>
@@ -206,7 +236,9 @@ else
     private ContentItem item = new() { Status = "Draft", CreatedBy = "System Admin", Data = new() };
     private ContentType[] contentTypes = Array.Empty<ContentType>();
     private ContentItem[] availableParents = Array.Empty<ContentItem>();
+    private MediaGallery[] publishedGalleries = Array.Empty<MediaGallery>();
     private ContentType? selectedContentType;
+    private MediaGallery? selectedGallery;
 
     private bool showIconPicker = false;
     private string iconSearch = "";
@@ -248,6 +280,7 @@ else
     {
         contentTypes = await ApiClient.GetContentTypesAsync();
         availableParents = await ApiClient.GetContentItemsAsync();
+        publishedGalleries = await ApiClient.GetGalleriesAsync(includeUnpublished: false);
 
         if (IsEdit)
         {
@@ -256,10 +289,27 @@ else
             {
                 item = existing;
                 selectedContentType = contentTypes.FirstOrDefault(c => c.Id == item.ContentTypeId);
+                
+                if (!string.IsNullOrEmpty(item.GalleryId))
+                {
+                    selectedGallery = await ApiClient.GetGalleryByIdAsync(item.GalleryId);
+                }
             }
         }
         
         isLoading = false;
+    }
+
+    private async Task OnGalleryChanged()
+    {
+        if (!string.IsNullOrEmpty(item.GalleryId))
+        {
+            selectedGallery = await ApiClient.GetGalleryByIdAsync(item.GalleryId);
+        }
+        else
+        {
+            selectedGallery = null;
+        }
     }
 
     private void OnContentTypeChanged()

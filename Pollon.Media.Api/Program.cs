@@ -52,4 +52,65 @@ media.MapGet("/{id}", async (string id, IMediaStorageService mediaService, Cance
     return Results.File(asset.Data, asset.MimeType, asset.FileName);
 });
 
+// Gallery Endpoints
+var galleries = app.MapGroup("/api/galleries").WithTags("Galleries");
+
+galleries.MapGet("/", async (IRepository<MediaGallery> repository, CancellationToken ct) =>
+{
+    var list = await repository.GetAllAsync();
+    return Results.Ok(list);
+});
+
+galleries.MapGet("/{id}", async (string id, IRepository<MediaGallery> repository, CancellationToken ct) =>
+{
+    var gallery = await repository.GetByIdAsync(id);
+    return gallery is not null ? Results.Ok(gallery) : Results.NotFound();
+});
+
+galleries.MapPost("/", async (HttpRequest request, IMediaStorageService mediaService, IRepository<MediaGallery> repository, CancellationToken ct) =>
+{
+    if (!request.HasFormContentType) return Results.BadRequest("Expected form content.");
+    
+    var form = await request.ReadFormAsync(ct);
+    var name = form["name"].ToString();
+    if (string.IsNullOrWhiteSpace(name)) return Results.BadRequest("Gallery name is required.");
+    
+    var isPublished = bool.TryParse(form["isPublished"], out var published) && published;
+    
+    var files = form.Files;
+    var assets = new List<MediaAsset>();
+    
+    foreach (var file in files)
+    {
+        using var stream = file.OpenReadStream();
+        var asset = await mediaService.SaveFileAsync(file.FileName, stream, file.ContentType, ct);
+        assets.Add(asset);
+    }
+    
+    var gallery = new MediaGallery
+    {
+        Id = Guid.NewGuid().ToString(),
+        Name = name,
+        IsPublished = isPublished,
+        AssetIds = assets.Select(a => a.Id).ToList()
+    };
+    
+    await repository.CreateAsync(gallery);
+    
+    return Results.Created($"/api/galleries/{gallery.Id}", gallery);
+}).DisableAntiforgery();
+
+galleries.MapPut("/{id}", async (string id, MediaGallery gallery, IRepository<MediaGallery> repository, CancellationToken ct) =>
+{
+    if (id != gallery.Id) return Results.BadRequest("ID mismatch.");
+    await repository.UpdateAsync(id, gallery);
+    return Results.NoContent();
+});
+
+galleries.MapDelete("/{id}", async (string id, IRepository<MediaGallery> repository, CancellationToken ct) =>
+{
+    await repository.DeleteAsync(id);
+    return Results.NoContent();
+});
+
 app.Run();

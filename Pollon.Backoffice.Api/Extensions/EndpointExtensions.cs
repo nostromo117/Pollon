@@ -102,4 +102,46 @@ public static class EndpointExtensions
 
         return endpoints;
     }
+
+    public static IEndpointRouteBuilder MapGalleryEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/galleries").WithTags("Galleries").RequireAuthorization();
+
+        group.MapGet("/", async (bool? includeUnpublished, IRepository<MediaGallery> repo) =>
+        {
+            var all = await repo.GetAllAsync();
+            if (includeUnpublished == true) return Results.Ok(all);
+            return Results.Ok(all.Where(x => x.IsPublished));
+        });
+
+        group.MapGet("/{id}", async (string id, IRepository<MediaGallery> repo) =>
+        {
+            var item = await repo.GetByIdAsync(id);
+            return item is not null ? Results.Ok(item) : Results.NotFound();
+        });
+
+        group.MapPost("/", async (MediaGallery item, IRepository<MediaGallery> repo) =>
+        {
+            if (string.IsNullOrWhiteSpace(item.Name)) return Results.BadRequest("Gallery name is required.");
+            await repo.CreateAsync(item);
+            return Results.Created($"/api/galleries/{item.Id}", item);
+        });
+
+        group.MapPut("/{id}", async (string id, MediaGallery item, IRepository<MediaGallery> repo) =>
+        {
+            var existing = await repo.GetByIdAsync(id);
+            if (existing is null) return Results.NotFound();
+            item.Id = id;
+            await repo.UpdateAsync(id, item);
+            return Results.NoContent();
+        });
+
+        group.MapDelete("/{id}", async (string id, IRepository<MediaGallery> repo) =>
+        {
+            await repo.DeleteAsync(id);
+            return Results.NoContent();
+        });
+
+        return endpoints;
+    }
 }

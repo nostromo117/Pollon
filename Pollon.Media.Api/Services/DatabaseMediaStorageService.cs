@@ -28,6 +28,17 @@ public class DatabaseMediaStorageService(IRepository<MediaAsset> repository) : I
         return asset;
     }
 
+    public async Task<List<MediaAsset>> SaveFilesAsync(IEnumerable<(string fileName, Stream content, string mimeType)> files, CancellationToken cancellationToken = default)
+    {
+        var assets = new List<MediaAsset>();
+        foreach (var file in files)
+        {
+            var asset = await SaveFileAsync(file.fileName, file.content, file.mimeType, cancellationToken);
+            assets.Add(asset);
+        }
+        return assets;
+    }
+
     public async Task<MediaAsset?> GetFileAsync(string id, CancellationToken cancellationToken = default)
     {
         return await repository.GetByIdAsync(id);

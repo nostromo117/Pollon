@@ -1,0 +1,98 @@
+@page "/galleries"
+@using Pollon.Backoffice.Models
+@inject BackofficeApiClient ApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h4" Class="mb-4">Gallerie Media</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateGallery" StartIcon="@Icons.Material.Filled.Add" Class="mb-4">
+    Nuova Galleria
+</MudButton>
+
+@if (_galleries == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else if (!_galleries.Any())
+{
+    <MudAlert Severity="Severity.Info">Nessuna galleria trovata.</MudAlert>
+}
+else
+{
+    <MudTable T="MediaGallery" Items="@_galleries" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" OnRowClick="@((args) => EditGallery(args.Item.Id))">
+        <HeaderContent>
+            <MudTh>Nome</MudTh>
+            <MudTh>Stato</MudTh>
+            <MudTh>Immagini</MudTh>
+            <MudTh>Data Creazione</MudTh>
+            <MudTh>Azioni</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nome">@context.Name</MudTd>
+            <MudTd DataLabel="Stato">
+                <MudChip T="string" Color="@(context.IsPublished ? Color.Success : Color.Warning)" Size="Size.Small">
+                    @(context.IsPublished ? "Pubblicata" : "Bozza")
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Immagini">@context.AssetIds.Count</MudTd>
+            <MudTd DataLabel="Data Creazione">@context.CreatedAt.ToLocalTime().ToString("g")</MudTd>
+            <MudTd DataLabel="Azioni">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditGallery(context.Id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteGallery(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private MediaGallery[]? _galleries;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGalleries();
+    }
+
+    private async Task LoadGalleries()
+    {
+        _loading = true;
+        try
+        {
+            // We pass includeUnpublished=true because the backoffice should see everything to manage it.
+            _galleries = await ApiClient.GetGalleriesAsync(includeUnpublished: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nel caricamento delle gallerie: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void CreateGallery()
+    {
+        Navigation.NavigateTo("/galleries/new");
+    }
+
+    private void EditGallery(string id)
+    {
+        Navigation.NavigateTo($"/galleries/edit/{id}");
+    }
+
+    private async Task DeleteGallery(string id)
+    {
+        try
+        {
+            await ApiClient.DeleteGalleryAsync(id);
+            Snackbar.Add("Galleria eliminata con successo.", Severity.Success);
+            await LoadGalleries();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nell'eliminazione della galleria: " + ex.Message, Severity.Error);
+        }
+    }
+}

@@ -99,4 +99,50 @@ public class BackofficeApiClient(HttpClient httpClient, TokenProvider tokenProvi
         PrepareClient();
         return await httpClient.GetAsync($"/api/media/{id}", cancellationToken);
     }
+
+    // Gallery Methods
+    public async Task<MediaGallery[]> GetGalleriesAsync(bool includeUnpublished = false, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        return await httpClient.GetFromJsonAsync<MediaGallery[]>($"/api/galleries?includeUnpublished={includeUnpublished.ToString().ToLower()}", cancellationToken) ?? [];
+    }
+
+    public async Task<MediaGallery?> GetGalleryByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        return await httpClient.GetFromJsonAsync<MediaGallery>($"/api/galleries/{id}", cancellationToken);
+    }
+
+    public async Task CreateGalleryAsync(MediaGallery item, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        await httpClient.PostAsJsonAsync("/api/galleries", item, cancellationToken);
+    }
+
+    public async Task<MediaGallery?> CreateGalleryWithUploadAsync(MultipartFormDataContent content, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        // This is tricky: where does the upload go? Media.Api or Backoffice.Api?
+        // Usually, the Media.Api handles the files. 
+        // I configured /api/galleries POST in Media.Api to handle multi-upload.
+        // If the Backoffice.Web is talking to the Gateway, I need to make sure the Gateway proxies this.
+        var response = await httpClient.PostAsync("/api/galleries", content, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<MediaGallery>(cancellationToken: cancellationToken);
+        }
+        return null;
+    }
+
+    public async Task UpdateGalleryAsync(string id, MediaGallery item, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        await httpClient.PutAsJsonAsync($"/api/galleries/{id}", item, cancellationToken);
+    }
+
+    public async Task DeleteGalleryAsync(string id, CancellationToken cancellationToken = default)
+    {
+        PrepareClient();
+        await httpClient.DeleteAsync($"/api/galleries/{id}", cancellationToken);
+    }
 }

@@ -35,8 +35,8 @@ Per accedere al Backoffice, utilizza le seguenti credenziali pre-configurate:
 
 ### Interfaccia Utente
 Nella barra superiore (`AppBar`) è ora visibile:
-- Il nome dell'utente collegato.
-- Un menu a tendina per effettuare il **Logout**.
+- Il nome dell'utente collegato con un menu a tendina.
+- Un'opzione per effettuare il **Logout** all'interno del menu.
 - Se non sei autenticato, verrai automaticamente reindirizzato alla pagina di login di Keycloak quando tenti di accedere a una sezione protetta.
 
 ## Verifica Tecnica Completata

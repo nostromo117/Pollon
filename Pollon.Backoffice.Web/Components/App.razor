@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
+@using Microsoft.AspNetCore.Authentication
+@inject TokenProvider TokenProvider
 
 <head>
     <meta charset="utf-8" />
@@ -16,9 +18,34 @@
 </head>
 
 <body>
+    <TokenStateBridge />
     <Routes @rendermode="InteractiveServer" />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <PersistComponentState />
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[AUTH-DEBUG] App.razor OnInitializedAsync - Authenticated: {HttpContext.User.Identity?.IsAuthenticated}");
+        if (HttpContext.User.Identity?.IsAuthenticated == true)
+        {
+            var token = await HttpContext.GetTokenAsync("access_token");
+            if (!string.IsNullOrEmpty(token))
+            {
+                TokenProvider.AccessToken = token;
+                Console.WriteLine($"[AUTH-DEBUG] App.razor: Access token captured (Length: {token.Length})");
+            }
+            else
+            {
+                Console.WriteLine("[AUTH-DEBUG] App.razor: Access token IS NULL OR EMPTY even if authenticated.");
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 @page "/content-items"
 @rendermode InteractiveServer
+@attribute [Authorize]
 @inject BackofficeApiClient ApiClient
 @attribute [StreamRendering]
 
@@ -20,7 +21,15 @@
     </div>
 </div>
 
-@if (contentItems == null || contentTypes == null)
+@if (errorMessage != null)
+{
+    <MudAlert Severity="Severity.Error" Class="my-4">
+        <MudText Typo="Typo.h6">Si è verificato un errore:</MudText>
+        <MudText Typo="Typo.body2">@errorMessage</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="LoadDataAsync" Class="mt-2">Riprova</MudButton>
+    </MudAlert>
+}
+else if (contentItems == null || contentTypes == null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
@@ -88,10 +97,21 @@ else
         await LoadDataAsync();
     }
 
+    private string? errorMessage;
+
     private async Task LoadDataAsync()
     {
-        contentTypes = await ApiClient.GetContentTypesAsync();
-        contentItems = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+        try 
+        {
+            errorMessage = null;
+            contentTypes = await ApiClient.GetContentTypesAsync();
+            contentItems = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            if (ex.InnerException != null) errorMessage += $" --> {ex.InnerException.Message}";
+        }
     }
 
     private string GetContentTypeName(string id)

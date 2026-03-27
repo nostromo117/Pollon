@@ -1,6 +1,7 @@
 @page "/content-items/new"
 @page "/content-items/edit/{Id}"
 @rendermode InteractiveServer
+@attribute [Authorize]
 @inject BackofficeApiClient ApiClient
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation

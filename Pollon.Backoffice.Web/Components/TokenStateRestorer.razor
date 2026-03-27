@@ -1,0 +1,21 @@
+@using Microsoft.AspNetCore.Components
+@inject TokenProvider TokenProvider
+@inject PersistentComponentState ApplicationState
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(TokenProvider.AccessToken))
+        {
+            if (ApplicationState.TryTakeFromJson<string>("Pollon_AccessToken", out var token))
+            {
+                TokenProvider.AccessToken = token;
+                Console.WriteLine($"[AUTH-DEBUG] TokenStateRestorer: Restored token from PersistentComponentState (Length: {token?.Length ?? 0})");
+            }
+            else
+            {
+                 Console.WriteLine("[AUTH-DEBUG] TokenStateRestorer: NO token found in state during restoration.");
+            }
+        }
+    }
+}

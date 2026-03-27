@@ -5,6 +5,7 @@ using Pollon.Backoffice.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
 using Pollon.Backoffice.Api.Services;
+using Pollon.Backoffice.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+
+builder.Services.AddBackofficeAuthentication(builder.Configuration);
 
 // Configure JSON to ignore cycles for hierarchical data
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -49,8 +52,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Content Types Endpoints
-var contentTypes = app.MapGroup("/api/content-types").WithTags("Content Types");
+var contentTypes = app.MapGroup("/api/content-types").WithTags("Content Types").RequireAuthorization();
 
 contentTypes.MapGet("/", async (IRepository<ContentType> repo) =>
 {
@@ -102,7 +108,7 @@ contentTypes.MapDelete("/{id}", async (string id, IRepository<ContentType> repo)
     return Results.NoContent();
 });
 
-var contentItems = app.MapGroup("/api/content-items").WithTags("Content Items");
+var contentItems = app.MapGroup("/api/content-items").WithTags("Content Items").RequireAuthorization();
 
 contentItems.MapGet("/", async (
     string? status, 

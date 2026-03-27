@@ -1,0 +1,62 @@
+{
+  "id": "Pollon",
+  "realm": "Pollon",
+  "enabled": true,
+  "users": [
+    {
+      "username": "talco",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Talco",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "talco",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator role"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "backoffice",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ]
+    },
+    {
+      "clientId": "contentapi",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "contentapi-secret",
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ]
+    }
+  ]
+}

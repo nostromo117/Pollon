@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
 
 <MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
@@ -14,7 +16,22 @@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/nostromo117/Pollon" Target="_blank" />
         </MudTooltip>
         <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
-        <MudAvatar Color="Color.Secondary" Class="ml-2">A</MudAvatar>
+        <AuthorizeView Context="authContext">
+            <Authorized>
+                <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
+                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+                    <ActivatorContent>
+                        <MudAvatar Color="Color.Secondary" Size="Size.Small">@(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")</MudAvatar>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("login", true))">Accedi</MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
         <NavMenu />

@@ -45,6 +45,30 @@ To run this project, you need the following installed:
    dotnet run --project Pollon.AppHost/Pollon.AppHost.csproj
    ```
 
+## Authentication
+
+The project uses **Keycloak** for centralized authentication (OIDC).
+
+### Credentials
+- **Keycloak Admin Console**:
+  - **User**: `admin`
+  - **Password**: `admin`
+- **Pollon Backoffice (Web)**:
+  - **User**: `talco`
+  - **Password**: `talco`
+
+> [!TIP]
+> To access the Keycloak Admin Console, check the Aspire Dashboard for the `keycloak` resource URI (usually on port 58817 or similar).
+
+### Troubleshooting & Reset
+If you need to reset the authentication data (e.g., if you changed the realm export or credentials):
+1. Stop the application.
+2. Delete the `./Pollon.AppHost/keycloak-data` folder.
+3. Restart the application. Keycloak will re-import the `realm-export.json` on the next start.
+
+### Logout Tip
+If the logout doesn't seem to clear the session in the browser, ensure you are redirected back to the app and that your browser hasn't cached the OIDC session. Clearing cookies for `localhost` is a quick way to force a fresh login during development.
+
 ## Key Features
 
 - **Dynamic Content Types**: Create custom content structures (Text, Number, Date, Boolean, RichText, Image) via UI, backed by a strongly-typed `ContentFieldType` enum.

@@ -15,6 +15,9 @@ builder.AddServiceDefaults();
 // Add SQL Server DbContext
 builder.AddSqlServerDbContext<ApiDbContext>("sqlserver");
 
+// Setup Keycloak Token Service (for service-to-service auth)
+builder.Services.AddHttpClient<KeycloakTokenService>();
+
 // Setup Backoffice API Client
 builder.Services.AddHttpClient<BackofficeApiClient>(client =>
 {

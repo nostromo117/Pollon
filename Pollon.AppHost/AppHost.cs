@@ -2,36 +2,51 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var sql = builder.AddSqlServer("sqlserver");
 var postgres = builder.AddPostgres("postgres").AddDatabase("backofficedb");
-var keycloak = builder.AddKeycloak("keycloak", 8080);
+var keycloak = builder.AddKeycloak("keycloak")
+    .WithDataBindMount("./keycloak-data")
+    .WithBindMount("./keycloak-config", "/opt/keycloak/data/import", isReadOnly: true)
+    .WithEnvironment("KEYCLOAK_ADMIN", "admin")
+    .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
+    .WithEnvironment("KC_BOOTSTRAP_ADMIN_USERNAME", "admin")
+    .WithEnvironment("KC_BOOTSTRAP_ADMIN_PASSWORD", "admin");
+
 var messaging = builder.AddRabbitMQ("messaging");
 
 var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
     .WithReference(postgres)
-    .WaitFor(postgres);
+    .WithReference(keycloak)
+    .WaitFor(postgres)
+    .WaitFor(keycloak);
 
 var backofficeApi = builder.AddProject<Projects.Pollon_Backoffice_Api>("backofficeapi")
     .WithExternalHttpEndpoints()
     .WithReference(sql)
     .WithReference(postgres)
     .WithReference(messaging)
+    .WithReference(keycloak)
     .WaitFor(sql)
-    .WaitFor(postgres);
+    .WaitFor(postgres)
+    .WaitFor(keycloak);
 
 var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
     .WithReference(sql)
     .WithReference(messaging)
     .WithReference(backofficeApi)
+    .WithReference(keycloak)
     .WithHttpHealthCheck("/health")
     .WaitFor(sql)
-    .WaitFor(messaging);
+    .WaitFor(messaging)
+    .WaitFor(keycloak);
 
 var backofficeWeb = builder.AddProject<Projects.Pollon_Backoffice_Web>("backoffice-web")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(backofficeApi)
     .WithReference(mediaApi)
+    .WithReference(keycloak)
     .WaitFor(backofficeApi)
-    .WaitFor(mediaApi);
+    .WaitFor(mediaApi)
+    .WaitFor(keycloak);
 
 var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web")
     .WithExternalHttpEndpoints()

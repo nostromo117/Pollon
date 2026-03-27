@@ -1,5 +1,6 @@
 using Pollon.Backoffice.Web;
 using Pollon.Backoffice.Web.Components;
+using Pollon.Backoffice.Web.Extensions;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,9 +12,12 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<TokenProvider>();
+
 builder.Services.AddOutputCache();
 builder.Services.AddMudServices();
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<BackofficeApiClient>(client =>
     {
         client.BaseAddress = new("https+http://backofficeapi");
@@ -23,6 +27,8 @@ builder.Services.AddHttpClient("MediaApi", client =>
 {
     client.BaseAddress = new("https+http://mediaapi");
 });
+
+builder.Services.AddBackofficeAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -35,6 +41,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseAntiforgery();
 
 app.UseOutputCache();
@@ -46,9 +55,16 @@ app.MapRazorComponents<App>()
 
 app.MapDefaultEndpoints();
 
-app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, CancellationToken ct) =>
+app.MapAuthenticationEndpoints();
+
+app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, TokenProvider tokenProvider, CancellationToken ct) =>
 {
     var client = factory.CreateClient("MediaApi");
+    if (!string.IsNullOrEmpty(tokenProvider.AccessToken))
+    {
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenProvider.AccessToken);
+    }
+    
     var response = await client.GetAsync($"/api/media/{id}", ct);
     if (!response.IsSuccessStatusCode) return Results.NotFound();
     

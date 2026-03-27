@@ -1,6 +1,26 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+<TokenStateRestorer />
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+                        <MudPaper Elevation="1" Class="pa-8 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" Class="mb-4" />
+                            <MudText Typo="Typo.h5" GutterBottom="true">Access Denied</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-6">You are not authorized to view this page. Please log in with an account that has administrative privileges.</MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="login">Login</MudButton>
+                        </MudPaper>
+                    </MudContainer>
+                </NotAuthorized>
+                <Authorizing>
+                    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        <MudText Type="Typo.h6" Class="mt-4">Verifying authorization...</MudText>
+                    </MudContainer>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingAuthenticationState>

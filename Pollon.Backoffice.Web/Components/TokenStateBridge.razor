@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Components
+@implements IDisposable
+@inject TokenProvider TokenProvider
+@inject PersistentComponentState ApplicationState
+
+@code {
+    private PersistingComponentStateSubscription _subscription;
+
+    protected override void OnInitialized()
+    {
+        _subscription = ApplicationState.RegisterOnPersisting(PersistToken);
+    }
+
+    private Task PersistToken()
+    {
+        Console.WriteLine($"[AUTH-DEBUG] TokenStateBridge: Persisting token (Empty: {string.IsNullOrEmpty(TokenProvider.AccessToken)})");
+        if (!string.IsNullOrEmpty(TokenProvider.AccessToken))
+        {
+            ApplicationState.PersistAsJson("Pollon_AccessToken", TokenProvider.AccessToken);
+        }
+        return Task.CompletedTask;
+    }
+
+    void IDisposable.Dispose() => _subscription.Dispose();
+}

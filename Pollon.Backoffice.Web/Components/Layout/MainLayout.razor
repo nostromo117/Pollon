@@ -14,7 +14,16 @@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/nostromo117/Pollon" Target="_blank" />
         </MudTooltip>
         <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
-        <UserMenu />
+        <AuthorizeView Context="authContext">
+            <Authorized>
+                <MudMenu Label="@authContext.User.Identity?.Name" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" StartIcon="@Icons.Material.Filled.AccountCircle">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
+                </MudMenu>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo("login", true))">Accedi</MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
         <NavMenu />

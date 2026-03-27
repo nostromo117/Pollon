@@ -16,8 +16,18 @@
         <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
         <AuthorizeView Context="authContext">
             <Authorized>
-                <MudMenu Label="@authContext.User.Identity?.Name" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" StartIcon="@Icons.Material.Filled.AccountCircle">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
+                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" Color="Color.Inherit">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Text" Color="Color.Inherit" Class="px-1" Style="text-transform:none">
+                            <MudText Typo="Typo.body2" Class="ml-3 mr-2">@authContext.User.Identity?.Name</MudText>
+                            <MudAvatar Color="Color.Secondary" Size="Size.Small">
+                                @(authContext.User.Identity?.Name?[0].ToString().ToUpper() ?? "U")
+                            </MudAvatar>
+                        </MudButton>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="@(() => Navigation.NavigateTo("logout", true))">Logout</MudMenuItem>
+                    </ChildContent>
                 </MudMenu>
             </Authorized>
             <NotAuthorized>

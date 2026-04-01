@@ -41,3 +41,11 @@ bld/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Debug and Build logs
+*.log
+build_*.txt
+errors*.txt
+*.binlog
+build.txt
+build_final.txt

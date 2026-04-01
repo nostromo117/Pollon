@@ -40,12 +40,15 @@
             if (!string.IsNullOrEmpty(token))
             {
                 TokenProvider.AccessToken = token;
-                Console.WriteLine($"[AUTH-DEBUG] App.razor: Access token captured (Length: {token.Length})");
             }
-            else
+
+            var refreshToken = await HttpContext.GetTokenAsync("refresh_token");
+            if (!string.IsNullOrEmpty(refreshToken))
             {
-                Console.WriteLine("[AUTH-DEBUG] App.razor: Access token IS NULL OR EMPTY even if authenticated.");
+                TokenProvider.RefreshToken = refreshToken;
             }
+            
+            Console.WriteLine($"[AUTH-DEBUG] App.razor: Tokens captured - AccessToken: {!string.IsNullOrEmpty(token)}, RefreshToken: {!string.IsNullOrEmpty(refreshToken)}");
         }
     }
 }

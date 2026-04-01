@@ -13,10 +13,13 @@
 
     private Task PersistToken()
     {
-        Console.WriteLine($"[AUTH-DEBUG] TokenStateBridge: Persisting token (Empty: {string.IsNullOrEmpty(TokenProvider.AccessToken)})");
         if (!string.IsNullOrEmpty(TokenProvider.AccessToken))
         {
             ApplicationState.PersistAsJson("Pollon_AccessToken", TokenProvider.AccessToken);
+        }
+        if (!string.IsNullOrEmpty(TokenProvider.RefreshToken))
+        {
+            ApplicationState.PersistAsJson("Pollon_RefreshToken", TokenProvider.RefreshToken);
         }
         return Task.CompletedTask;
     }

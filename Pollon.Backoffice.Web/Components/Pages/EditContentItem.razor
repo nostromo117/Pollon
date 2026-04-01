@@ -132,15 +132,25 @@ else
                                         {
                                             <div class="d-flex flex-column gap-2 mb-4">
                                                 <MudText Typo="Typo.subtitle2">@field.Name</MudText>
+                                                
                                                 @if (!string.IsNullOrEmpty(GetStringValue(field.Name)))
                                                 {
                                                     <MudImage Src="@GetStringValue(field.Name)" Alt="@field.Name" Elevation="2" Class="rounded" Style="max-width: 200px; max-height: 200px; object-fit: cover;" />
                                                 }
-                                                <div>
-                                                    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                                        Upload Image
-                                                        <InputFile OnChange="@(e => UploadImageAsync(field.Name, e.File))" accept=".jpg,.jpeg,.png,.webp,.gif" style="display:none;" />
-                                                    </MudButton>
+
+                                                <div class="mt-2">
+                                                    @if (_isUploading)
+                                                    {
+                                                        <MudProgressLinear Color="Color.Primary" Value="_uploadProgress" Class="my-1" />
+                                                        <MudText Typo="Typo.caption">Caricamento in corso: @(_uploadProgress.ToString("0"))%</MudText>
+                                                    }
+                                                    
+                                                    <div style="@(_isUploading ? "display: none;" : "")">
+                                                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                                            Upload Image
+                                                            <InputFile @key="@($"input_{field.Name}")" OnChange="@(e => UploadImageAsync(field.Name, e.File))" accept=".jpg,.jpeg,.png,.webp,.gif" style="display:none;" />
+                                                        </MudButton>
+                                                    </div>
                                                 </div>
                                             </div>
                                         }
@@ -298,6 +308,8 @@ else
 
     private bool showIconPicker = false;
     private string iconSearch = "";
+    private bool _isUploading = false;
+    private double _uploadProgress = 0;
     private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
     private List<TreeItemData<ContentItem>> FilteredRoots => ApplySearch(allRoots, treeSearch);
@@ -719,27 +731,54 @@ else
     {
         if (file is null) return;
         
-        // Prevent SignalR stream deadlocks by fully downloading the file into memory 
-        // before passing it to the synchronous/blocking HttpClient request pipeline.
-        using var memoryStream = new MemoryStream();
-        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
-        memoryStream.Position = 0;
+        _isUploading = true;
+        _uploadProgress = 0;
+        await InvokeAsync(StateHasChanged);
 
-        using var content = new MultipartFormDataContent();
-        var fileContent = new StreamContent(memoryStream);
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-        content.Add(fileContent, "file", file.Name);
-
-        var client = HttpClientFactory.CreateClient("MediaApi");
-        var response = await client.PostAsync("/api/media", content);
-        if (response.IsSuccessStatusCode)
+        try 
         {
-            var asset = await response.Content.ReadFromJsonAsync<MediaAsset>();
+            // Read the file in chunks to show progress
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            var buffer = new byte[81920]; // 80KB chunks
+            int bytesRead;
+            long totalRead = 0;
+
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await memoryStream.WriteAsync(buffer, 0, bytesRead);
+                totalRead += bytesRead;
+                _uploadProgress = (totalRead * 100.0) / file.Size;
+                StateHasChanged();
+            }
+
+            memoryStream.Position = 0;
+
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(memoryStream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "file", file.Name);
+
+            var asset = await ApiClient.UploadMediaAsync(content);
             if (asset != null && !string.IsNullOrEmpty(asset.Url))
             {
                 SetValue(fieldName, asset.Url);
-                await InvokeAsync(StateHasChanged);
+                Snackbar.Add("Immagine caricata con successo", Severity.Success);
             }
+            else
+            {
+                Snackbar.Add("Errore durante l'upload dell'immagine", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _isUploading = false;
+            _uploadProgress = 0;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

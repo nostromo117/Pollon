@@ -191,4 +191,88 @@ public static class EndpointExtensions
 
         return endpoints;
     }
+
+    public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/media").WithTags("Media").RequireAuthorization();
+
+        group.MapGet("/{id}", async (string id, IHttpClientFactory factory, HttpContext context) =>
+        {
+            var client = factory.CreateClient("MediaApi");
+
+            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToArray());
+            }
+
+            var response = await client.GetAsync($"/api/media/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return Results.StatusCode((int)response.StatusCode);
+            }
+
+            return Results.Stream(await response.Content.ReadAsStreamAsync(), 
+                                 response.Content.Headers.ContentType?.ToString());
+        });
+
+        group.MapPost("/", async (HttpContext context, IHttpClientFactory factory) =>
+        {
+            if (!context.Request.HasFormContentType)
+            {
+                return Results.BadRequest("Expected form content.");
+            }
+
+            var client = factory.CreateClient("MediaApi");
+
+            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToArray());
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/media");
+            var streamContent = new StreamContent(context.Request.Body);
+            
+            foreach (var header in context.Request.Headers)
+            {
+                if (!header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase) && 
+                    !header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) &&
+                    !header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase))
+                {
+                    streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                }
+            }
+            request.Content = streamContent;
+
+            try 
+            {
+                var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return Results.StatusCode((int)response.StatusCode);
+                }
+                
+                return Results.Stream(await response.Content.ReadAsStreamAsync(), 
+                                     response.Content.Headers.ContentType?.ToString());
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem("Error forwarding request to Media.Api: " + ex.Message);
+            }
+        }).DisableAntiforgery();
+
+        group.MapDelete("/{id}", async (string id, IHttpClientFactory factory, HttpContext context) =>
+        {
+            var client = factory.CreateClient("MediaApi");
+
+            if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToArray());
+            }
+
+            var response = await client.DeleteAsync($"/api/media/{id}");
+            return Results.StatusCode((int)response.StatusCode);
+        });
+
+        return endpoints;
+    }
 }

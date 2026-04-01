@@ -25,6 +25,13 @@ else
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGallery" Disabled="@_saving">
                         @(_saving ? "Salvataggio..." : "Salva")
                     </MudButton>
+                    @if (_saving && _selectedFiles != null && _selectedFiles.Any())
+                    {
+                        <div class="flex-grow-1 ml-4">
+                            <MudProgressLinear Color="Color.Primary" Value="_uploadProgress" Class="my-1" />
+                            <MudText Typo="Typo.caption">Caricamento: @(_uploadProgress.ToString("0"))%</MudText>
+                        </div>
+                    }
                     <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel" Class="ml-2">Annulla</MudButton>
                 </MudCardActions>
             </MudCard>
@@ -43,7 +50,7 @@ else
                         <div class="d-flex flex-column gap-2">
                             <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CloudUpload">
                                 Carica Immagini
-                                <InputFile OnChange="OnInputFileChanged" multiple style="display:none;" />
+                                <InputFile @key="@("gallery_input_file")" OnChange="OnInputFileChanged" multiple style="display:none;" />
                             </MudButton>
                             
                             @if (_selectedFiles != null && _selectedFiles.Any())
@@ -88,6 +95,7 @@ else
     private MediaGallery _gallery = new();
     private bool _loading = true;
     private bool _saving = false;
+    private double _uploadProgress = 0;
     private IReadOnlyList<IBrowserFile>? _selectedFiles;
 
     protected override async Task OnInitializedAsync()
@@ -158,9 +166,27 @@ else
 
                 if (_selectedFiles != null)
                 {
+                    long totalSize = _selectedFiles.Sum(f => f.Size);
+                    long totalRead = 0;
+                    _uploadProgress = 0;
+
                     foreach (var file in _selectedFiles)
                     {
-                        var fileContent = new StreamContent(file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)); // 10MB limit
+                        var ms = new MemoryStream();
+                        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                        var buffer = new byte[81920];
+                        int bytesRead;
+
+                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await ms.WriteAsync(buffer, 0, bytesRead);
+                            totalRead += bytesRead;
+                            _uploadProgress = (totalRead * 100.0) / totalSize;
+                            StateHasChanged();
+                        }
+
+                        ms.Position = 0;
+                        var fileContent = new StreamContent(ms);
                         fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
                         content.Add(fileContent, "files", file.Name);
                     }

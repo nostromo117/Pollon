@@ -64,5 +64,6 @@ app.UseAuthorization();
 app.MapContentTypeEndpoints();
 app.MapContentItemEndpoints();
 app.MapGalleryEndpoints();
+app.MapMediaEndpoints();
 
 app.Run();

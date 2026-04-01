@@ -206,7 +206,7 @@ public class BackofficeApiClient(
         await SendWithAuthAsync(request, cancellationToken);
     }
 
-    public async Task<string?> UploadMediaAsync(MultipartFormDataContent content, CancellationToken cancellationToken = default)
+    public async Task<MediaAsset?> UploadMediaAsync(MultipartFormDataContent content, CancellationToken cancellationToken = default)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/media")
         {
@@ -215,7 +215,7 @@ public class BackofficeApiClient(
         var response = await SendWithAuthAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadAsStringAsync(cancellationToken);
+            return await response.Content.ReadFromJsonAsync<MediaAsset>(cancellationToken);
         }
         return null;
     }

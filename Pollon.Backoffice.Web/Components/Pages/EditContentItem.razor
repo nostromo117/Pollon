@@ -33,14 +33,17 @@
                 }
                 else
                 {
-                    <MudTreeView Items="@FilteredRoots" Hover="true" Dense="true" T="ContentItem" SelectionMode="SelectionMode.SingleSelection">
+                    <MudTreeView Items="@FilteredRoots" Hover="true" Dense="true" T="ContentItem" 
+                                 SelectionMode="SelectionMode.SingleSelection"
+                                 ExpandOnClick="true">
                         <ItemTemplate Context="treeContext">
-                            <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
-                                             @bind-Expanded="@treeContext.Expanded" 
-                                             Selected="@(treeContext.Value?.Id == Id)">
-                                <Content>
-                                    <div class="d-flex align-center py-1 w-100 cursor-pointer @(treeContext.Value?.Id == Id ? "mud-theme-primary-light rounded px-2" : "")" 
-                                         @onclick='() => NavigateToItem(treeContext.Value?.Id)'>
+                             <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
+                                              @bind-Expanded="@treeContext.Expanded" 
+                                              Selected="@(treeContext.Value?.Id == Id)">
+                                 <Content>
+                                     <MudTreeViewItemToggleButton @bind-Expanded="@treeContext.Expanded" Visible="@treeContext.HasChildren" ExpandedIcon="@Icons.Material.Filled.ExpandMore" CollapsedIcon="@Icons.Material.Filled.ChevronRight" />
+                                     <div class="d-flex align-center py-1 flex-grow-1 cursor-pointer @(treeContext.Value?.Id == Id ? "mud-theme-primary-light rounded px-2" : "")" 
+                                          @onclick='() => NavigateToItem(treeContext.Value?.Id)'>
                                         <MudIcon Icon="@GetItemIcon(treeContext.Value!)" Size="Size.Small" Class="mr-2" 
                                                  Color="@(treeContext.Value?.Id == Id ? Color.Primary : Color.Default)" />
                                         <MudText Typo="Typo.body2" Class="text-truncate flex-grow-1" 

@@ -1,0 +1,23 @@
+  Individuazione dei progetti da ripristinare...
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj : warning NU1510: Microsoft.AspNetCore.Authentication.Cookies PackageReference non verr├á rimosso. ├ê consigliabile rimuovere questo pacchetto dalle dipendenze, poich├® ├¿ probabile che non sia necessario.
+  Tutti i progetti sono aggiornati per il ripristino.
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj : warning NU1510: Microsoft.AspNetCore.Authentication.Cookies PackageReference non verr├á rimosso. ├ê consigliabile rimuovere questo pacchetto dalle dipendenze, poich├® ├¿ probabile che non sia necessario.
+  Pollon.ServiceDefaults -> C:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\bin\Debug\net10.0\Pollon.ServiceDefaults.dll
+  Pollon.Backoffice -> C:\Users\user\source\repos\Pollon\Pollon.Backoffice\bin\Debug\net10.0\Pollon.Backoffice.dll
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\App.razor(25,5): warning RZ10012: Found markup element with unexpected name 'PersistComponentState'. If this is intended to be a component, add a @using directive for its namespace. [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(408,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'ShowIconPicker' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(409,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'HideIconPicker' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(410,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'SelectIcon' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+
+Compilazione NON RIUSCITA.
+
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj : warning NU1510: Microsoft.AspNetCore.Authentication.Cookies PackageReference non verr├á rimosso. ├ê consigliabile rimuovere questo pacchetto dalle dipendenze, poich├® ├¿ probabile che non sia necessario.
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj : warning NU1510: Microsoft.AspNetCore.Authentication.Cookies PackageReference non verr├á rimosso. ├ê consigliabile rimuovere questo pacchetto dalle dipendenze, poich├® ├¿ probabile che non sia necessario.
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\App.razor(25,5): warning RZ10012: Found markup element with unexpected name 'PersistComponentState'. If this is intended to be a component, add a @using directive for its namespace. [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(408,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'ShowIconPicker' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(409,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'HideIconPicker' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Components\Pages\EditContentItem.razor(410,18): error CS0111: Il tipo 'EditContentItem' definisce gi├á un membro denominato 'SelectIcon' con gli stessi tipi di parametro [C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\Pollon.Backoffice.Web.csproj]
+    Avvisi: 3
+    Errori: 3
+
+Tempo trascorso 00:00:01.90

@@ -23,4 +23,18 @@ public class ContentItem
 
     // Flessibile dictionary per contenere i campi dinamici
     public Dictionary<string, object> Data { get; set; } = new();
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is ContentItem other)
+        {
+            return string.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return Id?.ToLowerInvariant().GetHashCode() ?? 0;
+    }
 }

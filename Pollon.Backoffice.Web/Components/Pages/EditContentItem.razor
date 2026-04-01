@@ -5,13 +5,68 @@
 @inject BackofficeApiClient ApiClient
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 @using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web
 
-<PageTitle>@(IsEdit ? "Edit Content Item" : "New Content Item")</PageTitle>
+<PageTitle>@(IsEdit ? $"Edit: {GetItemDisplayName(item)}" : "New Content Item")</PageTitle>
 
-<PageTitle>@(IsEdit ? "Edit Content Item" : "New Content Item")</PageTitle>
+<MudGrid Class="mt-2" Spacing="4">
+    <!-- Left Sidebar: Hierarchy & Search -->
+    <MudItem xs="12" md="3">
+        <MudPaper Elevation="0" Class="pa-4 border" Style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
+            <div class="d-flex align-center justify-space-between mb-4">
+                <MudText Typo="Typo.h6">Navigation</MudText>
+                <MudTooltip Text="New Root Item">
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Size="Size.Small" OnClick="CreateRootItem" />
+                </MudTooltip>
+            </div>
 
-<MudText Typo="Typo.h4" GutterBottom="true">@(IsEdit ? "Edit Content Item" : "New Content Item")</MudText>
+            <MudTextField T="string" Label="Search Content..." @bind-Value="treeSearch" Immediate="true" 
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+
+            <div style="flex-grow: 1; overflow-y: auto;">
+                @if (allRoots == null)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudTreeView Items="@FilteredRoots" Hover="true" Dense="true" T="ContentItem" SelectionMode="SelectionMode.SingleSelection">
+                        <ItemTemplate Context="treeContext">
+                            <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
+                                             @bind-Expanded="@treeContext.Expanded" 
+                                             Selected="@(treeContext.Value?.Id == Id)">
+                                <Content>
+                                    <div class="d-flex align-center py-1 w-100 cursor-pointer @(treeContext.Value?.Id == Id ? "mud-theme-primary-light rounded px-2" : "")" 
+                                         @onclick='() => NavigateToItem(treeContext.Value?.Id)'>
+                                        <MudIcon Icon="@GetItemIcon(treeContext.Value!)" Size="Size.Small" Class="mr-2" 
+                                                 Color="@(treeContext.Value?.Id == Id ? Color.Primary : Color.Default)" />
+                                        <MudText Typo="Typo.body2" Class="text-truncate flex-grow-1" 
+                                                 Style="@(treeContext.Value?.Id == Id ? "font-weight: bold" : "")">
+                                            @GetItemDisplayName(treeContext.Value!)
+                                        </MudText>
+                                        <div @onclick:stopPropagation="true">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Primary" 
+                                                           OnClick="@(() => AddChild(treeContext.Value?.Id))" />
+                                        </div>
+                                    </div>
+                                </Content>
+                            </MudTreeViewItem>
+                        </ItemTemplate>
+                    </MudTreeView>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <!-- Right Content: Form -->
+    <MudItem xs="12" md="9">
+        <div class="d-flex justify-space-between align-center mb-6">
+            <MudText Typo="Typo.h4">@(IsEdit ? "Edit Content Item" : "New Content Item")</MudText>
+            <MudButton Href="content-items" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack">Back to List</MudButton>
+        </div>
 
 @if (isLoading)
 {
@@ -119,13 +174,7 @@ else
 
                             <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="/" Variant="Variant.Outlined" HelperText="Used for the item URL." />
 
-                            <MudSelect T="string" Label="Parent Item" @bind-Value="item.ParentId" Variant="Variant.Outlined" Clearable="true" HelperText="Select a parent to nest this content item under it.">
-                                <MudSelectItem T="string" Value="@((string?)null)">-- Nessuno --</MudSelectItem>
-                                @foreach (var parent in availableParents.Where(p => p.Id != item.Id))
-                                {
-                                    <MudSelectItem T="string" Value="@parent.Id">@GetItemDisplayName(parent)</MudSelectItem>
-                                }
-                            </MudSelect>
+                        
 
                             <MudPaper Elevation="0" Class="pa-4 bg-light">
                                 <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="mb-2">Icon</MudText>
@@ -178,7 +227,7 @@ else
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudSelect T="string" Label="Seleziona Galleria" @bind-Value="item.GalleryId" Variant="Variant.Outlined" Clearable="true" HelperText="Collega una galleria a questo contenuto." @bind-Value:after="OnGalleryChanged">
+                        <MudSelect T="string" Label="Seleziona Galleria" @bind-Value="item.GalleryId" Variant="Variant.Outlined" Clearable="true" HelperText="@(publishedGalleries.Any() ? "Collega una galleria a questo contenuto." : "Nessuna galleria pubblicata trovata. Vai in Media > Gallerie per pubblicarne una.")" @bind-Value:after="OnGalleryChanged">
                             <MudSelectItem T="string" Value="@((string?)null)">-- Nessuna --</MudSelectItem>
                             @foreach (var gal in publishedGalleries)
                             {
@@ -200,12 +249,9 @@ else
                         }
                     </MudCardContent>
                 </MudCard>
-                
-                <MudButton Href="content-items" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4" FullWidth="true">Back to List</MudButton>
             </MudItem>
         </MudGrid>
     </EditForm>
-
     <MudDialog @bind-Visible="showIconPicker" Options="_dialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Palette" Class="mr-3"/>Seleziona un'icona</MudText>
@@ -225,24 +271,96 @@ else
         </DialogContent>
     </MudDialog>
 }
+    </MudItem>
+</MudGrid>
 
 @code {
     [Parameter]
     public string? Id { get; set; }
 
+    [SupplyParameterFromQuery]
+    public string? ParentId { get; set; }
+
     private bool IsEdit => !string.IsNullOrEmpty(Id);
+    private bool IsParentFixed => !string.IsNullOrEmpty(ParentId);
     private bool isLoading = true;
 
     private ContentItem item = new() { Status = "Draft", CreatedBy = "System Admin", Data = new() };
     private ContentType[] contentTypes = Array.Empty<ContentType>();
-    private ContentItem[] availableParents = Array.Empty<ContentItem>();
+    private List<TreeItemData<ContentItem>> parentTreeItems = new();
+    private List<TreeItemData<ContentItem>>? allRoots;
     private MediaGallery[] publishedGalleries = Array.Empty<MediaGallery>();
     private ContentType? selectedContentType;
     private MediaGallery? selectedGallery;
 
+    private bool showParentSelector = false;
+    private string treeSearch = "";
+
     private bool showIconPicker = false;
     private string iconSearch = "";
     private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private List<TreeItemData<ContentItem>> FilteredRoots => ApplySearch(allRoots, treeSearch);
+
+    private List<TreeItemData<ContentItem>> ApplySearch(List<TreeItemData<ContentItem>>? roots, string search)
+    {
+        if (roots == null) return new();
+        if (string.IsNullOrWhiteSpace(search)) return roots;
+
+        var filtered = new List<TreeItemData<ContentItem>>();
+        foreach (var root in roots)
+        {
+            var match = MatchAndClone(root, search);
+            if (match != null) filtered.Add(match);
+        }
+        return filtered;
+    }
+
+    private TreeItemData<ContentItem>? MatchAndClone(TreeItemData<ContentItem> node, string search)
+    {
+        bool nameMatch = GetItemDisplayName(node.Value!).Contains(search, StringComparison.OrdinalIgnoreCase);
+        
+        var filteredChildren = new List<TreeItemData<ContentItem>>();
+        if (node.Children != null)
+        {
+            foreach (var child in node.Children)
+            {
+                var matchChild = MatchAndClone((TreeItemData<ContentItem>)child, search);
+                if (matchChild != null) filteredChildren.Add(matchChild);
+            }
+        }
+
+        if (nameMatch || filteredChildren.Any())
+        {
+            return new TreeItemData<ContentItem>
+            {
+                Value = node.Value,
+                Expanded = !string.IsNullOrWhiteSpace(search) || node.Expanded,
+                Children = filteredChildren.Any() ? filteredChildren : null
+            };
+        }
+        return null;
+    }
+
+    private void NavigateToItem(string? id)
+    {
+        if (id == null) Navigation.NavigateTo("content-items/new");
+        else Navigation.NavigateTo($"content-items/edit/{id}");
+    }
+
+    private void CreateRootItem()
+    {
+        Navigation.NavigateTo("content-items/new");
+    }
+
+    private void AddChild(string? parentId)
+    {
+        Navigation.NavigateTo($"content-items/new?parentId={parentId}");
+    }
+
+    private void ShowIconPicker() => showIconPicker = true;
+    private void HideIconPicker() { showIconPicker = false; iconSearch = ""; }
+    private void SelectIcon(string icon) { item.Icon = icon; HideIconPicker(); }
 
     private string GetMudIcon(string faClass)
     {
@@ -272,32 +390,187 @@ else
             ? AvailableIcons 
             : AvailableIcons.Where(i => i.Name.Contains(iconSearch, StringComparison.OrdinalIgnoreCase) || i.Val.Contains(iconSearch, StringComparison.OrdinalIgnoreCase));
 
-    private void ShowIconPicker() => showIconPicker = true;
-    private void HideIconPicker() { showIconPicker = false; iconSearch = ""; }
-    private void SelectIcon(string icon) { item.Icon = icon; HideIconPicker(); }
+    private string? lastProcessedId;
+    private IEnumerable<ContentItem>? cachedAllItems;
 
     protected override async Task OnInitializedAsync()
     {
-        contentTypes = await ApiClient.GetContentTypesAsync();
-        availableParents = await ApiClient.GetContentItemsAsync();
-        publishedGalleries = await ApiClient.GetGalleriesAsync(includeUnpublished: false);
-
-        if (IsEdit)
+        try 
         {
-            var existing = await ApiClient.GetContentItemByIdAsync(Id!);
-            if (existing != null)
+            contentTypes = await ApiClient.GetContentTypesAsync();
+            publishedGalleries = await ApiClient.GetGalleriesAsync(includeUnpublished: false);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nel caricamento dei metadati: " + ex.Message, Severity.Error);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        try 
+        {
+            // 1. Ensure hierarchy data is loaded once
+            if (allRoots == null || cachedAllItems == null)
             {
-                item = existing;
-                selectedContentType = contentTypes.FirstOrDefault(c => c.Id == item.ContentTypeId);
-                
-                if (!string.IsNullOrEmpty(item.GalleryId))
+                cachedAllItems = await ApiClient.GetContentItemsAsync();
+                allRoots = BuildFullTree(cachedAllItems);
+            }
+
+            // 2. Load or Reset the item
+            if (IsEdit)
+            {
+                var existing = await ApiClient.GetContentItemByIdAsync(Id!);
+                if (existing != null)
                 {
-                    selectedGallery = await ApiClient.GetGalleryByIdAsync(item.GalleryId);
+                    item = existing;
+                    selectedContentType = contentTypes.FirstOrDefault(c => c.Id == item.ContentTypeId);
+                    
+                    if (!string.IsNullOrEmpty(item.GalleryId))
+                    {
+                        selectedGallery = await ApiClient.GetGalleryByIdAsync(item.GalleryId);
+                    }
+                }
+            }
+            else
+            {
+                // Reset for new item
+                item = new ContentItem { Status = "Draft", CreatedBy = "System Admin", Data = new(), ParentId = ParentId };
+                selectedContentType = null;
+                selectedGallery = null;
+            }
+
+            // 3. Update parent selection tree (using cached data)
+            parentTreeItems = BuildParentTree(cachedAllItems);
+            
+            // 4. Update UI state (expand to current item if editing, or to parent if creating child)
+            var targetIdToExpand = IsEdit ? Id : ParentId;
+            if (!string.IsNullOrEmpty(targetIdToExpand))
+            {
+                ExpandPathTo(allRoots, targetIdToExpand);
+            }
+            
+            lastProcessedId = Id;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Errore nel caricamento: " + ex.Message, Severity.Error);
+        }
+        isLoading = false;
+    }
+
+    private async Task LoadSidebarAsync()
+    {
+        cachedAllItems = await ApiClient.GetContentItemsAsync();
+        allRoots = BuildFullTree(cachedAllItems);
+        if (IsEdit) ExpandPathTo(allRoots, Id!);
+    }
+
+    private void ExpandPathTo(IEnumerable<TreeItemData<ContentItem>> items, string id)
+    {
+        foreach (var it in items)
+        {
+            if (string.Equals(it.Value?.Id, id, StringComparison.OrdinalIgnoreCase))
+            {
+                it.Expanded = true;
+                return;
+            }
+            
+            if (it.Children != null && it.Children.Any())
+            {
+                var found = FindInTree(it.Children, id);
+                if (found != null)
+                {
+                    it.Expanded = true;
+                    ExpandPathTo(it.Children.Cast<TreeItemData<ContentItem>>(), id);
+                    return;
                 }
             }
         }
+    }
+
+    private List<TreeItemData<ContentItem>> BuildFullTree(IEnumerable<ContentItem> items)
+    {
+        var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
+        var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
+        var roots = new List<TreeItemData<ContentItem>>();
+
+        foreach (var it in allItems)
+        {
+            var parentId = it.Value!.ParentId;
+            if (string.IsNullOrEmpty(parentId) || !itemLookup.TryGetValue(parentId, out var parent))
+            {
+                roots.Add(it);
+            }
+            else
+            {
+                if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
+                ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
+            }
+        }
+        return roots;
+    }
+
+    private void ToggleParentSelector() => showParentSelector = !showParentSelector;
+
+    private void HandleParentFieldClick()
+    {
+        if (!IsParentFixed) ToggleParentSelector();
+    }
+
+    private void SelectParent(ContentItem? parent)
+    {
+        item.ParentId = parent?.Id;
+        showParentSelector = false;
+    }
+
+    private List<TreeItemData<ContentItem>> BuildParentTree(IEnumerable<ContentItem> items)
+    {
+        var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
+        var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
         
-        isLoading = false;
+        // If editing, identify current item and all its descendants to exclude them
+        var excludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (IsEdit)
+        {
+            excludedIds.Add(item.Id);
+            AddDescendants(item.Id, allItems, excludedIds);
+        }
+
+        var roots = new List<TreeItemData<ContentItem>>();
+        foreach (var it in allItems)
+        {
+            if (excludedIds.Contains(it.Value!.Id)) continue;
+
+            var parentId = it.Value!.ParentId;
+            if (string.IsNullOrEmpty(parentId) || !itemLookup.TryGetValue(parentId, out var parent) || excludedIds.Contains(parentId))
+            {
+                roots.Add(it);
+            }
+            else
+            {
+                if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
+                ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
+            }
+        }
+        return roots;
+    }
+
+    private void AddDescendants(string parentId, List<TreeItemData<ContentItem>> allItems, HashSet<string> excludedIds)
+    {
+        var children = allItems.Where(i => i.Value?.ParentId == parentId).ToList();
+        foreach (var child in children)
+        {
+            excludedIds.Add(child.Value!.Id);
+            AddDescendants(child.Value!.Id, allItems, excludedIds);
+        }
+    }
+
+    private string GetItemIcon(ContentItem ci)
+    {
+        if (!string.IsNullOrEmpty(ci.Icon)) return GetMudIcon(ci.Icon);
+        return Icons.Material.Filled.Description;
     }
 
     private async Task OnGalleryChanged()
@@ -338,6 +611,29 @@ else
             return t.ToString() ?? ci.Id;
         }
         return ci.Id;
+    }
+
+    private string GetParentDisplayName()
+    {
+        if (string.IsNullOrEmpty(item.ParentId)) return "Nessuno";
+        
+        // Lookup in the flat list of all items or the tree
+        var found = FindInTree(parentTreeItems, item.ParentId);
+        return found != null ? GetItemDisplayName(found.Value!) : item.ParentId;
+    }
+
+    private TreeItemData<ContentItem>? FindInTree(IEnumerable<ITreeItemData<ContentItem>> items, string id)
+    {
+        foreach (var it in items)
+        {
+            if (string.Equals(it.Value?.Id, id, StringComparison.OrdinalIgnoreCase)) return (TreeItemData<ContentItem>)it;
+            if (it.Children != null)
+            {
+                var found = FindInTree(it.Children, id);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private string GetStringValue(string fieldName)
@@ -398,17 +694,25 @@ else
 
     private async Task HandleSubmit()
     {
+        string? newId = Id;
         if (IsEdit)
         {
             await ApiClient.UpdateContentItemAsync(Id!, item);
         }
         else
         {
-            item.Id = Guid.NewGuid().ToString(); // Assuming UUID generation handled client-side or we wait for API response
+            item.Id = Guid.NewGuid().ToString();
+            newId = item.Id;
             await ApiClient.CreateContentItemAsync(item);
         }
         
-        Navigation.NavigateTo("content-items");
+        Snackbar.Add("Contenuto salvato con successo", Severity.Success);
+        
+        // Refresh sidebar
+        await LoadSidebarAsync();
+        
+        // Navigate to the edit page of the item
+        Navigation.NavigateTo($"content-items/edit/{newId}");
     }
 
     private async Task UploadImageAsync(string fieldName, IBrowserFile file)

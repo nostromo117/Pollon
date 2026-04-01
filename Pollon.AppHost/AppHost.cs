@@ -1,7 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var sql = builder.AddSqlServer("sqlserver");
-var postgres = builder.AddPostgres("postgres").AddDatabase("backofficedb");
+var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume()
+    .AddDatabase("backofficedb");
 var keycloak = builder.AddKeycloak("keycloak")
     .WithDataBindMount("./keycloak-data")
     .WithBindMount("./keycloak-config", "/opt/keycloak/data/import", isReadOnly: true)
@@ -24,9 +26,11 @@ var backofficeApi = builder.AddProject<Projects.Pollon_Backoffice_Api>("backoffi
     .WithReference(postgres)
     .WithReference(messaging)
     .WithReference(keycloak)
+    .WithReference(mediaApi)
     .WaitFor(sql)
     .WaitFor(postgres)
-    .WaitFor(keycloak);
+    .WaitFor(keycloak)
+    .WaitFor(mediaApi);
 
 var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
     .WithReference(sql)

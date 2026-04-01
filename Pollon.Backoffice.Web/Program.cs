@@ -21,11 +21,13 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<BackofficeApiClient>(client =>
     {
         client.BaseAddress = new("https+http://backofficeapi");
+        client.Timeout = TimeSpan.FromMinutes(5);
     });
 
 builder.Services.AddHttpClient("MediaApi", client =>
 {
     client.BaseAddress = new("https+http://mediaapi");
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 
 builder.Services.AddBackofficeAuthentication(builder.Configuration);

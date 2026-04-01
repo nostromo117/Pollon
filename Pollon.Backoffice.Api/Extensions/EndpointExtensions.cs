@@ -120,12 +120,59 @@ public static class EndpointExtensions
             return item is not null ? Results.Ok(item) : Results.NotFound();
         });
 
-        group.MapPost("/", async (MediaGallery item, IRepository<MediaGallery> repo) =>
+        group.MapPost("/", async (HttpContext context, IHttpClientFactory factory, IRepository<MediaGallery> repo) =>
         {
-            if (string.IsNullOrWhiteSpace(item.Name)) return Results.BadRequest("Gallery name is required.");
-            await repo.CreateAsync(item);
-            return Results.Created($"/api/galleries/{item.Id}", item);
-        });
+            if (context.Request.HasFormContentType)
+            {
+                // Forward multipart request to Media.Api
+                var client = factory.CreateClient("MediaApi");
+                
+                // Get token from incoming request
+                if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                {
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToArray());
+                }
+
+                // Copy headers and stream the content
+                var request = new HttpRequestMessage(HttpMethod.Post, "/api/galleries");
+                
+                var streamContent = new StreamContent(context.Request.Body);
+                foreach (var header in context.Request.Headers)
+                {
+                    // Skip Host and Authorization (manually added)
+                    if (!header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase) && 
+                        !header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase))
+                    {
+                        streamContent.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                    }
+                }
+                request.Content = streamContent;
+
+                try 
+                {
+                    var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return Results.StatusCode((int)response.StatusCode);
+                    }
+                    
+                    return Results.Stream(await response.Content.ReadAsStreamAsync(), 
+                                         response.Content.Headers.ContentType?.ToString());
+                }
+                catch (Exception ex)
+                {
+                    return Results.Problem("Error forwarding request to Media.Api: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Handle JSON as before
+                var item = await context.Request.ReadFromJsonAsync<MediaGallery>();
+                if (item == null || string.IsNullOrWhiteSpace(item.Name)) return Results.BadRequest("Gallery name is required.");
+                await repo.CreateAsync(item);
+                return Results.Created($"/api/galleries/{item.Id}", item);
+            }
+        }).DisableAntiforgery();
 
         group.MapPut("/{id}", async (string id, MediaGallery item, IRepository<MediaGallery> repo) =>
         {

@@ -29,57 +29,49 @@
         <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="LoadDataAsync" Class="mt-2">Riprova</MudButton>
     </MudAlert>
 }
-else if (contentItems == null || contentTypes == null)
+else if (rootItems == null || contentTypes == null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
 else
 {
-    <MudTable Items="@contentItems" Hover="true" Elevation="1" Dense="true" Class="mt-4">
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>ContentType</MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.CreatedAt)" InitialDirection="SortDirection.Descending">Created</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ContentItem, object>(x=>x.PublishedAt!)">Published</MudTableSortLabel></MudTh>
-            <MudTh Style="text-align: right">Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">
-                <MudText Typo="Typo.body1" Style="font-weight: 500">@GetItemDisplayName(context)</MudText>
-                @if (!string.IsNullOrEmpty(context.ParentId))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Primary"><MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" Class="mr-1 mt-n1" />Sub-item</MudText>
-                }
-            </MudTd>
-            <MudTd DataLabel="ContentType">
-                <MudText Typo="Typo.body2" Style="font-weight: 600">@GetContentTypeName(context.ContentTypeId)</MudText>
-            </MudTd>
-            <MudTd DataLabel="Status">
-                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Text">@context.Status</MudChip>
-            </MudTd>
-            <MudTd DataLabel="Created">
-                <MudText Typo="Typo.body2" Color="Color.Secondary">@context.CreatedAt.ToLocalTime().ToString("g")</MudText>
-            </MudTd>
-            <MudTd DataLabel="Published">
-                <MudText Typo="Typo.body2" Color="Color.Secondary">@(context.PublishedAt?.ToLocalTime().ToString("g") ?? "-")</MudText>
-            </MudTd>
-            <MudTd DataLabel="Actions" Style="text-align: right">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Href="@($"content-items/edit/{context.Id}")" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteItem(context.Id)" />
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText Typo="Typo.body1" Align="Align.Center" Class="pa-4">No content items found. Click "New Content" to create one.</MudText>
-        </NoRecordsContent>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
+    @if (!rootItems.Any())
+    {
+        <MudPaper Elevation="0" Class="pa-8 d-flex flex-column align-center justify-center border-dashed">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Color="Color.Default" Size="Size.Large" Class="mb-4" Style="opacity: 0.2" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary">No content items found. Click "New Content" to create one.</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudTreeView Items="@rootItems" Hover="true" Dense="true">
+            <ItemTemplate Context="treeContext">
+                <MudTreeViewItem @bind-Expanded="@treeContext.Expanded" Items="@treeContext.Children" Value="@treeContext.Value">
+                    <Content>
+                        <div class="d-flex align-center w-100 py-2">
+                            <MudIcon Icon="@GetItemIcon(treeContext.Value!)" Color="@(treeContext.Value?.Status == "Published" ? Color.Primary : Color.Default)" Class="mr-3" />
+                            <div class="flex-grow-1">
+                                <MudText Typo="Typo.body1" Style="font-weight: 500">@GetItemDisplayName(treeContext.Value!)</MudText>
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@GetContentTypeName(treeContext.Value!.ContentTypeId)</MudText>
+                                    <MudDivider Vertical="true" FlexItem="true" Style="height: 12px;" />
+                                    <MudChip T="string" Color="@GetStatusColor(treeContext.Value!.Status)" Size="Size.Small" Variant="Variant.Text" Class="ma-0 pa-0" Style="height: 18px; font-size: 0.7rem;">@treeContext.Value!.Status</MudChip>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1 ml-4 justify-end actions-container" style="min-width: 80px;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Href="@($"content-items/edit/{treeContext.Value!.Id}")" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteItem(treeContext.Value!.Id)" />
+                            </div>
+                        </div>
+                    </Content>
+                </MudTreeViewItem>
+            </ItemTemplate>
+        </MudTreeView>
+    }
 }
 
 @code {
-    private ContentItem[]? contentItems;
+    private List<TreeItemData<ContentItem>>? rootItems;
     private ContentType[]? contentTypes;
     
     private string? selectedStatus;
@@ -105,13 +97,38 @@ else
         {
             errorMessage = null;
             contentTypes = await ApiClient.GetContentTypesAsync();
-            contentItems = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+            var items = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+            
+            // Build tree
+            rootItems = BuildTree(items);
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
             if (ex.InnerException != null) errorMessage += $" --> {ex.InnerException.Message}";
         }
+    }
+
+    private List<TreeItemData<ContentItem>> BuildTree(IEnumerable<ContentItem> items)
+    {
+        var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
+        var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
+        var roots = new List<TreeItemData<ContentItem>>();
+
+        foreach (var it in allItems)
+        {
+            var parentId = it.Value!.ParentId;
+            if (string.IsNullOrEmpty(parentId) || !itemLookup.TryGetValue(parentId, out var parent))
+            {
+                roots.Add(it);
+            }
+            else
+            {
+                if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
+                ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
+            }
+        }
+        return roots;
     }
 
     private string GetContentTypeName(string id)
@@ -128,6 +145,12 @@ else
         "Archived" => Color.Warning,
         _ => Color.Info
     };
+
+    private string GetItemIcon(ContentItem ci)
+    {
+        if (!string.IsNullOrEmpty(ci.Icon)) return ci.Icon;
+        return Icons.Material.Filled.Description;
+    }
 
     private async Task DeleteItem(string id)
     {

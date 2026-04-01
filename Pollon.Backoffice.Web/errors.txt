@@ -1,0 +1,441 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Compilatore Microsoft (R) Visual C#",
+        "version": "5.0.0.0",
+        "fileVersion": "5.0.0-2.26075.103 (c2435c3e)",
+        "semanticVersion": "5.0.0",
+        "language": "it-IT"
+      },
+      "results": [
+        {
+          "ruleId": "RZ10012",
+          "level": "warning",
+          "message": "Found markup element with unexpected name 'PersistComponentState'. If this is intended to be a component, add a @using directive for its namespace.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/App.razor",
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 5,
+                  "endLine": 25,
+                  "endColumn": 30
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereferenziamento di un possibile riferimento Null.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/MediaGalleries.razor",
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 148,
+                  "endLine": 23,
+                  "endColumn": 157
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS0411",
+          "level": "error",
+          "message": "Non è possibile dedurre gli argomenti di tipo per il metodo 'TypeInference.CreateMudTreeView_4_CaptureParameters<T>(IReadOnlyCollection<ITreeItemData<T>>, out IReadOnlyCollection<ITreeItemData<T>>, bool, out bool, bool, out bool)' dall'utilizzo. Provare a specificare gli argomenti di tipo in modo esplicito.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_ContentItems_razor.g.cs",
+                "region": {
+                  "startLine": 826,
+                  "startColumn": 100,
+                  "endLine": 826,
+                  "endColumn": 137
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1503",
+          "level": "error",
+          "message": "Argomento 1: non è possibile convertire da 'System.Collections.Generic.List<Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem>' a 'System.Collections.Generic.IReadOnlyCollection<MudBlazor.ITreeItemData<Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem>>'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 138,
+                  "startColumn": 66,
+                  "endLine": 138,
+                  "endColumn": 81
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ITreeItemData<EditContentItem.TreeItem>' non contiene una definizione di 'IsExpanded' e non è stato trovato alcun metodo di estensione accessibile 'IsExpanded' che accetta un primo argomento di tipo 'ITreeItemData<EditContentItem.TreeItem>'. Probabilmente manca una direttiva using o un riferimento all'assembly.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 140,
+                  "startColumn": 150,
+                  "endLine": 140,
+                  "endColumn": 160
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ITreeItemData<EditContentItem.TreeItem>' non contiene una definizione di 'IsExpanded' e non è stato trovato alcun metodo di estensione accessibile 'IsExpanded' che accetta un primo argomento di tipo 'ITreeItemData<EditContentItem.TreeItem>'. Probabilmente manca una direttiva using o un riferimento all'assembly.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_EditContentItem_razor.g.cs",
+                "region": {
+                  "startLine": 2386,
+                  "startColumn": 314,
+                  "endLine": 2386,
+                  "endColumn": 324
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ITreeItemData<EditContentItem.TreeItem>' non contiene una definizione di 'IsExpanded' e non è stato trovato alcun metodo di estensione accessibile 'IsExpanded' che accetta un primo argomento di tipo 'ITreeItemData<EditContentItem.TreeItem>'. Probabilmente manca una direttiva using o un riferimento all'assembly.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_EditContentItem_razor.g.cs",
+                "region": {
+                  "startLine": 2386,
+                  "startColumn": 280,
+                  "endLine": 2386,
+                  "endColumn": 290
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1503",
+          "level": "error",
+          "message": "Argomento 1: non è possibile convertire da 'MudBlazor.ITreeItemData<Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem>' a 'Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem?'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 142,
+                  "startColumn": 149,
+                  "endLine": 142,
+                  "endColumn": 160
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1503",
+          "level": "error",
+          "message": "Argomento 1: non è possibile convertire da 'MudBlazor.ITreeItemData<Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem>' a 'Pollon.Backoffice.Models.ContentItem'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 143,
+                  "startColumn": 93,
+                  "endLine": 143,
+                  "endColumn": 104
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ITreeItemData<EditContentItem.TreeItem>' non contiene una definizione di 'Id' e non è stato trovato alcun metodo di estensione accessibile 'Id' che accetta un primo argomento di tipo 'ITreeItemData<EditContentItem.TreeItem>'. Probabilmente manca una direttiva using o un riferimento all'assembly.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 144,
+                  "startColumn": 113,
+                  "endLine": 144,
+                  "endColumn": 115
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ITreeItemData<EditContentItem.TreeItem>' non contiene una definizione di 'Id' e non è stato trovato alcun metodo di estensione accessibile 'Id' che accetta un primo argomento di tipo 'ITreeItemData<EditContentItem.TreeItem>'. Probabilmente manca una direttiva using o un riferimento all'assembly.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 144,
+                  "startColumn": 188,
+                  "endLine": 144,
+                  "endColumn": 190
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1503",
+          "level": "error",
+          "message": "Argomento 1: non è possibile convertire da 'MudBlazor.ITreeItemData<Pollon.Backoffice.Web.Components.Pages.EditContentItem.TreeItem>' a 'Pollon.Backoffice.Models.ContentItem'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 145,
+                  "startColumn": 89,
+                  "endLine": 145,
+                  "endColumn": 100
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1662",
+          "level": "error",
+          "message": "Non è possibile convertire 'espressione lambda' nel tipo delegato previsto perché alcuni dei tipi restituiti nel blocco non sono convertibili in modo implicito nel tipo restituito del delegato",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_EditContentItem_razor.g.cs",
+                "region": {
+                  "startLine": 2361,
+                  "startColumn": 195,
+                  "endLine": 2361,
+                  "endColumn": 210
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1662",
+          "level": "error",
+          "message": "Non è possibile convertire 'espressione lambda' nel tipo delegato previsto perché alcuni dei tipi restituiti nel blocco non sono convertibili in modo implicito nel tipo restituito del delegato",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_EditContentItem_razor.g.cs",
+                "region": {
+                  "startLine": 333,
+                  "startColumn": 185,
+                  "endLine": 333,
+                  "endColumn": 200
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CA1816",
+          "level": "note",
+          "message": "Cambiare TokenProvider.Dispose() in modo da chiamare GC.SuppressFinalize(object). In questo modo si eviterà che i tipi derivati che introducono un finalizzatore debbano eseguire una nuova implementazione di 'IDisposable' per chiamarlo.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/TokenProvider.cs",
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 17,
+                  "endLine": 16,
+                  "endColumn": 24
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "MUD0002",
+          "level": "warning",
+          "message": "Illegal Attribute 'OnClick' on 'MudTextField' using pattern 'LowerCase' source location '(2047,36)-(2047,108)'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/Components/Pages/EditContentItem.razor",
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "uri": "file:///C:/Users/user/source/repos/Pollon/Pollon.Backoffice.Web/obj/Debug/net10.0/Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Components_Pages_EditContentItem_razor.g.cs",
+                "region": {
+                  "startLine": 2048,
+                  "startColumn": 37,
+                  "endLine": 2048,
+                  "endColumn": 109
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "ClassName": "Pollon.Backoffice.Web.Components.Pages.EditContentItem"
+            }
+          }
+        }
+      ],
+      "rules": {
+        "CA1816": {
+          "id": "CA1816",
+          "shortDescription": "I metodi Dispose devono chiamare SuppressFinalize",
+          "fullDescription": "Un metodo che è un'implementazione di Dispose non chiama GC.SuppressFinalize, un metodo che non è un'implementazione di Dispose chiama GC.SuppressFinalize oppure un metodo chiama GC.SuppressFinalize e passa un elemento diverso da this (Me in Visual Basic).",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1816",
+          "properties": {
+            "category": "Usage",
+            "isEnabledByDefault": true,
+            "tags": [
+              "PortedFromFxCop",
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CS0411": {
+          "id": "CS0411",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS0411)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1061": {
+          "id": "CS1061",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1061)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1503": {
+          "id": "CS1503",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1503)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1662": {
+          "id": "CS1662",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1662)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS8602": {
+          "id": "CS8602",
+          "shortDescription": "Dereferenziamento di un possibile riferimento Null.",
+          "defaultLevel": "warning",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8602)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry"
+            ]
+          }
+        },
+        "MUD0002": {
+          "id": "MUD0002",
+          "shortDescription": "Unknown MudBlazor attribute/parameter",
+          "fullDescription": "This is not a component parameter, it could be an attribute.",
+          "defaultLevel": "warning",
+          "helpUri": "https://mudblazor.com/features/analyzers",
+          "properties": {
+            "category": "Attributes/Parameters",
+            "isEnabledByDefault": true
+          }
+        },
+        "RZ10012": {
+          "id": "RZ10012",
+          "shortDescription": "Found markup element with unexpected name 'PersistComponentState'. If this is intended to be a component, add a @using directive for its namespace.",
+          "defaultLevel": "warning",
+          "properties": {
+            "category": "Razor",
+            "isEnabledByDefault": true
+          }
+        }
+      }
+    }
+  ]
+}

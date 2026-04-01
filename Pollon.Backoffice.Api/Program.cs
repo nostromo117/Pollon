@@ -32,6 +32,11 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(MartenRepository<>));
 
 builder.Services.AddScoped<IContentItemService, ContentItemService>();
 
+builder.Services.AddHttpClient("MediaApi", client =>
+{
+    client.BaseAddress = new("https+http://mediaapi");
+});
+
 // Setup Wolverine / RabbitMQ
 builder.Host.UseWolverine(opts =>
 {

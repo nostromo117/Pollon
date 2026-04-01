@@ -194,16 +194,28 @@ public class ContentItemService : IContentItemService
 
     public async Task DeleteAndPublishAsync(string id)
     {
-        var existingItem = await _repository.GetByIdAsync(id);
-        if (existingItem != null)
+        await DeleteRecursiveAsync(id);
+        await _session.SaveChangesAsync();
+    }
+
+    private async Task DeleteRecursiveAsync(string id)
+    {
+        // Find all children IDs first to recurse
+        var childrenIds = await _session.Query<ContentItem>()
+            .Where(x => x.ParentId == id)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        foreach (var childId in childrenIds)
         {
-            await _repository.DeleteAsync(id);
-
-            // Pubblica l'evento di eliminazione a prescindere, in modo che l'ApiService elimini se l'aveva.
-            var deletedEvent = new ContentDeletedEvent(id);
-            await _messageBus.PublishAsync(deletedEvent);
-
-            await _session.SaveChangesAsync();
+            await DeleteRecursiveAsync(childId);
         }
+
+        // Delete the item itself from the session
+        _session.Delete<ContentItem>(id);
+
+        // Publish the deletion event for this specific ID
+        var deletedEvent = new ContentDeletedEvent(id);
+        await _messageBus.PublishAsync(deletedEvent);
     }
 }

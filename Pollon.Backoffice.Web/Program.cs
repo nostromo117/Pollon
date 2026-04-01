@@ -13,7 +13,6 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<TokenProvider>();
-builder.Services.AddTransient<AuthHeaderHandler>();
 
 builder.Services.AddOutputCache();
 builder.Services.AddMudServices();
@@ -23,13 +22,13 @@ builder.Services.AddHttpClient<BackofficeApiClient>(client =>
     {
         client.BaseAddress = new("https+http://backofficeapi");
         client.Timeout = TimeSpan.FromMinutes(5);
-    }).AddHttpMessageHandler<AuthHeaderHandler>();
+    });
 
 builder.Services.AddHttpClient("MediaApi", client =>
 {
     client.BaseAddress = new("https+http://mediaapi");
     client.Timeout = TimeSpan.FromMinutes(5);
-}).AddHttpMessageHandler<AuthHeaderHandler>();
+});
 
 builder.Services.AddBackofficeAuthentication(builder.Configuration);
 
@@ -60,10 +59,16 @@ app.MapDefaultEndpoints();
 
 app.MapAuthenticationEndpoints();
 
-app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, CancellationToken ct) =>
+app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, HttpContext context, CancellationToken ct) =>
 {
     var client = factory.CreateClient("MediaApi");
-    // Token handling is now centralized in AuthHeaderHandler
+    
+    // For direct HTTP requests (like images), we use the access token from the current HttpContext
+    var token = await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.GetTokenAsync(context, "access_token");
+    if (!string.IsNullOrEmpty(token))
+    {
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+    }
     
     var response = await client.GetAsync($"/api/media/{id}", ct);
     if (!response.IsSuccessStatusCode) return Results.NotFound();

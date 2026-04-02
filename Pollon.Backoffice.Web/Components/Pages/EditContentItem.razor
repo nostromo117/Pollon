@@ -138,7 +138,14 @@ else
                                                 
                                                 @if (!string.IsNullOrEmpty(GetStringValue(field.Name)))
                                                 {
-                                                    <MudImage Src="@GetStringValue(field.Name)" Alt="@field.Name" Elevation="2" Class="rounded" Style="max-width: 200px; max-height: 200px; object-fit: cover;" />
+                                                    var imgUrl = GetStringValue(field.Name);
+                                                    <div style="position: relative; max-width: 200px; min-height: 150px;">
+                                                        @if (!_loadedImages.Contains(imgUrl))
+                                                        {
+                                                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Width="200px" Height="150px" Class="rounded absolute" Style="top:0;left:0;z-index:1;" />
+                                                        }
+                                                        <img src="@imgUrl" alt="@field.Name" class="mud-elevation-2 rounded" style="@(_loadedImages.Contains(imgUrl) ? "" : "opacity: 0;") max-width: 200px; max-height: 200px; object-fit: cover; position: relative; z-index:2; transition: opacity 0.3s ease-in;" @onload="@(() => OnImageLoaded(imgUrl))" />
+                                                    </div>
                                                 }
 
                                                 <div class="mt-2">
@@ -255,7 +262,16 @@ else
                                 @foreach (var assetId in selectedGallery.AssetIds)
                                 {
                                     <MudItem xs="4">
-                                        <MudImage Src="@($"/api/media/{assetId}")" Width="60" Height="60" ObjectFit="ObjectFit.Cover" Class="rounded" />
+                                        @{
+                                            var galImgUrl = $"/api/media/{assetId}";
+                                        }
+                                        <div style="position: relative; width: 60px; height: 60px;">
+                                            @if (!_loadedImages.Contains(galImgUrl))
+                                            {
+                                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Width="60px" Height="60px" Class="rounded absolute" Style="top:0;left:0;z-index:1;" />
+                                            }
+                                            <img src="@galImgUrl" class="rounded" style="@(_loadedImages.Contains(galImgUrl) ? "" : "opacity: 0;") width: 60px; height: 60px; object-fit: cover; position: relative; z-index:2; transition: opacity 0.3s ease-in;" @onload="@(() => OnImageLoaded(galImgUrl))" />
+                                        </div>
                                     </MudItem>
                                 }
                             </MudGrid>
@@ -314,6 +330,17 @@ else
     private bool _isUploading = false;
     private double _uploadProgress = 0;
     private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private HashSet<string> _loadedImages = new();
+
+    private void OnImageLoaded(string url)
+    {
+        if (!_loadedImages.Contains(url))
+        {
+            _loadedImages.Add(url);
+            InvokeAsync(StateHasChanged);
+        }
+    }
 
     private List<TreeItemData<ContentItem>> FilteredRoots => ApplySearch(allRoots, treeSearch);
 

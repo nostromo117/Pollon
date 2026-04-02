@@ -71,9 +71,10 @@ public static class EndpointExtensions
             string? status, 
             string? sortBy, 
             bool? sortDescending,
+            string? searchTerm,
             IContentItemService service) =>
         {
-            return Results.Ok(await service.GetAllAsync(status, sortBy, sortDescending ?? true));
+            return Results.Ok(await service.GetAllAsync(status, sortBy, sortDescending ?? true, searchTerm));
         });
 
         group.MapGet("/{id}", async (string id, IContentItemService service) =>

@@ -9,6 +9,7 @@
 <div class="d-flex justify-content-between align-items-center mb-6">
     <MudText Typo="Typo.h4" GutterBottom="true">Content Items</MudText>
     <div class="d-flex gap-4 align-center">
+        <MudTextField T="string" Label="Search (fuzzy)" Value="searchTerm" ValueChanged="OnSearchTermChanged" Immediate="true" DebounceInterval="400" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Dense="true" Margin="Margin.Dense" Style="min-width: 150px;" />
         <MudSelect T="string" Label="Status" Value="selectedStatus" ValueChanged="OnStatusChanged" Dense="true" Margin="Margin.Dense" Class="mud-width-full" Style="min-width: 150px;">
             <MudSelectItem Value="@((string?)null)">All Statuses</MudSelectItem>
             <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
@@ -80,6 +81,7 @@ else
     private string? selectedStatus;
     private string selectedSortBy = "CreatedAt";
     private bool sortDescending = true;
+    private string? searchTerm;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +94,16 @@ else
         await LoadDataAsync();
     }
 
+    private async Task OnSearchTermChanged(string? value)
+    {
+        searchTerm = value;
+        // Don't search if string is less than 3 chars (PG Trigram works best >= 3)
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length >= 3)
+        {
+            await LoadDataAsync();
+        }
+    }
+
     private string? errorMessage;
 
     private async Task LoadDataAsync()
@@ -100,7 +112,7 @@ else
         {
             errorMessage = null;
             contentTypes = await ApiClient.GetContentTypesAsync();
-            var items = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending);
+            var items = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending, searchTerm);
             
             // Build tree
             rootItems = BuildTree(items);

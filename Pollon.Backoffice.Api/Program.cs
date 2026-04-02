@@ -26,6 +26,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddMarten(opts => 
 {
     opts.Connection(builder.Configuration.GetConnectionString("backofficedb")!);
+    opts.Schema.For<ContentItem>().NgramIndex(x => x.SearchText);
 }).UseLightweightSessions();
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MartenRepository<>));

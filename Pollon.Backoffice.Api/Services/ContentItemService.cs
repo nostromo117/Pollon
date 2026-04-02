@@ -1,5 +1,6 @@
 using Wolverine;
 using Marten;
+using Marten.Linq;
 using Pollon.Backoffice.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
@@ -26,9 +27,14 @@ public class ContentItemService : IContentItemService
         _session = session;
     }
 
-    public async Task<IEnumerable<ContentItem>> GetAllAsync(string? status = null, string? sortBy = null, bool sortDescending = true)
+    public async Task<IEnumerable<ContentItem>> GetAllAsync(string? status = null, string? sortBy = null, bool sortDescending = true, string? searchTerm = null)
     {
         IQueryable<ContentItem> query = _session.Query<ContentItem>();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(x => x.SearchText.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
 
         if (!string.IsNullOrEmpty(status))
         {
@@ -103,6 +109,8 @@ public class ContentItemService : IContentItemService
         {
             item.Slug = GenerateSlugFromData(item);
         }
+
+        PopulateSearchText(item);
         
         // Save to Marten
         await _repository.CreateAsync(item);
@@ -132,6 +140,22 @@ public class ContentItemService : IContentItemService
         return str.Trim('-');
     }
 
+    private void PopulateSearchText(ContentItem item)
+    {
+        if (item.Data != null && item.Data.Count > 0)
+        {
+            var values = item.Data.Values
+                .Where(v => v != null)
+                .Select(v => v!.ToString())
+                .Where(s => !string.IsNullOrWhiteSpace(s));
+            item.SearchText = string.Join(" ", values);
+        }
+        else
+        {
+            item.SearchText = string.Empty;
+        }
+    }
+
     public async Task<ContentItem?> UpdateAndPublishAsync(string id, ContentItem item)
     {
         // Non salvare i figli annidati
@@ -159,6 +183,8 @@ public class ContentItemService : IContentItemService
         {
             item.Slug = GenerateSlugFromData(item);
         }
+
+        PopulateSearchText(item);
 
         // Se passa da Draft a Published, impostare la data
         if (item.Status == "Published" && !existingItem.PublishedAt.HasValue)

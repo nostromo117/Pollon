@@ -167,12 +167,13 @@ public class BackofficeApiClient(
         string? status = null, 
         string? sortBy = null, 
         bool sortDescending = true, 
+        string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
-        var url = "/api/content-items?";
-        if (!string.IsNullOrEmpty(status)) url += $"status={status}&";
-        if (!string.IsNullOrEmpty(sortBy)) url += $"sortBy={sortBy}&";
-        url += $"sortDescending={sortDescending}";
+        var url = $"/api/content-items?sortDescending={sortDescending}";
+        if (!string.IsNullOrEmpty(status)) url += $"&status={Uri.EscapeDataString(status)}";
+        if (!string.IsNullOrEmpty(sortBy)) url += $"&sortBy={Uri.EscapeDataString(sortBy)}";
+        if (!string.IsNullOrEmpty(searchTerm)) url += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
 
         return await GetAsync<ContentItem[]>(url, cancellationToken) ?? [];
     }

@@ -68,5 +68,6 @@ In caso di modifiche al realm o necessità di reset totale:
 - **Gerarchia di Contenuti**: Supporto nativo per relazioni parent-child e gestione slug SEO.
 
 ## Documentazione Tecnica
-- [Guida allo Schema Database Marten](docs/marten_db_schema.md)
+- [Marten Database Schema](docs/marten_db_schema.md)
+- [Publication Modes & SSG](docs/publication-modes.md)
 - [Implementazione Autenticazione (Walkthrough)](walkthrough.md)

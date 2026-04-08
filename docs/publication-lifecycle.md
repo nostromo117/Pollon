@@ -51,23 +51,40 @@ sequenceDiagram
     Note right of SQL: Contenuto pronto per il Frontend
 ```
 
-### Flusso di Visualizzazione (Frontend)
+### Flusso di Visualizzazione (Frontend + YARP Proxy)
 
 ```mermaid
 sequenceDiagram
     participant USER as Utente Finale
-    participant FRONT as Frontend Web (Blazor)
+    participant FRONT_P as Frontend (YARP Proxy)
+    participant FRONT_B as Frontend (Blazor Server)
     participant CAPI as Content API
+    participant MINIO as MinIO Storage
     participant SQL as SQL Server (Read Model)
 
-    USER->>FRONT: Naviga su /article/{slug}
-    FRONT->>CAPI: GET /api/content/{slug}
-    CAPI->>SQL: Query per Slug
-    SQL-->>CAPI: Ritorna PublishedContent
-    CAPI-->>FRONT: Ritorna JSON (incluso HtmlContent)
-    FRONT->>FRONT: Renderizza MarkupString
-    FRONT-->>USER: Mostra Pagina Renderizzata
+    alt Richiesta Pagina Dinamica (/article/{slug})
+        USER->>FRONT_B: Naviga su /article/{slug}
+        FRONT_B->>CAPI: GET /api/content/{slug}
+        CAPI->>SQL: Query per Slug
+        SQL-->>CAPI: Ritorna PublishedContent
+        CAPI-->>FRONT_B: Ritorna JSON (incluso HtmlContent)
+        FRONT_B->>FRONT_B: Renderizza MarkupString
+        FRONT_B-->>USER: Mostra Pagina dinamica
+    else Richiesta Pagina Statica (/published/{slug}.html)
+        USER->>FRONT_P: Naviga su /published/{slug}.html
+        FRONT_P->>MINIO: Proxy Request (Inoltro a bucket statico)
+        MINIO-->>FRONT_P: Ritorna Standalone HTML
+        FRONT_P-->>USER: Serve file statico (Zero overhead Blazor)
+    end
 ```
+
+## Reverse Proxy & Ottimizzazione CDN
+L'integrazione di **YARP (Yet Another Reverse Proxy)** nel Frontend permette di servire i contenuti direttamente dallo storage ma sotto lo stesso dominio dell'applicazione principale.
+- **Vantaggi**: 
+    - Coerenza del dominio per SEO e SSL.
+    - Facilità di cache: una CDN (es. Cloudflare) può caricare in cache l'intero percorso `/published/*`.
+    - Performance: il server Blazor non viene interpellato per il rendering della pagina, riducendo drasticamente l'uso di memoria e CPU.
+
 
 ## Stati e Modalità di Pubblicazione
 

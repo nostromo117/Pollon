@@ -41,7 +41,11 @@
                                 @item.Slug
                             </h5>
                             <p class="card-text text-muted small">Pubblicato il @item.PublishedAt.ToString("dd MMM yyyy")</p>
-                            <a href="/article/@item.Slug" class="btn btn-outline-primary btn-sm stretched-link">Leggi di più</a>
+                            @{
+                                var isStatic = item.PublishMode == "Static" || item.PublishMode == "Both";
+                                var linkUrl = isStatic ? $"/published/{item.Slug}.html" : $"/article/{item.Slug}";
+                            }
+                            <a href="@linkUrl" class="btn btn-outline-primary btn-sm stretched-link" target="@(isStatic ? "_blank" : "_self")">Leggi di più</a>
                         </div>
                     </div>
                 </div>

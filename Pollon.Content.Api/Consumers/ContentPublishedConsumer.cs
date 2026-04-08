@@ -144,6 +144,7 @@ public partial class ContentPublishedConsumer
                     PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
                     JsonData = json,
                     HtmlContent = html,
+                    PublishMode = effectiveMode.ToString(),
                     SearchText = contentItem.SearchText
                 };
                 _dbContext.PublishedContents.Add(newContent);
@@ -160,6 +161,7 @@ public partial class ContentPublishedConsumer
                 existingContent.PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow;
                 existingContent.JsonData = json;
                 existingContent.HtmlContent = html;
+                existingContent.PublishMode = effectiveMode.ToString();
                 existingContent.SearchText = contentItem.SearchText;
                 _dbContext.PublishedContents.Update(existingContent);
             }

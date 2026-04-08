@@ -1,55 +1,78 @@
-<div class="pollon-content">
-    <h1 class="mb-2">{{ title || "Content Item" }}</h1>
-    
-    <div class="metadata mb-4 text-muted border-bottom pb-2">
-        <span class="me-3"><i class="fa fa-calendar"></i> {{ published_at | date.to_string "%d %B %Y %H:%M" }}</span>
-        <span><i class="fa fa-tag"></i> {{ content_type }}</span>
-    </div>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title || "Content Item" }} - Pollon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 50px; padding-bottom: 50px; }
+        .pollon-content { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 900px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .field-label { border-left: 3px solid #007bff; padding-left: 10px; }
+        .gallery-item-container { transition: transform 0.2s; cursor: pointer; }
+        .gallery-item-container:hover { transform: scale(1.02); }
+        .img-wrapper img { border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="pollon-content">
+            <header class="mb-5">
+                <h1 class="display-4 fw-bold mb-3">{{ title || "Content Item" }}</h1>
+                <div class="metadata text-muted">
+                    <span class="me-3"><i class="fa fa-calendar"></i> {{ published_at | date.to_string "%d %B %Y %H:%M" }}</span>
+                    <span><i class="fa fa-tag"></i> {{ content_type }}</span>
+                </div>
+                <hr />
+            </header>
 
-    <div class="content-fields">
-        {{ for pair in this -}}
-            {{ 
-               # Skip metadata keys
-               $key = pair.key | string.downcase
-               if ($key == "title" || $key == "published_at" || $key == "id" || $key == "slug" || $key == "content_type" || $key == "images")
-                  continue
-               end
-            }}
-            <div class="field mb-4">
-                <div class="field-label fw-bold text-uppercase small text-primary mb-1" style="letter-spacing: 0.5px;">{{ pair.key }}</div>
-                <div class="field-value">
-                    {{- $val = pair.value | string.to_string -}}
-                    {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
-                        <div class="img-wrapper mt-2">
-                            <img src="{{ $val }}" class="img-fluid rounded border shadow-sm" style="max-height: 500px; object-fit: contain;" alt="{{ pair.key }}" />
+            <div class="content-fields">
+                {{ for pair in this -}}
+                    {{ 
+                       # Skip metadata keys
+                       $key = pair.key | string.downcase
+                       if ($key == "title" || $key == "published_at" || $key == "id" || $key == "slug" || $key == "content_type" || $key == "images")
+                          continue
+                       end
+                    }}
+                    <div class="field mb-4">
+                        <div class="field-label fw-bold text-uppercase small text-primary mb-1" style="letter-spacing: 0.5px;">{{ pair.key }}</div>
+                        <div class="field-value">
+                            {{- $val = pair.value | string.to_string -}}
+                            {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
+                                <div class="img-wrapper mt-2">
+                                    <img src="{{ $val }}" class="img-fluid border shadow-sm" style="max-height: 500px; object-fit: contain;" alt="{{ pair.key }}" />
+                                </div>
+                            {{- else -}}
+                                <div class="text-secondary" style="font-size: 1.05rem;">{{ pair.value }}</div>
+                            {{- end -}}
                         </div>
-                    {{- else -}}
-                        <div class="text-secondary" style="font-size: 1.05rem;">{{ pair.value }}</div>
-                    {{- end -}}
+                    </div>
+                {{ end }}
+            </div>
+
+            {{ if images }}
+            <div class="gallery mt-5 pt-4 border-top">
+                <h4 class="mb-4">Galleria Media</h4>
+                <div class="row row-cols-2 row-cols-md-3 g-4">
+                    {{ for img in images }}
+                        <div class="col">
+                            <div class="gallery-item-container rounded overflow-hidden border">
+                                 <img src="{{ img.url }}" alt="{{ img.alt }}" class="img-fluid w-100" style="height: 200px; object-fit: cover;" />
+                            </div>
+                        </div>
+                    {{ end }}
                 </div>
             </div>
-        {{ end }}
-    </div>
-
-    {{ if images }}
-    <div class="gallery mt-5 pt-4 border-top">
-        <h4 class="mb-4">Galleria Media</h4>
-        <div class="row row-cols-2 row-cols-md-3 g-4">
-            {{ for img in images }}
-                <div class="col">
-                    <div class="gallery-item-container shadow-sm rounded overflow-hidden border">
-                         <img src="{{ img.url }}" alt="{{ img.alt }}" class="img-fluid w-100" style="height: 200px; object-fit: cover;" />
-                    </div>
-                </div>
             {{ end }}
+
+            <footer class="mt-5 pt-4 border-top text-center text-muted">
+                Generato da Pollon CMS - &copy; {{ date.now.year }}
+            </footer>
         </div>
     </div>
-    {{ end }}
-</div>
-
-<style>
-    .pollon-content { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-    .field-label { border-left: 3px solid var(--bs-primary); padding-left: 10px; }
-    .gallery-item-container { transition: transform 0.2s; }
-    .gallery-item-container:hover { transform: scale(1.02); }
-</style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

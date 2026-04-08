@@ -64,6 +64,8 @@ var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web
     .WithReference(contentApi)
     .WithReference(backofficeApi)
     .WithReference(mediaApi)
+    .WithReference(minio)
+    .WithEnvironment("ReverseProxy__Clusters__minio-cluster__Destinations__minio-dest__Address", minio.GetEndpoint("http"))
     .WaitFor(contentApi);
 
 builder.Build().Run();

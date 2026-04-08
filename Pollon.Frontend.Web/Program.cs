@@ -22,6 +22,10 @@ builder.Services.AddHttpClient("MediaApi", client =>
     client.BaseAddress = new("https+http://mediaapi");
 });
 
+// Configure YARP for Static Files (Reverse Proxy to MinIO)
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -41,6 +45,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapDefaultEndpoints();
+
+// YARP Reverse Proxy Mapping
+app.MapReverseProxy();
 
 app.MapGet("/api/media/{id}", async (string id, IHttpClientFactory factory, CancellationToken ct) =>
 {

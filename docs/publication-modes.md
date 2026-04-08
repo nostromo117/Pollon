@@ -4,6 +4,8 @@ Questa documentazione illustra l'architettura e il funzionamento del sistema di 
 
 ## Architettura del Sistema
 
+Per una visione dettagliata del processo asincrono e dei flussi tra i servizi, consulta il [Ciclo di Vita della Pubblicazione](publication-lifecycle.md).
+
 Pollon supporta due modalità di pubblicazione, definibili per ogni **ContentType** nel Backoffice:
 
 1.  **Headless (JSON)**: Il contenuto viene salvato in formato grezzo e servito via API REST. Ideale per app mobile o client JavaScript che gestiscono il rendering.

@@ -13,13 +13,20 @@ public class BackofficeApiClient(
     IConfiguration configuration,
     IHttpClientFactory httpClientFactory)
 {
+    private static readonly System.Text.Json.JsonSerializerOptions _options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+    };
+
     private async Task<T?> GetAsync<T>(string url, CancellationToken ct)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         var response = await SendWithAuthAsync(request, ct);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
+            return await response.Content.ReadFromJsonAsync<T>(_options, cancellationToken: ct);
         }
         return default;
     }
@@ -80,7 +87,7 @@ public class BackofficeApiClient(
             var response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(dict), ct);
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<TokenResponse>(cancellationToken: ct);
+                var result = await response.Content.ReadFromJsonAsync<TokenResponse>(_options, cancellationToken: ct);
                 if (result != null)
                 {
                     tokenProvider.AccessToken = result.access_token;
@@ -216,7 +223,7 @@ public class BackofficeApiClient(
         var response = await SendWithAuthAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<MediaAsset>(cancellationToken);
+            return await response.Content.ReadFromJsonAsync<MediaAsset>(_options, cancellationToken);
         }
         return null;
     }
@@ -246,7 +253,7 @@ public class BackofficeApiClient(
         var response = await SendWithAuthAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<MediaGallery>(cancellationToken);
+            return await response.Content.ReadFromJsonAsync<MediaGallery>(_options, cancellationToken);
         }
         return null;
     }

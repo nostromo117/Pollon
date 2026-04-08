@@ -10,5 +10,15 @@ public class ContentType
     public string Slug { get; set; } = string.Empty; // SEO-friendly name
     public string Description { get; set; } = string.Empty;
 
+    public PublishMode PublishMode { get; set; } = PublishMode.Headless;
+    public string? TemplateName { get; set; }
+
     public List<ContentField> Fields { get; set; } = new();
+}
+
+public enum PublishMode
+{
+    Headless,
+    Static,
+    Both
 }

@@ -39,6 +39,17 @@ else
                             <MudItem xs="12">
                                 <MudTextField T="string" Label="Description" @bind-Value="contentType.Description" Variant="Variant.Outlined" Lines="2" For="@(() => contentType.Description)" />
                             </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="PublishMode" Label="Publish Mode" @bind-Value="contentType.PublishMode" Required="true" Variant="Variant.Outlined" For="@(() => contentType.PublishMode)">
+                                    @foreach (var mode in Enum.GetValues<PublishMode>())
+                                    {
+                                        <MudSelectItem Value="@mode">@mode.ToString()</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField T="string" Label="Template Name" @bind-Value="contentType.TemplateName" Variant="Variant.Outlined" HelperText="e.g. article.html" For="@(() => contentType.TemplateName)" Disabled="@(contentType.PublishMode == PublishMode.Headless)" />
+                            </MudItem>
                         </MudGrid>
                     </MudCardContent>
                 </MudCard>

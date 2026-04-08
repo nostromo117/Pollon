@@ -23,6 +23,12 @@ public class ApiDbContext : DbContext
         entity.Property(x => x.JsonData)
             .HasColumnType("nvarchar(max)");
 
+        entity.Property(x => x.HtmlContent)
+            .HasColumnType("nvarchar(max)");
+
+        entity.Property(x => x.SearchText)
+            .HasColumnType("nvarchar(max)");
+
         // Optimize querying by SystemName and Slug
         entity.HasIndex(x => x.SystemName);
             

@@ -11,4 +11,6 @@ public class PublishedContent
     public string? Icon { get; set; }
     public DateTime PublishedAt { get; set; }
     public string JsonData { get; set; } = "{}";
+    public string? HtmlContent { get; set; }
+    public string SearchText { get; set; } = string.Empty;
 }

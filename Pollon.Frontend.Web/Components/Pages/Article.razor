@@ -40,29 +40,38 @@ else
                 </header>
 
                 <article class="content-body">
-                    <div class="mb-4">
-                        <h4 class="mb-4 border-bottom pb-2 text-primary fw-light">Specifiche Contenuto</h4>
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-                            @foreach (var property in ParseJson(_item.JsonData))
-                            {
-                                <div class="col">
-                                    <div class="property-box p-2 rounded bg-light border">
-                                        <div class="overflow-hidden">
-                                            <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">@property.Key</div>
-                                            @if (property.Value.StartsWith("/api/media/") || property.Value.StartsWith("http"))
-                                            {
-                                                <img src="@property.Value" class="img-fluid rounded mt-2" style="max-height: 200px; object-fit: contain;" alt="@property.Key" />
-                                            }
-                                            else
-                                            {
-                                                <div class="text-dark fw-semibold text-truncate" title="@property.Value" style="font-size: 0.9rem;">@property.Value</div>
-                                            }
+                    @if (!string.IsNullOrEmpty(_item.HtmlContent))
+                    {
+                        <div class="static-content">
+                            @((MarkupString)_item.HtmlContent)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <h4 class="mb-4 border-bottom pb-2 text-primary fw-light">Specifiche Contenuto (Modo Headless)</h4>
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                                @foreach (var property in ParseJson(_item.JsonData))
+                                {
+                                    <div class="col">
+                                        <div class="property-box p-2 rounded bg-light border">
+                                            <div class="overflow-hidden">
+                                                <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">@property.Key</div>
+                                                @if (property.Value.StartsWith("/api/media/") || property.Value.StartsWith("http"))
+                                                {
+                                                    <img src="@property.Value" class="img-fluid rounded mt-2" style="max-height: 200px; object-fit: contain;" alt="@property.Key" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-dark fw-semibold text-truncate" title="@property.Value" style="font-size: 0.9rem;">@property.Value</div>
+                                                }
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </div>
-                    </div>
+                    }
                 </article>
 
                 <footer class="mt-5 pt-5 border-top text-center">

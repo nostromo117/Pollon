@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Pollon.Content.Api.Data;
 using Pollon.Contracts.Models;
 using Pollon.Content.Api;
+using Pollon.Content.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,12 @@ builder.Services.AddHttpClient<BackofficeApiClient>(client =>
 {
     client.BaseAddress = new("https+http://backofficeapi");
 });
+
+builder.Services.AddSingleton<ITemplateRenderer, ScribanTemplateRenderer>();
+
+// MinIO Client and Static Storage
+builder.AddMinioClient("minio");
+builder.Services.AddSingleton<IStaticStorage, MinioStaticStorage>();
 
 
 
@@ -46,11 +53,14 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Ensure the database is created
+// Ensure the database is created and Storage is initialized
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
     dbContext.Database.EnsureCreated();
+    
+    var storage = scope.ServiceProvider.GetRequiredService<IStaticStorage>();
+    await storage.InitializeAsync();
 }
 
 // Configure the HTTP request pipeline.
@@ -95,7 +105,7 @@ static async Task<(List<PublishedContent> Items, int TotalCount)> GetPaginatedRe
     // Criteri di ricerca testuale (sul JSON per ora)
     if (!string.IsNullOrWhiteSpace(query.SearchTerm))
     {
-        queryable = queryable.Where(c => c.JsonData.Contains(query.SearchTerm));
+        queryable = queryable.Where(c => c.SearchText.Contains(query.SearchTerm));
     }
 
     // Ordinamento

@@ -20,6 +20,8 @@ public class ContentItem
     public List<ContentItem> Children { get; set; } = new();
     
     public string? GalleryId { get; set; }
+    
+    public PublishMode? PublishModeOverride { get; set; }
 
     // Flessibile dictionary per contenere i campi dinamici
     public Dictionary<string, object> Data { get; set; } = new();

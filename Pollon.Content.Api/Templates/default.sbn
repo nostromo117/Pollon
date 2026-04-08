@@ -1,0 +1,55 @@
+<div class="pollon-content">
+    <h1 class="mb-2">{{ title || "Content Item" }}</h1>
+    
+    <div class="metadata mb-4 text-muted border-bottom pb-2">
+        <span class="me-3"><i class="fa fa-calendar"></i> {{ published_at | date.to_string "%d %B %Y %H:%M" }}</span>
+        <span><i class="fa fa-tag"></i> {{ content_type }}</span>
+    </div>
+
+    <div class="content-fields">
+        {{ for pair in this -}}
+            {{ 
+               # Skip metadata keys
+               $key = pair.key | string.downcase
+               if ($key == "title" || $key == "published_at" || $key == "id" || $key == "slug" || $key == "content_type" || $key == "images")
+                  continue
+               end
+            }}
+            <div class="field mb-4">
+                <div class="field-label fw-bold text-uppercase small text-primary mb-1" style="letter-spacing: 0.5px;">{{ pair.key }}</div>
+                <div class="field-value">
+                    {{- $val = pair.value | string.to_string -}}
+                    {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
+                        <div class="img-wrapper mt-2">
+                            <img src="{{ $val }}" class="img-fluid rounded border shadow-sm" style="max-height: 500px; object-fit: contain;" alt="{{ pair.key }}" />
+                        </div>
+                    {{- else -}}
+                        <div class="text-secondary" style="font-size: 1.05rem;">{{ pair.value }}</div>
+                    {{- end -}}
+                </div>
+            </div>
+        {{ end }}
+    </div>
+
+    {{ if images }}
+    <div class="gallery mt-5 pt-4 border-top">
+        <h4 class="mb-4">Galleria Media</h4>
+        <div class="row row-cols-2 row-cols-md-3 g-4">
+            {{ for img in images }}
+                <div class="col">
+                    <div class="gallery-item-container shadow-sm rounded overflow-hidden border">
+                         <img src="{{ img.url }}" alt="{{ img.alt }}" class="img-fluid w-100" style="height: 200px; object-fit: cover;" />
+                    </div>
+                </div>
+            {{ end }}
+        </div>
+    </div>
+    {{ end }}
+</div>
+
+<style>
+    .pollon-content { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+    .field-label { border-left: 3px solid var(--bs-primary); padding-left: 10px; }
+    .gallery-item-container { transition: transform 0.2s; }
+    .gallery-item-container:hover { transform: scale(1.02); }
+</style>

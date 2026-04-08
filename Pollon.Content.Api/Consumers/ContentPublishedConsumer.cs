@@ -5,54 +5,133 @@ using Pollon.Content.Api.Data;
 using Pollon.Contracts.Models;
 using Pollon.Backoffice.Models;
 using Pollon.Contracts.Events;
+using Pollon.Content.Api.Services;
 
 namespace Pollon.Content.Api.Consumers;
 
-public class ContentPublishedConsumer
+public partial class ContentPublishedConsumer
 {
     private readonly ApiDbContext _dbContext;
     private readonly BackofficeApiClient _apiClient;
+    private readonly ITemplateRenderer _renderer;
+    private readonly IStaticStorage _staticStorage;
     private readonly ILogger<ContentPublishedConsumer> _logger;
 
     public ContentPublishedConsumer(
         ApiDbContext dbContext,
         BackofficeApiClient apiClient,
+        ITemplateRenderer renderer,
+        IStaticStorage staticStorage,
         ILogger<ContentPublishedConsumer> logger)
     {
         _dbContext = dbContext;
         _apiClient = apiClient;
+        _renderer = renderer;
+        _staticStorage = staticStorage;
         _logger = logger;
     }
 
     public async Task Handle(ContentPublishedEvent message)
     {
-        var contentItemId = message.ContentItemId;
-        _logger.LogInformation("Processing ContentPublishedEvent for ContentItemId {ContentItemId}", contentItemId);
+        LogProcessingEvent(_logger, message.ContentItemId);
+        await ProcessContentInternalAsync(message.ContentItemId);
+    }
 
+    public async Task Handle(ContentUpdatedEvent message)
+    {
+        LogProcessingEvent(_logger, message.ContentItemId);
+        await ProcessContentInternalAsync(message.ContentItemId);
+    }
+
+    private async Task ProcessContentInternalAsync(string contentItemId)
+    {
         try
         {
             var contentItem = await _apiClient.GetContentItemByIdAsync(contentItemId);
             if (contentItem == null)
             {
-                _logger.LogWarning("ContentItem {ContentItemId} not found in Backoffice API. Ignoring event.", contentItemId);
+                LogItemNotFound(_logger, contentItemId);
                 return;
             }
+
+            // Only process items that are actually Published
+            if (contentItem.Status != "Published")
+            {
+                LogSkippingNonPublished(_logger, contentItemId, contentItem.Status);
+                return;
+            }
+
+            LogRetrievedContentItem(_logger, contentItem.Slug, contentItem.ContentTypeId);
+            LogPublishModeOverride(_logger, contentItem.PublishModeOverride?.ToString() ?? "NULL");
 
             var contentType = await _apiClient.GetContentTypeByIdAsync(contentItem.ContentTypeId);
             if (contentType == null)
             {
-                _logger.LogWarning("ContentType {ContentTypeId} not found in Backoffice API. Ignoring event.", contentItem.ContentTypeId);
+                LogContentTypeNotFound(_logger, contentItem.ContentTypeId, contentItemId);
                 return;
             }
 
+            LogRetrievedContentType(_logger, contentType.SystemName, contentType.PublishMode);
+
             var json = JsonSerializer.Serialize(contentItem.Data);
-            _logger.LogDebug("Serialized data: {Json}", json);
+            LogSerializedData(_logger, json);
+
+            // Determine publication mode (Item override takes precedence over ContentType default)
+            var effectiveMode = contentItem.PublishModeOverride ?? contentType.PublishMode;
+            LogEffectivePublishMode(_logger, effectiveMode);
+
+            string? html = null;
+            if (effectiveMode == PublishMode.Static || effectiveMode == PublishMode.Both)
+            {
+                LogTriggeringRender(_logger, contentItemId, contentType.TemplateName);
+                try {
+                    // Enrich data for template
+                    var templateData = new Dictionary<string, object>(contentItem.Data);
+                    
+                    // Metadata
+                    templateData["id"] = contentItem.Id;
+                    templateData["slug"] = contentItem.Slug;
+                    templateData["published_at"] = contentItem.PublishedAt ?? DateTime.UtcNow;
+                    templateData["content_type"] = contentType.DisplayName;
+                    
+                    // Helper for Title if not already in Data
+                    if (!templateData.ContainsKey("title") && !templateData.ContainsKey("Title"))
+                    {
+                        templateData["title"] = GetItemDisplayName(contentItem);
+                    }
+
+                    // Gallery
+                    if (!string.IsNullOrEmpty(contentItem.GalleryId))
+                    {
+                        var gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
+                        if (gallery != null && gallery.AssetIds.Any())
+                        {
+                            templateData["images"] = gallery.AssetIds.Select(id => new { url = $"/api/media/{id}", alt = "Gallery Image" }).ToList();
+                        }
+                    }
+
+                    html = await _renderer.RenderAsync(contentType.TemplateName ?? "default", templateData);
+
+                    // Push to Static Storage (MinIO)
+                    if (!string.IsNullOrEmpty(html))
+                    {
+                        var fileName = string.IsNullOrWhiteSpace(contentItem.Slug) 
+                                       ? $"{contentItem.Id}.html" 
+                                       : $"{contentItem.Slug}.html";
+                                       
+                        await _staticStorage.SaveFileAsync(fileName, html, "text/html");
+                        LogStaticFileSaved(_logger, fileName);
+                    }
+                } catch (Exception ex) {
+                    LogRenderFailed(_logger, ex, contentItemId);
+                }
+            }
 
             var existingContent = await _dbContext.PublishedContents.FirstOrDefaultAsync(c => c.Id == contentItemId);
 
             if (existingContent == null)
             {
-                _logger.LogInformation("Creating new published content for {ContentItemId}", contentItemId);
+                LogContentAction(_logger, "Creating new", contentItemId);
                 var newContent = new PublishedContent
                 {
                     Id = contentItem.Id,
@@ -63,13 +142,15 @@ public class ContentPublishedConsumer
                            : contentItem.Slug,
                     Icon = contentItem.Icon,
                     PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
-                    JsonData = json
+                    JsonData = json,
+                    HtmlContent = html,
+                    SearchText = contentItem.SearchText
                 };
                 _dbContext.PublishedContents.Add(newContent);
             }
             else
             {
-                _logger.LogInformation("Updating existing published content for {ContentItemId}", contentItemId);
+                LogContentAction(_logger, "Updating existing", contentItemId);
                 existingContent.ContentTypeId = contentItem.ContentTypeId;
                 existingContent.SystemName = contentType.SystemName;
                 existingContent.Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
@@ -78,16 +159,30 @@ public class ContentPublishedConsumer
                 existingContent.Icon = contentItem.Icon;
                 existingContent.PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow;
                 existingContent.JsonData = json;
+                existingContent.HtmlContent = html;
+                existingContent.SearchText = contentItem.SearchText;
                 _dbContext.PublishedContents.Update(existingContent);
             }
 
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Successfully processed ContentPublishedEvent for ContentItemId {ContentItemId}", contentItemId);
+            LogProcessingSuccess(_logger, contentItemId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing ContentPublishedEvent for ContentItemId {ContentItemId}", contentItemId);
+            LogProcessingError(_logger, ex, contentItemId);
             throw; // Re-throw to allow Wolverine to handle retries/failure
         }
+    }
+
+    private string GetItemDisplayName(ContentItem ci)
+    {
+        if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
+            ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
+        {
+            if (t is JsonElement el && el.ValueKind == JsonValueKind.String)
+                return el.GetString() ?? ci.Id;
+            return t.ToString() ?? ci.Id;
+        }
+        return ci.Id;
     }
 }

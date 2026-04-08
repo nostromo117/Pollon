@@ -8,7 +8,7 @@ using Pollon.Contracts.Events;
 
 namespace Pollon.Content.Api.Consumers;
 
-public class ContentUpdatedConsumer
+public partial class ContentUpdatedConsumer
 {
     private readonly ApiDbContext _dbContext;
     private readonly BackofficeApiClient _apiClient;
@@ -27,32 +27,32 @@ public class ContentUpdatedConsumer
     public async Task Handle(ContentUpdatedEvent message)
     {
         var contentItemId = message.ContentItemId;
-        _logger.LogInformation("Processing ContentUpdatedEvent for ContentItemId {ContentItemId}", contentItemId);
+        LogProcessingEvent(_logger, contentItemId);
 
         try
         {
             var contentItem = await _apiClient.GetContentItemByIdAsync(contentItemId);
             if (contentItem == null)
             {
-                _logger.LogWarning("ContentItem {ContentItemId} not found in Backoffice API. Ignoring event.", contentItemId);
+                LogItemNotFound(_logger, contentItemId);
                 return;
             }
 
             var contentType = await _apiClient.GetContentTypeByIdAsync(contentItem.ContentTypeId);
             if (contentType == null)
             {
-                _logger.LogWarning("ContentType {ContentTypeId} not found in Backoffice API. Ignoring event.", contentItem.ContentTypeId);
+                LogContentTypeNotFound(_logger, contentItem.ContentTypeId);
                 return;
             }
 
             var json = JsonSerializer.Serialize(contentItem.Data);
-            _logger.LogDebug("Serialized data: {Json}", json);
+            LogSerializedData(_logger, json);
 
             var existingContent = await _dbContext.PublishedContents.FirstOrDefaultAsync(c => c.Id == contentItemId);
 
             if (existingContent == null)
             {
-                _logger.LogInformation("Creating new published content for {ContentItemId} (from update event)", contentItemId);
+                LogCreatingNewItem(_logger, contentItemId);
                 var newContent = new PublishedContent
                 {
                     Id = contentItem.Id,
@@ -69,7 +69,7 @@ public class ContentUpdatedConsumer
             }
             else
             {
-                _logger.LogInformation("Updating existing published content for {ContentItemId}", contentItemId);
+                LogUpdatingExistingItem(_logger, contentItemId);
                 existingContent.ContentTypeId = contentItem.ContentTypeId;
                 existingContent.SystemName = contentType.SystemName;
                 existingContent.Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
@@ -82,11 +82,11 @@ public class ContentUpdatedConsumer
             }
 
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Successfully processed ContentUpdatedEvent for ContentItemId {ContentItemId}", contentItemId);
+            LogProcessingSuccess(_logger, contentItemId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing ContentUpdatedEvent for ContentItemId {ContentItemId}", contentItemId);
+            LogProcessingError(_logger, ex, contentItemId);
             throw;
         }
     }

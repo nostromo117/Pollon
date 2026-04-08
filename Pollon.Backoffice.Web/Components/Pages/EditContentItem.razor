@@ -192,6 +192,14 @@ else
                                 <MudSelectItem Value="@("Archived")">Archived</MudSelectItem>
                             </MudSelect>
 
+                            <MudSelect T="PublishMode?" Label="Publication Mode" @bind-Value="item.PublishModeOverride" Variant="Variant.Outlined" Clearable="true">
+                                <MudSelectItem T="PublishMode?" Value="@(null)">Inherit: @(selectedContentType?.PublishMode.ToString() ?? "...")</MudSelectItem>
+                                @foreach (var mode in Enum.GetValues<PublishMode>())
+                                {
+                                    <MudSelectItem T="PublishMode?" Value="@mode">@mode.ToString()</MudSelectItem>
+                                }
+                            </MudSelect>
+
                             <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="/" Variant="Variant.Outlined" HelperText="Used for the item URL." />
 
                         
@@ -748,7 +756,7 @@ else
             await ApiClient.CreateContentItemAsync(item);
         }
         
-        Snackbar.Add("Contenuto salvato con successo", Severity.Success);
+        Snackbar.Add($"Contenuto salvato con successo (Mode: {item.PublishModeOverride?.ToString() ?? "Default"})", Severity.Success);
         
         // Refresh sidebar
         await LoadSidebarAsync();

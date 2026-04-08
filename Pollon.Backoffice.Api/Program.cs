@@ -20,14 +20,22 @@ builder.Services.AddBackofficeAuthentication(builder.Configuration);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
 // Setup Marten
-builder.Services.AddMarten(opts => 
+builder.Services.AddMarten((Marten.StoreOptions opts) => 
 {
     opts.Connection(builder.Configuration.GetConnectionString("backofficedb")!);
     opts.Schema.For<ContentItem>().NgramIndex(x => x.SearchText);
-}).UseLightweightSessions();
+    
+    // Align Marten with System.Text.Json enum settings used by the API
+    opts.Serializer(new Marten.Services.SystemTextJsonSerializer
+    {
+        EnumStorage = Weasel.Core.EnumStorage.AsString
+    });
+})
+.UseLightweightSessions();
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MartenRepository<>));
 

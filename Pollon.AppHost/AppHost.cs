@@ -1,6 +1,9 @@
+using CommunityToolkit.Aspire.Hosting.Minio;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var sql = builder.AddSqlServer("sqlserver");
+var sql = builder.AddSqlServer("sqlserver")
+    .WithDataVolume();
 var postgres = builder.AddPostgres("postgres")
     .WithDataVolume()
     .AddDatabase("backofficedb");
@@ -13,6 +16,8 @@ var keycloak = builder.AddKeycloak("keycloak")
     .WithEnvironment("KC_BOOTSTRAP_ADMIN_PASSWORD", "admin");
 
 var messaging = builder.AddRabbitMQ("messaging");
+var minio = builder.AddMinioContainer("minio")
+    .WithDataVolume();
 
 var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
     .WithReference(postgres)
@@ -37,6 +42,7 @@ var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
     .WithReference(messaging)
     .WithReference(backofficeApi)
     .WithReference(keycloak)
+    .WithReference(minio)
     .WithHttpHealthCheck("/health")
     .WaitFor(sql)
     .WaitFor(messaging)

@@ -5,7 +5,7 @@ using Pollon.Contracts.Events;
 
 namespace Pollon.Content.Api.Consumers;
 
-public class ContentDeletedConsumer
+public partial class ContentDeletedConsumer
 {
     private readonly ApiDbContext _dbContext;
     private readonly ILogger<ContentDeletedConsumer> _logger;
@@ -18,7 +18,7 @@ public class ContentDeletedConsumer
 
     public async Task Handle(ContentDeletedEvent message)
     {
-        _logger.LogInformation("Received ContentDeletedEvent for ContentItemId {ContentItemId}", message.ContentItemId);
+        LogReceivedEvent(_logger, message.ContentItemId);
 
         var existingContent = await _dbContext.PublishedContents
             .FirstOrDefaultAsync(c => c.Id == message.ContentItemId);
@@ -27,7 +27,7 @@ public class ContentDeletedConsumer
         {
             _dbContext.PublishedContents.Remove(existingContent);
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Deleted ContentItemId {ContentItemId} from SQL Server", message.ContentItemId);
+            LogDeletedSuccess(_logger, message.ContentItemId);
         }
     }
 }

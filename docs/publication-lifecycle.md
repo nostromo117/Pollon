@@ -8,7 +8,7 @@ Il sistema di pubblicazione di Pollon è completamente asincrono e si basa su Ra
 
 ### 1. Fase di Trigger (Backoffice API)
 Quando un utente preme "Salva e Pubblica" nel Backoffice:
-1. Il `ContentItemService` salva i dati grezzi nel database PostgreSQL.
+1. Il `ContentItemService` salva i dati grezzi nel database PostgreSQL (gestito come **Document Store** tramite Marten, vedi [Architettura](file:///c:/Users/user/source/repos/Pollon/docs/architecture.md)).
 2. Viene emesso un evento `ContentPublishedEvent` o `ContentUpdatedEvent` contenente solo l'ID del contenuto.
 
 ### 2. Fase di Elaborazione (Content API)
@@ -16,7 +16,7 @@ Il microservizio `Content.Api` è in ascolto di questi eventi:
 1. **Recupero Dati**: Il consumer chiama il Backoffice API per ottenere i dati completi dell'item e le informazioni sul suo `ContentType`.
 2. **Rendering**: Se il tipo di contenuto prevede la modalità `Static` o `Both`, viene invocato lo `ScribanTemplateRenderer`.
 3. **SSG (Static Site Generation)**: L'HTML prodotto viene inviato al `MinioStaticStorage`.
-4. **Persistenza Delivery**: I metadati, il testo per la ricerca (`SearchText`) e il blocco HTML vengono salvati nel database SQL Server dedicato alla lettura.
+4. **Persistenza Delivery**: I metadati, il testo per la ricerca (`SearchText`) e il blocco HTML vengono salvati nel database SQL Server dedicato alla lettura. Il campo `SearchText` viene generato aggregando tutti i campi testuali per ottimizzare le performance di ricerca (vedi [Strategia di Ricerca](file:///c:/Users/user/source/repos/Pollon/docs/architecture.md#strategia-di-ricerca-unified-search-text)).
 
 ## Diagrammi di Sequenza
 

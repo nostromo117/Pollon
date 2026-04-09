@@ -23,7 +23,8 @@ var minio = builder.AddMinioContainer("minio")
 var jaeger = builder.AddContainer("jaeger", "jaegertracing/all-in-one")
     .WithHttpEndpoint(port: 16686, targetPort: 16686, name: "ui")
     .WithEndpoint(port: 4317, targetPort: 4317, name: "otlp-grpc")
-    .WithEndpoint(port: 4318, targetPort: 4318, name: "otlp-http");
+    .WithEndpoint(port: 4318, targetPort: 4318, name: "otlp-http")
+    .WithEnvironment("COLLECTOR_OTLP_ENABLED", "true");
 
 var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
     .WithReference(postgres)

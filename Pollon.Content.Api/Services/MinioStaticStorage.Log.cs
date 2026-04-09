@@ -21,4 +21,13 @@ public partial class MinioStaticStorage
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Bucket {BucketName} created with public read policy.")]
     static partial void LogBucketPolicySet(ILogger logger, string bucketName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Removing file from MinIO: {Bucket}/{Path}")]
+    static partial void LogRemovingFile(ILogger logger, string bucket, string path);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Successfully removed {Path} from MinIO.")]
+    static partial void LogRemoveSuccess(ILogger logger, string path);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Error removing file {Path} from MinIO")]
+    static partial void LogRemoveError(ILogger logger, Exception ex, string path);
 }

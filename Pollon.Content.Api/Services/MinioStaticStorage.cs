@@ -50,6 +50,27 @@ public partial class MinioStaticStorage : IStaticStorage
         }
     }
 
+    public async Task DeleteFileAsync(string path)
+    {
+        try
+        {
+            LogRemovingFile(_logger, BucketName, path);
+
+            var removeArgs = new RemoveObjectArgs()
+                .WithBucket(BucketName)
+                .WithObject(path);
+
+            await _minioClient.RemoveObjectAsync(removeArgs);
+            
+            LogRemoveSuccess(_logger, path);
+        }
+        catch (Exception ex)
+        {
+            LogRemoveError(_logger, ex, path);
+            throw;
+        }
+    }
+
     private async Task EnsureBucketExistsAsync()
     {
         var found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(BucketName));

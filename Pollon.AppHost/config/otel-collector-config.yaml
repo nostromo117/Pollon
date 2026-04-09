@@ -1,0 +1,38 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+
+processors:
+  batch:
+  transform/infra:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          # Identify RabbitMQ
+          - set(attributes["peer.service"], "rabbitmq") where attributes["net.peer.port"] == 5672 or attributes["messaging.system"] == "rabbitmq"
+          # Identify MinIO
+          - set(attributes["peer.service"], "minio") where IsMatch(attributes["http.url"], ".*:9000.*") or attributes["net.peer.port"] == 9000
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, transform/infra]
+      exporters: [otlp/jaeger, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger, debug]

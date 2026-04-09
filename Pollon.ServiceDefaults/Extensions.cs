@@ -7,6 +7,7 @@ using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Logs;
 using Npgsql;
 
 namespace Microsoft.Extensions.Hosting;
@@ -83,11 +84,38 @@ public static class Extensions
 
     private static TBuilder AddOpenTelemetryExporters<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
-        var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+        var endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+        var useOtlpExporter = !string.IsNullOrWhiteSpace(endpoint);
 
-        if (useOtlpExporter)
+        var jaegerEndpoint = builder.Configuration["JAEGER_OTLP_ENDPOINT"];
+        var useJaeger = !string.IsNullOrWhiteSpace(jaegerEndpoint);
+
+        if (useOtlpExporter || useJaeger)
         {
-            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            if (useOtlpExporter)
+            {
+                builder.Logging.AddOpenTelemetry(logging => logging.AddOtlpExporter());
+            }
+
+            builder.Services.AddOpenTelemetry()
+                .WithTracing(tracing =>
+                {
+                    if (useOtlpExporter) tracing.AddOtlpExporter("aspire", _ => { });
+                    if (useJaeger) tracing.AddOtlpExporter("jaeger", options =>
+                    {
+                        options.Endpoint = new Uri(jaegerEndpoint!);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+                })
+                .WithMetrics(metrics =>
+                {
+                    if (useOtlpExporter) metrics.AddOtlpExporter("aspire", _ => { });
+                    if (useJaeger) metrics.AddOtlpExporter("jaeger", options =>
+                    {
+                        options.Endpoint = new Uri(jaegerEndpoint!);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    });
+                });
         }
 
         // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.AspNetCore package)

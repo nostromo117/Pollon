@@ -2,9 +2,14 @@
 
 Questo documento descrive come Pollon implementa l'osservabilità (Distributed Tracing, Logging e Metrics) per permettere il monitoraggio e il debugging end-to-end delle richieste in un ambiente a microservizi.
 
-## Architettura di Tracciamento
+## Architettura di Tracciamento: Dual-Export Nativo
 
-Pollon utilizza **OpenTelemetry (OTel)** come standard per la raccolta di telemetria. Ogni componente della soluzione è strumentato per emettere segnali che vengono raccolti dal dashboard di .NET Aspire durante lo sviluppo.
+Pollon utilizza **OpenTelemetry (OTel)** come standard per la raccolta di telemetria, implementando un'architettura di **Dual-Export Nativo**. Per mantenere stabilità e aggirare le naturali restrizioni di rete di Docker Desktop, ogni microservizio genera e invia la propria telemetria simultaneamente a due destinazioni:
+
+1.  **.NET Aspire Dashboard** (Processo Host): Per la visualizzazione in tempo reale di Log, Metriche e Tracce base, sfruttando l'autenticazione nativa di sistema.
+2.  **OpenTelemetry Collector** (Container Docker): Riceve una copia parallela esclusivamente delle tracce. Si occupa di arricchirle (es. identificando RabbitMQ e MinIO come nodi infrastrutturali) e le inoltra a **Jaeger** per le analisi grafiche più avanzate.
+
+Questa architettura parallela e "senza ponti interconnessi" garantisce l'assenza di errori di autorizzazione (`401 Unauthorized`) o irraggiungibilità di rete, massimizzando l'affidabilità dell'osservabilità locale.
 
 ### Propagazione del TraceId
 Quando una richiesta entra nel sistema (es: tramite il Frontend), viene generato un **TraceId** univoco. Questo ID viene propagato automaticamente attraverso tutti i confini del servizio:

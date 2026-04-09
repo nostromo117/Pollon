@@ -41,3 +41,19 @@ Oltre alle tracce, il progetto `Pollon.ServiceDefaults` espone metriche standard
 - Latenza media delle chiamate database.
 
 Questi dati sono consultabili nella sezione **Metrics** della dashboard.
+
+## Analisi Avanzata con Jaeger
+
+Per un'analisi ancora più dettagliata, abbiamo integrato **Jaeger**, un tool open-source specializzato nel Distributed Tracing.
+
+### Perché usare Jaeger invece della Dashboard Aspire?
+Mentre la dashboard di Aspire è ottima per una visione rapida, Jaeger offre:
+- **Grafico delle Dipendenze**: Visualizza automaticamente come i tuoi microservizi interagiscono tra loro.
+- **Confronto Tracce**: Permette di mettere a confronto due esecuzioni della stessa operazione per capire perché una è stata più lenta dell'altra.
+- **Ricerca Avanzata**: Filtri potenti per tag, durata e errori.
+
+### Accesso a Jaeger
+1. Avvia la soluzione con `aspire run`.
+2. Nella dashboard di Aspire, individua la risorsa **jaeger**.
+3. Clicca sul link nell'endpoint **ui** (porta 16686).
+4. Seleziona un servizio dal menu "Service" e clicca su "Find Traces" per iniziare l'analisi.

@@ -1,6 +1,6 @@
 # Architettura dei Dati e Strategia di Ricerca
 
-Questo documento descrive le scelte architettoniche relative alla persistenza dei dati e alla gestione della ricerca all'interno di Pollon.
+Questo documento descrive le scelte architettoniche relative alla persistenza dei dati e alla gestione della ricerca all'interno di Pollon. Per dettagli sul monitoraggio e tracciamento distribuito, vedi [Osservabilità](file:///c:/Users/user/source/repos/Pollon/docs/observability.md).
 
 ## Strategia Database Ibrida (CQRS)
 

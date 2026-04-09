@@ -28,6 +28,8 @@ var jaeger = builder.AddContainer("jaeger", "jaegertracing/all-in-one")
 var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
     .WithReference(postgres)
     .WithReference(keycloak)
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", jaeger.GetEndpoint("otlp-grpc"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
     .WaitFor(postgres)
     .WaitFor(keycloak);
 
@@ -38,6 +40,8 @@ var backofficeApi = builder.AddProject<Projects.Pollon_Backoffice_Api>("backoffi
     .WithReference(messaging)
     .WithReference(keycloak)
     .WithReference(mediaApi)
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", jaeger.GetEndpoint("otlp-grpc"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
     .WaitFor(sql)
     .WaitFor(postgres)
     .WaitFor(keycloak)
@@ -50,6 +54,8 @@ var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
     .WithReference(keycloak)
     .WithReference(minio)
     .WithHttpHealthCheck("/health")
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", jaeger.GetEndpoint("otlp-grpc"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
     .WaitFor(sql)
     .WaitFor(messaging)
     .WaitFor(keycloak);
@@ -60,6 +66,8 @@ var backofficeWeb = builder.AddProject<Projects.Pollon_Backoffice_Web>("backoffi
     .WithReference(backofficeApi)
     .WithReference(mediaApi)
     .WithReference(keycloak)
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", jaeger.GetEndpoint("otlp-grpc"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
     .WaitFor(backofficeApi)
     .WaitFor(mediaApi)
     .WaitFor(keycloak);
@@ -72,6 +80,8 @@ var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web
     .WithReference(mediaApi)
     .WithReference(minio)
     .WithEnvironment("ReverseProxy__Clusters__minio-cluster__Destinations__minio-dest__Address", minio.GetEndpoint("http"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", jaeger.GetEndpoint("otlp-grpc"))
+    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
     .WaitFor(contentApi);
 
 builder.Build().Run();

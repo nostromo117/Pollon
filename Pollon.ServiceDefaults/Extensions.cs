@@ -73,7 +73,6 @@ public static class Extensions
                     )
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation() // Trace EF Core database calls
-                    .AddSqlClientInstrumentation() // Trace SQL Server calls
                     .AddNpgsql(); // Trace PostgreSQL calls
             });
 

@@ -11,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+// Add PostgreSQL DataSource for Marten
+builder.AddNpgsqlDataSource("backofficedb");
+
 // Add services to the container.
 builder.Services.AddOpenApi();
 
@@ -24,11 +27,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // Setup Marten
-builder.Services.AddMarten((Marten.StoreOptions opts) => 
+builder.Services.AddMarten(opts => 
 {
     opts.Connection(builder.Configuration.GetConnectionString("backofficedb")!);
     opts.Schema.For<ContentItem>().NgramIndex(x => x.SearchText);
-    
+
     // Align Marten with System.Text.Json enum settings used by the API
     opts.Serializer(new Marten.Services.SystemTextJsonSerializer
     {

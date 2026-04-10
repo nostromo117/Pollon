@@ -13,8 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
-// Add SQL Server DbContext
-builder.AddSqlServerDbContext<ApiDbContext>("sqlserver");
+// Add PostgreSQL DbContext
+builder.AddNpgsqlDbContext<ApiDbContext>("contentdb");
 
 // Setup Keycloak Token Service (for service-to-service auth)
 builder.Services.AddHttpClient<KeycloakTokenService>();
@@ -57,8 +57,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
-    dbContext.Database.EnsureCreated();
-    
+
+    // In development, recreate the database to ensure schema is correct
+    if (app.Environment.IsDevelopment())
+    {
+        await dbContext.Database.EnsureDeletedAsync();
+    }
+    await dbContext.Database.EnsureCreatedAsync();
+
     var storage = scope.ServiceProvider.GetRequiredService<IStaticStorage>();
     await storage.InitializeAsync();
 }
@@ -119,13 +125,13 @@ static async Task<(List<PublishedContent> Items, int TotalCount)> GetPaginatedRe
     }
 
     // Conteggio totale e Paginazione
-    var totalCount = await EntityFrameworkQueryableExtensions.CountAsync(queryable);
-    
+    var totalCount = await queryable.CountAsync();
+
     var itemsQuery = queryable
         .Skip((query.Page - 1) * query.PageSize)
         .Take(query.PageSize);
-        
-    var items = await EntityFrameworkQueryableExtensions.ToListAsync(itemsQuery);
+
+    var items = await itemsQuery.ToListAsync();
 
     return (items, totalCount);
 }

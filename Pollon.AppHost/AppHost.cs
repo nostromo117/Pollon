@@ -2,11 +2,10 @@ using CommunityToolkit.Aspire.Hosting.Minio;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var sql = builder.AddSqlServer("sqlserver")
+var postgresServer = builder.AddPostgres("postgres")
     .WithDataVolume();
-var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume()
-    .AddDatabase("backofficedb");
+var postgres = postgresServer.AddDatabase("backofficedb");
+var contentDb = postgresServer.AddDatabase("contentdb");
 var keycloak = builder.AddKeycloak("keycloak")
     .WithDataBindMount("./keycloak-data")
     .WithBindMount("./keycloak-config", "/opt/keycloak/data/import", isReadOnly: true)
@@ -36,27 +35,25 @@ var mediaApi = builder.AddProject<Projects.Pollon_Media_Api>("mediaapi")
     .WithReference(keycloak)
     .WithEnvironment("JAEGER_OTLP_ENDPOINT", otelCollector.GetEndpoint("grpc"))
     .WithEnvironment("JAEGER_OTLP_PROTOCOL", "grpc")
-    .WaitFor(postgres)
+    .WaitFor(postgresServer)
     .WaitFor(keycloak)
     .WaitFor(otelCollector);
 
 var backofficeApi = builder.AddProject<Projects.Pollon_Backoffice_Api>("backofficeapi")
     .WithExternalHttpEndpoints()
-    .WithReference(sql)
     .WithReference(postgres)
     .WithReference(messaging)
     .WithReference(keycloak)
     .WithReference(mediaApi)
     .WithEnvironment("JAEGER_OTLP_ENDPOINT", otelCollector.GetEndpoint("grpc"))
     .WithEnvironment("JAEGER_OTLP_PROTOCOL", "grpc")
-    .WaitFor(sql)
-    .WaitFor(postgres)
+    .WaitFor(postgresServer)
     .WaitFor(keycloak)
     .WaitFor(mediaApi)
     .WaitFor(otelCollector);
 
 var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
-    .WithReference(sql)
+    .WithReference(contentDb)
     .WithReference(messaging)
     .WithReference(backofficeApi)
     .WithReference(keycloak)
@@ -64,7 +61,7 @@ var contentApi = builder.AddProject<Projects.Pollon_Content_Api>("contentapi")
     .WithHttpHealthCheck("/health")
     .WithEnvironment("JAEGER_OTLP_ENDPOINT", otelCollector.GetEndpoint("grpc"))
     .WithEnvironment("JAEGER_OTLP_PROTOCOL", "grpc")
-    .WaitFor(sql)
+    .WaitFor(postgresServer)
     .WaitFor(messaging)
     .WaitFor(keycloak)
     .WaitFor(otelCollector);

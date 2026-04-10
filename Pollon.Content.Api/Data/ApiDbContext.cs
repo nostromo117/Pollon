@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-
 using Pollon.Contracts.Models;
 
 namespace Pollon.Content.Api.Data;
@@ -15,23 +14,26 @@ public class ApiDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         var entity = modelBuilder.Entity<PublishedContent>();
-        
+
+        // PostgreSQL uses lowercase table names by default
+        entity.ToTable("publishedcontents");
+
         entity.HasKey(x => x.Id);
-        
+
         entity.Property(x => x.JsonData)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         entity.Property(x => x.HtmlContent)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         entity.Property(x => x.SearchText)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         // Optimize querying by SystemName and Slug
         entity.HasIndex(x => x.SystemName);
-            
+
         entity.HasIndex(x => x.Slug);
     }
 }

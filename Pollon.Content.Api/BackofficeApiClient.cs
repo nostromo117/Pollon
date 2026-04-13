@@ -34,6 +34,13 @@ public class BackofficeApiClient(HttpClient httpClient, KeycloakTokenService tok
     public async Task<MediaGallery?> GetGalleryByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         await PrepareClientAsync();
-        return await httpClient.GetFromJsonAsync<MediaGallery>($"/api/galleries/{id}", _options, cancellationToken);
+        try
+        {
+            return await httpClient.GetFromJsonAsync<MediaGallery>($"/api/galleries/{id}", _options, cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 }

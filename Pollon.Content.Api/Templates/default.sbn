@@ -40,7 +40,7 @@
                     <div class="field mb-4">
                         <div class="field-label fw-bold text-uppercase small text-primary mb-1" style="letter-spacing: 0.5px;">{{ pair.key }}</div>
                         <div class="field-value">
-                            {{- $val = pair.value | string.to_string -}}
+                            {{- $val = "" + pair.value -}}
                             {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
                                 <div class="img-wrapper mt-2">
                                     <img src="{{ $val }}" class="img-fluid border shadow-sm" style="max-height: 500px; object-fit: contain;" alt="{{ pair.key }}" />

@@ -200,7 +200,7 @@ else
                                 }
                             </MudSelect>
 
-                            <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="/" Variant="Variant.Outlined" HelperText="Used for the item URL." />
+                            <MudTextField T="string" Label="Slug" @bind-Value="item.Slug" Adornment="Adornment.Start" AdornmentText="@(selectedContentType != null && !string.IsNullOrWhiteSpace(selectedContentType.Slug) ? $"/{selectedContentType.Slug}/" : "/")" Variant="Variant.Outlined" HelperText="Used for the item URL." />
 
                         
 

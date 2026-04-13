@@ -80,6 +80,13 @@ public partial class ContentPublishedConsumer
             var effectiveMode = contentItem.PublishModeOverride ?? contentType.PublishMode;
             LogEffectivePublishMode(_logger, effectiveMode);
 
+            // Calculate unified Slug combining ContentType and ContentItem rules
+            var baseSlug = contentType.Slug?.Trim('/') ?? string.Empty;
+            var itemSlugPart = string.IsNullOrWhiteSpace(contentItem.Slug) ? contentItem.Id : contentItem.Slug;
+            var publishedSlug = string.IsNullOrEmpty(baseSlug) 
+                ? itemSlugPart 
+                : (itemSlugPart.StartsWith($"{baseSlug}/") ? itemSlugPart : $"{baseSlug}/{itemSlugPart}");
+
             string? html = null;
             if (effectiveMode == PublishMode.Static || effectiveMode == PublishMode.Both)
             {
@@ -106,7 +113,11 @@ public partial class ContentPublishedConsumer
                         var gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
                         if (gallery != null && gallery.AssetIds.Any())
                         {
-                            templateData["images"] = gallery.AssetIds.Select(id => new { url = $"/api/media/{id}", alt = "Gallery Image" }).ToList();
+                            templateData["images"] = gallery.AssetIds.Select(id => new Dictionary<string, string> 
+                            { 
+                                { "url", $"/api/media/{id}" }, 
+                                { "alt", "Gallery Image" } 
+                            }).ToList();
                         }
                     }
 
@@ -115,9 +126,7 @@ public partial class ContentPublishedConsumer
                     // Push to Static Storage (MinIO)
                     if (!string.IsNullOrEmpty(html))
                     {
-                        var fileName = string.IsNullOrWhiteSpace(contentItem.Slug) 
-                                       ? $"{contentItem.Id}.html" 
-                                       : $"{contentItem.Slug}.html";
+                        var fileName = $"{publishedSlug}.html";
                                        
                         await _staticStorage.SaveFileAsync(fileName, html, "text/html");
                         LogStaticFileSaved(_logger, fileName);
@@ -137,9 +146,7 @@ public partial class ContentPublishedConsumer
                     Id = contentItem.Id,
                     ContentTypeId = contentItem.ContentTypeId,
                     SystemName = contentType.SystemName,
-                    Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
-                           ? $"{contentType.Slug}/{contentItem.Id}" 
-                           : contentItem.Slug,
+                    Slug = publishedSlug,
                     Icon = contentItem.Icon,
                     PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
                     JsonData = json,
@@ -154,9 +161,7 @@ public partial class ContentPublishedConsumer
                 LogContentAction(_logger, "Updating existing", contentItemId);
                 existingContent.ContentTypeId = contentItem.ContentTypeId;
                 existingContent.SystemName = contentType.SystemName;
-                existingContent.Slug = string.IsNullOrWhiteSpace(contentItem.Slug) 
-                                       ? $"{contentType.Slug}/{contentItem.Id}" 
-                                       : contentItem.Slug;
+                existingContent.Slug = publishedSlug;
                 existingContent.Icon = contentItem.Icon;
                 existingContent.PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow;
                 existingContent.JsonData = json;

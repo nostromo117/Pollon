@@ -70,4 +70,5 @@ In caso di modifiche al realm o necessità di reset totale:
 ## Documentazione Tecnica
 - [Marten Database Schema](docs/marten_db_schema.md)
 - [Publication Modes & SSG](docs/publication-modes.md)
-- [Implementazione Autenticazione (Walkthrough)](walkthrough.md)
+- [Autenticazione Backoffice (Walkthrough)](walkthrough.md)
+- [Ordinamento Campi Content Type (Walkthrough)](walkthrough-field-ordering.md)

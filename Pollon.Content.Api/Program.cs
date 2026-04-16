@@ -87,19 +87,19 @@ contentApi.MapGet("/", async ([AsParameters] ContentQueryParameters query, ApiDb
     return Results.Ok(new PagedResult<PublishedContent>(items, totalCount, query.Page, query.PageSize));
 });
 
-// Recupera tutti i contenuti di un certo tipo (es: "blog-post") sfruttando l'indice su Slug
-contentApi.MapGet("/{slug}", async (string slug, [AsParameters] ContentQueryParameters query, ApiDbContext dbContext) =>
-{
-    var queryable = dbContext.PublishedContents.Where(c => c.Slug == slug);
-    var (items, totalCount) = await GetPaginatedResultsAsync(queryable, query);
-    return Results.Ok(new PagedResult<PublishedContent>(items, totalCount, query.Page, query.PageSize));
-});
-
 // Recupera il singolo contenuto per ID
 contentApi.MapGet("/item/{id}", async (string id, ApiDbContext dbContext) =>
 {
     var item = await dbContext.PublishedContents.FindAsync(id);
     return item is not null ? Results.Ok(item) : Results.NotFound();
+});
+
+// Recupera i contenuti per Slug (supporta percorsi annidati con {*slug})
+contentApi.MapGet("/{*slug}", async (string slug, [AsParameters] ContentQueryParameters query, ApiDbContext dbContext) =>
+{
+    var queryable = dbContext.PublishedContents.Where(c => c.Slug == slug);
+    var (items, totalCount) = await GetPaginatedResultsAsync(queryable, query);
+    return Results.Ok(new PagedResult<PublishedContent>(items, totalCount, query.Page, query.PageSize));
 });
 
 app.MapDefaultEndpoints();

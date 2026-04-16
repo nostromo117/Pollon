@@ -21,7 +21,7 @@ public static class EndpointExtensions
             return item is not null ? Results.Ok(item) : Results.NotFound();
         });
 
-        group.MapPost("/", async (ContentType item, IRepository<ContentType> repo) =>
+        group.MapPost("/", async (ContentType item, IRepository<ContentType> repo, ILogger<ContentType> logger) =>
         {
             if (string.IsNullOrWhiteSpace(item.DisplayName) || 
                 string.IsNullOrWhiteSpace(item.SystemName) || 
@@ -31,10 +31,11 @@ public static class EndpointExtensions
             }
 
             await repo.CreateAsync(item);
+            logger.LogInformation("Created ContentType {DisplayName} ({SystemName}) with {FieldCount} fields.", item.DisplayName, item.SystemName, item.Fields.Count);
             return Results.Created($"/api/content-types/{item.Id}", item);
         });
 
-        group.MapPut("/{id}", async (string id, ContentType item, IRepository<ContentType> repo) =>
+        group.MapPut("/{id}", async (string id, ContentType item, IRepository<ContentType> repo, ILogger<ContentType> logger) =>
         {
             var existingItem = await repo.GetByIdAsync(id);
             if (existingItem is null) return Results.NotFound();
@@ -48,6 +49,8 @@ public static class EndpointExtensions
 
             item.Id = id;
             await repo.UpdateAsync(id, item);
+            logger.LogInformation("Updated ContentType {DisplayName} ({SystemName}). Fields updated: {FieldNames}", 
+                item.DisplayName, item.SystemName, string.Join(", ", item.Fields.OrderBy(f => f.Position).Select(f => $"{f.Name} [pos:{f.Position}]")));
             return Results.NoContent();
         });
 

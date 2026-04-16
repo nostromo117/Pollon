@@ -1,11 +1,13 @@
+using Microsoft.AspNetCore.Components.RenderTree;
+using Microsoft.EntityFrameworkCore;
+using Pollon.Backoffice.Models;
+using Pollon.Content.Api.Data;
+using Pollon.Content.Api.Services;
+using Pollon.Content.Api.Templates;
+using Pollon.Contracts.Events;
+using Pollon.Contracts.Models;
 using System.Text.Json;
 using Wolverine;
-using Microsoft.EntityFrameworkCore;
-using Pollon.Content.Api.Data;
-using Pollon.Contracts.Models;
-using Pollon.Backoffice.Models;
-using Pollon.Contracts.Events;
-using Pollon.Content.Api.Services;
 
 namespace Pollon.Content.Api.Consumers;
 
@@ -87,51 +89,30 @@ public partial class ContentPublishedConsumer
                 ? itemSlugPart 
                 : (itemSlugPart.StartsWith($"{baseSlug}/") ? itemSlugPart : $"{baseSlug}/{itemSlugPart}");
 
-            string? html = null;
+            var html = string.Empty;
             if (effectiveMode == PublishMode.Static || effectiveMode == PublishMode.Both)
             {
                 LogTriggeringRender(_logger, contentItemId, contentType.TemplateName);
-                try {
-                    // Enrich data for template
-                    var templateData = new Dictionary<string, object>(contentItem.Data);
-                    
-                    // Metadata
-                    templateData["id"] = contentItem.Id;
-                    templateData["slug"] = contentItem.Slug;
-                    templateData["published_at"] = contentItem.PublishedAt ?? DateTime.UtcNow;
-                    templateData["content_type"] = contentType.DisplayName;
-                    
-                    // Helper for Title if not already in Data
-                    if (!templateData.ContainsKey("title") && !templateData.ContainsKey("Title"))
-                    {
-                        templateData["title"] = GetItemDisplayName(contentItem);
-                    }
+                try
+            {
+               MediaGallery? gallery = null;
+               if (!string.IsNullOrEmpty(contentItem.GalleryId))
+               {
+                 gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
+               }
+                  // Enrich data for template
+                  html = await RenderTemplate.RenderContent(contentItem, contentType, _renderer, gallery);
 
-                    // Gallery
-                    if (!string.IsNullOrEmpty(contentItem.GalleryId))
-                    {
-                        var gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
-                        if (gallery != null && gallery.AssetIds.Any())
-                        {
-                            templateData["images"] = gallery.AssetIds.Select(id => new Dictionary<string, string> 
-                            { 
-                                { "url", $"/api/media/{id}" }, 
-                                { "alt", "Gallery Image" } 
-                            }).ToList();
-                        }
-                    }
+               // Push to Static Storage (MinIO)
+               if (!string.IsNullOrEmpty(html))
+               {
+                  var fileName = $"{publishedSlug}.html";
 
-                    html = await _renderer.RenderAsync(contentType.TemplateName ?? "default", templateData);
-
-                    // Push to Static Storage (MinIO)
-                    if (!string.IsNullOrEmpty(html))
-                    {
-                        var fileName = $"{publishedSlug}.html";
-                                       
-                        await _staticStorage.SaveFileAsync(fileName, html, "text/html");
-                        LogStaticFileSaved(_logger, fileName);
-                    }
-                } catch (Exception ex) {
+                  await _staticStorage.SaveFileAsync(fileName, html, "text/html");
+                  LogStaticFileSaved(_logger, fileName);
+               }
+            }
+            catch (Exception ex) {
                     LogRenderFailed(_logger, ex, contentItemId);
                 }
             }
@@ -181,15 +162,7 @@ public partial class ContentPublishedConsumer
         }
     }
 
-    private string GetItemDisplayName(ContentItem ci)
-    {
-        if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
-            ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
-        {
-            if (t is JsonElement el && el.ValueKind == JsonValueKind.String)
-                return el.GetString() ?? ci.Id;
-            return t.ToString() ?? ci.Id;
-        }
-        return ci.Id;
-    }
+ 
+
+ 
 }

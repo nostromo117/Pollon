@@ -6,4 +6,5 @@ public class ContentField
     public ContentFieldType FieldType { get; set; } = ContentFieldType.Text;
     public bool IsRequired { get; set; }
     public string? DefaultValue { get; set; }
+    public int Position { get; set; }
 }

@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @inject BackofficeApiClient ApiClient
+@inject IDialogService DialogService
+@inject Pollon.Backoffice.Web.Services.IContentTreeService TreeService
 @attribute [StreamRendering]
 
 <PageTitle>Content Items</PageTitle>
@@ -9,8 +11,8 @@
 <div class="d-flex justify-content-between align-items-center mb-6">
     <MudText Typo="Typo.h4" GutterBottom="true">Content Items</MudText>
     <div class="d-flex gap-4 align-center">
-        <MudTextField T="string" Label="Search (fuzzy)" Value="searchTerm" ValueChanged="OnSearchTermChanged" Immediate="true" DebounceInterval="400" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Dense="true" Margin="Margin.Dense" Style="min-width: 150px;" />
-        <MudSelect T="string" Label="Status" Value="selectedStatus" ValueChanged="OnStatusChanged" Dense="true" Margin="Margin.Dense" Class="mud-width-full" Style="min-width: 150px;">
+        <MudTextField T="string" Label="Search (fuzzy)" Value="searchTerm" ValueChanged="OnSearchTermChanged" Immediate="true" DebounceInterval="400" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Margin="Margin.Dense" Style="min-width: 150px;" />
+        <MudSelect T="string" Label="Status" Value="selectedStatus" ValueChanged="OnStatusChanged" Margin="Margin.Dense" Class="mud-width-full" Style="min-width: 150px;">
             <MudSelectItem Value="@((string?)null)">All Statuses</MudSelectItem>
             <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
             <MudSelectItem Value="@("Published")">Published</MudSelectItem>
@@ -46,15 +48,15 @@ else
     else
     {
         <MudPaper Elevation="1" Class="mt-4 pa-2">
-            <MudTreeView Items="@rootItems" Hover="true" Dense="true" ExpandOnClick="true">
+            <MudTreeView Items="@rootItems" Hover="true" ExpandOnClick="true">
                 <ItemTemplate Context="treeContext">
                     <MudTreeViewItem @bind-Expanded="@treeContext.Expanded" Items="@treeContext.Children" Value="@treeContext.Value">
                         <Content>
                             <div class="d-flex align-center w-100 py-2">
                                 <MudTreeViewItemToggleButton @bind-Expanded="@treeContext.Expanded" Visible="@(treeContext.Children != null && treeContext.Children.Any())" />
-                                <MudIcon Icon="@GetItemIcon(treeContext.Value!)" Color="@(treeContext.Value?.Status == "Published" ? Color.Primary : Color.Default)" Class="mr-3" />
-                                <div class="flex-grow-1">
-                                    <MudText Typo="Typo.body1" Style="font-weight: 500">@GetItemDisplayName(treeContext.Value!)</MudText>
+                                 <MudIcon Icon="@TreeService.GetItemIcon(treeContext.Value!)" Color="@(treeContext.Value?.Status == "Published" ? Color.Primary : Color.Default)" Class="mr-3" />
+                                 <div class="flex-grow-1">
+                                     <MudText Typo="Typo.body1" Style="font-weight: 500">@TreeService.GetItemDisplayName(treeContext.Value!)</MudText>
                                     <div class="d-flex align-center gap-2">
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@GetContentTypeName(treeContext.Value!.ContentTypeId)</MudText>
                                         <MudDivider Vertical="true" FlexItem="true" Style="height: 12px;" />
@@ -115,7 +117,7 @@ else
             var items = await ApiClient.GetContentItemsAsync(selectedStatus, selectedSortBy, sortDescending, searchTerm);
             
             // Build tree
-            rootItems = BuildTree(items);
+            rootItems = TreeService.BuildTree(items);
         }
         catch (Exception ex)
         {
@@ -124,27 +126,6 @@ else
         }
     }
 
-    private List<TreeItemData<ContentItem>> BuildTree(IEnumerable<ContentItem> items)
-    {
-        var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
-        var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
-        var roots = new List<TreeItemData<ContentItem>>();
-
-        foreach (var it in allItems)
-        {
-            var parentId = it.Value!.ParentId;
-            if (string.IsNullOrEmpty(parentId) || !itemLookup.TryGetValue(parentId, out var parent))
-            {
-                roots.Add(it);
-            }
-            else
-            {
-                if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
-                ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
-            }
-        }
-        return roots;
-    }
 
     private string GetContentTypeName(string id)
     {
@@ -163,25 +144,19 @@ else
 
     private string GetItemIcon(ContentItem ci)
     {
-        if (!string.IsNullOrEmpty(ci.Icon)) return ci.Icon;
-        return Icons.Material.Filled.Description;
+        return TreeService.GetItemIcon(ci);
     }
 
     private async Task DeleteItem(string id)
     {
-        await ApiClient.DeleteContentItemAsync(id);
-        await LoadDataAsync();
+        if (await DialogService.ShowMessageBoxAsync(
+            "Conferma Eliminazione", 
+            "Sei sicuro di voler eliminare definitivamente questo contenuto? L'azione rimuoverà anche i relativi file statici generati.", 
+            yesText: "Elimina", cancelText: "Annulla") == true)
+        {
+            await ApiClient.DeleteContentItemAsync(id);
+            await LoadDataAsync();
+        }
     }
 
-    private string GetItemDisplayName(ContentItem ci)
-    {
-        if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
-            ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
-        {
-            if (t is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
-                return el.GetString() ?? ci.Id;
-            return t.ToString() ?? ci.Id;
-        }
-        return ci.Id;
-    }
 }

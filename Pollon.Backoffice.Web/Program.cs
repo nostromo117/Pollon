@@ -13,6 +13,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<TokenProvider>();
+builder.Services.AddScoped<Pollon.Backoffice.Web.Services.IContentTreeService, Pollon.Backoffice.Web.Services.ContentTreeService>();
 
 builder.Services.AddOutputCache();
 builder.Services.AddMudServices();

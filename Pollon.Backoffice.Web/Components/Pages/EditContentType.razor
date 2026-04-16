@@ -4,6 +4,7 @@
 
 @inject BackofficeApiClient ApiClient
 @inject NavigationManager Navigation
+@inject ILogger<EditContentType> Logger
 
 <PageTitle>@(IsEdit ? "Edit Content Type" : "New Content Type")</PageTitle>
 
@@ -15,7 +16,8 @@
 }
 else
 {
-    <EditForm Model="contentType" OnValidSubmit="HandleSubmit" FormName="ModifyContentType">
+    <EditForm EditContext="_editContext" OnValidSubmit="HandleSubmit" FormName="ModifyContentType">
+        <MudExitPrompt Disabled="@(!_hasUnsavedChanges)" />
         <MudGrid>
             <!-- Basic Info -->
             <MudItem xs="12" md="8">
@@ -67,12 +69,16 @@ else
                     <MudCardContent>
                         <MudTable @key="contentType.Fields.Count" Items="@contentType.Fields" Elevation="0" Dense="true" Hover="true">
                             <HeaderContent>
+                                <MudTh>Pos</MudTh>
                                 <MudTh>Label</MudTh>
                                 <MudTh>Type</MudTh>
                                 <MudTh>Required</MudTh>
                                 <MudTh Style="text-align: right">Actions</MudTh>
                             </HeaderContent>
                             <RowTemplate Context="field">
+                                <MudTd DataLabel="Pos">
+                                    <MudText Typo="Typo.body2">@(field.Position + 1)</MudText>
+                                </MudTd>
                                 <MudTd>
                                     <MudTextField @bind-Value="field.Name" Immediate="true" Margin="Margin.Dense" Variant="Variant.Outlined" Placeholder="e.g. Title" />
                                 </MudTd>
@@ -88,6 +94,8 @@ else
                                     <MudCheckBox @bind-Value="field.IsRequired" Color="Color.Primary" Dense="true" />
                                 </MudTd>
                                 <MudTd Style="text-align: right">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Default" Size="Size.Small" OnClick="() => MoveFieldUp(field)" Disabled="@(field.Position == 0)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Color="Color.Default" Size="Size.Small" OnClick="() => MoveFieldDown(field)" Disabled="@(field.Position == contentType.Fields.Count - 1)" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => RemoveField(field)" />
                                 </MudTd>
                             </RowTemplate>
@@ -126,6 +134,8 @@ else
     private bool isLoading = true;
 
     private ContentType contentType = new();
+    private EditContext _editContext = default!;
+    private bool _hasUnsavedChanges = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +145,7 @@ else
             if (existing != null)
             {
                 contentType = existing;
+                contentType.Fields = contentType.Fields.OrderBy(f => f.Position).ToList();
             }
         }
         else
@@ -142,12 +153,17 @@ else
             contentType.Fields = new List<ContentField>();
         }
         
+        _editContext = new EditContext(contentType);
+        _editContext.OnFieldChanged += (s, e) => { _hasUnsavedChanges = true; InvokeAsync(StateHasChanged); };
+        
         isLoading = false;
     }
 
     private void UpdateDisplayName(string value)
     {
         contentType.DisplayName = value;
+        _hasUnsavedChanges = true;
+        
         if (!IsEdit)
         {
             if (string.IsNullOrWhiteSpace(contentType.SystemName) || contentType.SystemName == GenerateSystemName(oldDisplayName))
@@ -169,9 +185,40 @@ else
         if (contentType.Fields == null)
             contentType.Fields = new List<ContentField>();
             
-        contentType.Fields.Add(new ContentField { FieldType = ContentFieldType.Text });
-        contentType.Fields = contentType.Fields.ToList(); 
+        var nextPosition = contentType.Fields.Any() ? contentType.Fields.Max(f => f.Position) + 1 : 0;
+        contentType.Fields.Add(new ContentField { FieldType = ContentFieldType.Text, Position = nextPosition });
+        
+        contentType.Fields = contentType.Fields.OrderBy(f => f.Position).ToList(); 
+        _hasUnsavedChanges = true;
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task MoveFieldUp(ContentField field)
+    {
+        var index = contentType.Fields.IndexOf(field);
+        if (index > 0)
+        {
+            var other = contentType.Fields[index - 1];
+            (field.Position, other.Position) = (other.Position, field.Position);
+            contentType.Fields = contentType.Fields.OrderBy(f => f.Position).ToList();
+            Logger.LogInformation("Field '{FieldName}' moved up to position {Position} in ContentType '{ContentTypeName}'", field.Name, field.Position, contentType.DisplayName);
+            _hasUnsavedChanges = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task MoveFieldDown(ContentField field)
+    {
+        var index = contentType.Fields.IndexOf(field);
+        if (index < contentType.Fields.Count - 1)
+        {
+            var other = contentType.Fields[index + 1];
+            (field.Position, other.Position) = (other.Position, field.Position);
+            contentType.Fields = contentType.Fields.OrderBy(f => f.Position).ToList();
+            Logger.LogInformation("Field '{FieldName}' moved down to position {Position} in ContentType '{ContentTypeName}'", field.Name, field.Position, contentType.DisplayName);
+            _hasUnsavedChanges = true;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task RemoveField(ContentField field)
@@ -179,7 +226,13 @@ else
         if (contentType.Fields != null)
         {
             contentType.Fields.Remove(field);
+            // Re-normalize positions
+            for (int i = 0; i < contentType.Fields.Count; i++)
+            {
+                contentType.Fields[i].Position = i;
+            }
             contentType.Fields = contentType.Fields.ToList(); 
+            _hasUnsavedChanges = true;
             await InvokeAsync(StateHasChanged);
         }
     }
@@ -219,6 +272,10 @@ else
             contentType.Id = Guid.NewGuid().ToString(); // Assuming string ID format handling
             await ApiClient.CreateContentTypeAsync(contentType);
         }
+        
+        _hasUnsavedChanges = false;
+        StateHasChanged();
+        await Task.Delay(10); // Give Blazor UI thread a tick to update MudExitPrompt
         
         Navigation.NavigateTo("content-types");
     }

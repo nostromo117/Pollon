@@ -2,26 +2,33 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @inject BackofficeApiClient ApiClient
+@inject IDialogService DialogService
 @attribute [StreamRendering]
 
 <PageTitle>Content Types</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-6">
     <MudText Typo="Typo.h4" GutterBottom="true">Content Types</MudText>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="content-types/new">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+        Href="content-types/new">
         New Content Type
     </MudButton>
 </div>
 
 @if (contentTypes == null)
+
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
+
 else
+
 {
     <MudTable Items="@contentTypes" Hover="true" Elevation="1" Dense="true" Class="mt-4">
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<ContentType, object>(x=>x.DisplayName)">Name</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ContentType, object>(x=>x.DisplayName)">Name</MudTableSortLabel>
+            </MudTh>
             <MudTh>System Name</MudTh>
             <MudTh>Slug</MudTh>
             <MudTh>Fields</MudTh>
@@ -35,18 +42,23 @@ else
                 <MudChip T="string" Color="Color.Default" Size="Size.Small">@context.SystemName</MudChip>
             </MudTd>
             <MudTd DataLabel="Slug">
-                <MudText Typo="Typo.body2" Color="Color.Secondary"><span style="opacity: 0.5">/content/</span>@context.Slug</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary"><span style="opacity: 0.5">/content/</span>@context.Slug
+                </MudText>
             </MudTd>
             <MudTd DataLabel="Fields">
-                <MudAvatar Color="Color.Info" Size="Size.Small" Style="font-size: 0.75rem;">@context.Fields?.Count</MudAvatar>
+                <MudAvatar Color="Color.Info" Size="Size.Small" Style="font-size: 0.75rem;">@context.Fields?.Count
+                </MudAvatar>
             </MudTd>
             <MudTd DataLabel="Actions" Style="text-align: right">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Href="@($"content-types/edit/{context.Id}")" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="() => DeleteType(context.Id)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                    Href="@($"content-types/edit/{context.Id}")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                    OnClick="() => DeleteType(context.Id)" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudText Typo="Typo.body1" Align="Align.Center" Class="pa-4">No content types found. Click "New Content Type" to create one.</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="pa-4">No content types found. Click "New Content Type" to
+                create one.</MudText>
         </NoRecordsContent>
         <PagerContent>
             <MudTablePager />
@@ -57,19 +69,37 @@ else
 @code {
     private ContentType[]? contentTypes;
 
+
+
     protected override async Task OnInitializedAsync()
+
     {
+
         await LoadDataAsync();
+
     }
 
+
+
     private async Task LoadDataAsync()
+
     {
+
         contentTypes = await ApiClient.GetContentTypesAsync();
+
     }
+
+
 
     private async Task DeleteType(string id)
     {
-        await ApiClient.DeleteContentTypeAsync(id);
-        await LoadDataAsync();
+        if (await DialogService.ShowMessageBoxAsync(
+        "Conferma Eliminazione",
+        "Sei sicuro di voler eliminare definitivamente questo tipo di contenuto? Questa operazione è irreversibile.",
+        yesText: "Elimina", cancelText: "Annulla") == true)
+        {
+            await ApiClient.DeleteContentTypeAsync(id);
+            await LoadDataAsync();
+        }
     }
 }

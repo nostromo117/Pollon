@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.RenderTree;
-using Pollon.Backoffice.Models;
+using Microsoft.AspNetCore.Components.RenderTree;
+using Pollon.Publication.Models;
 using Pollon.Content.Api.Services;
 using System.Text.Json;
 

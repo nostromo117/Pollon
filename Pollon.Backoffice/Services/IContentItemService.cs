@@ -1,4 +1,4 @@
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Backoffice.Services;
 
@@ -9,4 +9,5 @@ public interface IContentItemService
     Task DeleteAndPublishAsync(string id);
     Task<ContentItem?> GetByIdAsync(string id);
     Task<IEnumerable<ContentItem>> GetAllAsync(string? status = null, string? sortBy = null, bool sortDescending = true, string? searchTerm = null);
+    Task RepublishAllAsync();
 }

@@ -1,5 +1,5 @@
 using Marten;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
 using Pollon.Media.Api.Services;

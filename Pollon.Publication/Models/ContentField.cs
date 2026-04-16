@@ -1,4 +1,4 @@
-namespace Pollon.Backoffice.Models;
+namespace Pollon.Publication.Models;
 
 public class ContentField
 {

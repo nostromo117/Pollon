@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Pollon.Backoffice.Models;
+namespace Pollon.Publication.Models;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ContentFieldType

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Pollon.Contracts.Models;
+namespace Pollon.Publication.Models;
 
 public class PublishedContent
 {

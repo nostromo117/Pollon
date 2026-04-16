@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Pollon.Contracts.Models;
+namespace Pollon.Publication.Models;
 
 public record ContentQueryParameters(
     int Page = 1,

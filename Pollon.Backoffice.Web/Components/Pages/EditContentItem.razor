@@ -7,6 +7,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject Pollon.Backoffice.Web.Services.IContentTreeService TreeService
+@inject AuthenticationStateProvider AuthStateProvider
 @using System.Text.Json
 @using Microsoft.AspNetCore.Components.Web
 
@@ -229,7 +230,7 @@ else
                                 </MudStack>
                             </MudPaper>
 
-                            <MudTextField T="string" Label="Created By" @bind-Value="item.CreatedBy" Variant="Variant.Outlined" />
+                            <MudTextField T="string" Label="Created By" @bind-Value="item.CreatedBy" Variant="Variant.Outlined" ReadOnly="true" />
 
                             @if (IsEdit)
                             {
@@ -447,7 +448,11 @@ else
             else
             {
                 // Reset for new item
-                item = new ContentItem { Status = "Draft", CreatedBy = "System Admin", Data = new(), ParentId = ParentId };
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                var creator = user.Identity?.Name ?? "Unknown User";
+                
+                item = new ContentItem { Status = "Draft", CreatedBy = creator, Data = new(), ParentId = ParentId };
                 selectedContentType = null;
                 selectedGallery = null;
             }

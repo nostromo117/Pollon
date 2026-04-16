@@ -4,7 +4,7 @@ using Wolverine.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Pollon.Content.Api.Data;
-using Pollon.Contracts.Models;
+using Pollon.Publication.Models;
 using Pollon.Content.Api;
 using Pollon.Content.Api.Services;
 
@@ -58,11 +58,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
 
-    // In development, recreate the database to ensure schema is correct
-    if (app.Environment.IsDevelopment())
-    {
-        await dbContext.Database.EnsureDeletedAsync();
-    }
+    // In development, ensure the database is created
     await dbContext.Database.EnsureCreatedAsync();
 
     var storage = scope.ServiceProvider.GetRequiredService<IStaticStorage>();

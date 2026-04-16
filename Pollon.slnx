@@ -5,7 +5,9 @@
   <Project Path="Pollon.Backoffice/Pollon.Backoffice.csproj" />
   <Project Path="Pollon.Contracts/Pollon.Contracts.csproj" />
   <Project Path="Pollon.Media.Api/Pollon.Media.Api.csproj" />
+  <Project Path="Pollon.Publication/Pollon.Publication.csproj" />
   <Project Path="Pollon.ServiceDefaults/Pollon.ServiceDefaults.csproj" />
+  <Project Path="Pollon.Backoffice.Mcp/Pollon.Backoffice.Mcp.csproj" />
   <Project Path="Pollon.Backoffice.Web/Pollon.Backoffice.Web.csproj" />
   <Project Path="Pollon.Frontend.Web/Pollon.Frontend.Web.csproj" />
 </Solution>

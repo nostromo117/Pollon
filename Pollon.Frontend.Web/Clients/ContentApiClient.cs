@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using Pollon.Contracts.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Frontend.Web.Clients;
 

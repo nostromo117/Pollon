@@ -1,5 +1,5 @@
 using MudBlazor;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 using System.Text.Json;
 
 namespace Pollon.Backoffice.Web.Services

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Pollon.Backoffice.Models;
+namespace Pollon.Publication.Models;
 
 public class MediaGallery
 {

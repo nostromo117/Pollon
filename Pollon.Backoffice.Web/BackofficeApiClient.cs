@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Backoffice.Web;
 

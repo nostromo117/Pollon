@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,7 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pollon.ServiceDefaults\Pollon.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Pollon.Contracts\Pollon.Contracts.csproj" />
-    <ProjectReference Include="..\Pollon.Backoffice\Pollon.Backoffice.csproj" />
+    <ProjectReference Include="..\Pollon.Publication\Pollon.Publication.csproj" />
   </ItemGroup>
 
   <ItemGroup>

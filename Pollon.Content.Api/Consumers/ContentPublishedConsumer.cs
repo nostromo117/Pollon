@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.EntityFrameworkCore;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 using Pollon.Content.Api.Data;
 using Pollon.Content.Api.Services;
 using Pollon.Content.Api.Templates;
 using Pollon.Contracts.Events;
-using Pollon.Contracts.Models;
+using Pollon.Publication.Models;
 using System.Text.Json;
 using Wolverine;
 

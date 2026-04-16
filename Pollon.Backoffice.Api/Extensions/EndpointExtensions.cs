@@ -1,4 +1,4 @@
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
 
@@ -6,6 +6,16 @@ namespace Pollon.Backoffice.Api.Extensions;
 
 public static class EndpointExtensions
 {
+    public static IEndpointRouteBuilder MapBackofficeEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapContentTypeEndpoints();
+        endpoints.MapContentItemEndpoints();
+        endpoints.MapGalleryEndpoints();
+        endpoints.MapMediaEndpoints();
+
+        return endpoints;
+    }
+
     public static IEndpointRouteBuilder MapContentTypeEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/content-types").WithTags("Content Types").RequireAuthorization();
@@ -102,6 +112,12 @@ public static class EndpointExtensions
         {
             await service.DeleteAndPublishAsync(id);
             return Results.NoContent();
+        });
+        
+        group.MapPost("/sync", async (IContentItemService service) =>
+        {
+            await service.RepublishAllAsync();
+            return Results.Accepted();
         });
 
         return endpoints;

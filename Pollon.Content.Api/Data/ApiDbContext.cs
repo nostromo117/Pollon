@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Pollon.Contracts.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Content.Api.Data;
 

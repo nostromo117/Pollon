@@ -1,12 +1,12 @@
 using Wolverine;
 using Marten;
 using Marten.Linq;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
 using Pollon.Contracts.Events;
 
-namespace Pollon.Backoffice.Api.Services;
+namespace Pollon.Backoffice.Services;
 
 public class ContentItemService : IContentItemService
 {
@@ -243,5 +243,18 @@ public class ContentItemService : IContentItemService
         // Publish the deletion event for this specific ID
         var deletedEvent = new ContentDeletedEvent(id);
         await _messageBus.PublishAsync(deletedEvent);
+    }
+
+    public async Task RepublishAllAsync()
+    {
+        var publishedItems = await _session.Query<ContentItem>()
+            .Where(x => x.Status == "Published")
+            .ToListAsync();
+
+        foreach (var item in publishedItems)
+        {
+            var publishedEvent = new ContentPublishedEvent(item.Id);
+            await _messageBus.PublishAsync(publishedEvent);
+        }
     }
 }

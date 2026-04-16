@@ -1,4 +1,4 @@
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Backoffice.Services;
 

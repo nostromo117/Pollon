@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Pollon.Backoffice.Models;
+using Pollon.Publication.Models;
 
 namespace Pollon.Content.Api.Consumers;
 

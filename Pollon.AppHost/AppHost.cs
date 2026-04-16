@@ -79,6 +79,11 @@ var backofficeWeb = builder.AddProject<Projects.Pollon_Backoffice_Web>("backoffi
     .WaitFor(keycloak)
     .WaitFor(otelCollector);
 
+builder.AddProject<Projects.Pollon_Backoffice_Mcp>("backoffice-mcp")
+    .WithReference(postgres)
+    .WithReference(messaging)
+    .WaitFor(postgresServer);
+
 var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")

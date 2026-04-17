@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Pollon.Plugin.Example-603d6d9c-8517-4f6c-9457-3f33878772a1</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pollon.Contracts\Pollon.Contracts.csproj" />
+    <ProjectReference Include="..\Pollon.Publication\Pollon.Publication.csproj" />
+    <ProjectReference Include="..\Pollon.ServiceDefaults\Pollon.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.21.0" />
+    <PackageReference Include="WolverineFx.Http" Version="5.21.0" />
+  </ItemGroup>
+
+</Project>

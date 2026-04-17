@@ -17,7 +17,7 @@
     <!-- Left Sidebar: Hierarchy & Search -->
     <MudItem xs="12" md="3">
         <MudPaper Elevation="0" Class="pa-4 border" Style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
-            <div class="d-flex align-center justify-space-between mb-4">
+            <div class="d-flex align-center justify-space-between mb-2">
                 <MudText Typo="Typo.h6">Navigation</MudText>
                 <MudTooltip Text="New Root Item">
                     <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Size="Size.Small" OnClick="CreateRootItem" />
@@ -26,9 +26,9 @@
 
             <MudTextField T="string" Label="Search Content..." @bind-Value="treeSearch" Immediate="true" 
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
-                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="ma-0" />
 
-            <div style="flex-grow: 1; overflow-y: auto;">
+            <div style="flex-grow: 1; overflow-y: auto;" class="mt-2">
                 @if (allRoots == null)
                 {
                     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
@@ -37,7 +37,7 @@
                 {
                     <MudTreeView Items="@FilteredRoots" Hover="true" T="ContentItem" 
                                  SelectionMode="SelectionMode.SingleSelection"
-                                 ExpandOnClick="true">
+                                 ExpandOnClick="true" Dense="true" Class="pa-0 mt-n2">
                         <ItemTemplate Context="treeContext">
                              <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
                                               @bind-Expanded="@treeContext.Expanded" 

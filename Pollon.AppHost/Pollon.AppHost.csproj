@@ -15,6 +15,8 @@
     <ProjectReference Include="..\Pollon.Frontend.Web\Pollon.Frontend.Web.csproj" />
     <ProjectReference Include="..\Pollon.Media.Api\Pollon.Media.Api.csproj" />
     <ProjectReference Include="..\Pollon.Backoffice.Mcp\Pollon.Backoffice.Mcp.csproj" />
+    <ProjectReference Include="..\Pollon.Configuration.Seeder\Pollon.Configuration.Seeder.csproj" />
+    <ProjectReference Include="..\Pollon.Plugin.Example\Pollon.Plugin.Example.csproj" />
   </ItemGroup>
 
   <ItemGroup>

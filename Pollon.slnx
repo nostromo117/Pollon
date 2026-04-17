@@ -10,4 +10,6 @@
   <Project Path="Pollon.Backoffice.Mcp/Pollon.Backoffice.Mcp.csproj" />
   <Project Path="Pollon.Backoffice.Web/Pollon.Backoffice.Web.csproj" />
   <Project Path="Pollon.Frontend.Web/Pollon.Frontend.Web.csproj" />
+  <Project Path="Pollon.Configuration.Seeder/Pollon.Configuration.Seeder.csproj" />
+  <Project Path="Pollon.Plugin.Example/Pollon.Plugin.Example.csproj" />
 </Solution>

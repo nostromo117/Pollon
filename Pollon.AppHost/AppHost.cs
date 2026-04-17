@@ -18,6 +18,10 @@ var messaging = builder.AddRabbitMQ("messaging");
 var minio = builder.AddMinioContainer("minio")
     .WithDataVolume();
 
+var consul = builder.AddContainer("consul", "hashicorp/consul", "latest")
+    .WithHttpEndpoint(port: 8500, targetPort: 8500, name: "ui")
+    .WithArgs("agent", "-dev", "-client", "0.0.0.0");
+
 // Jaeger Tracing Backend (Open Source)
 var jaeger = builder.AddContainer("jaeger", "jaegertracing/all-in-one")
     .WithHttpEndpoint(port: 16686, targetPort: 16686, name: "ui")
@@ -96,5 +100,14 @@ var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web
     .WithEnvironment("JAEGER_OTLP_PROTOCOL", "grpc")
     .WaitFor(contentApi)
     .WaitFor(otelCollector);
+
+// --- PLUGIN SYSTEM ---
+
+// Seeder: writes RabbitMQ connection string to Consul
+builder.AddProject<Projects.Pollon_Configuration_Seeder>("config-seeder")
+    .WithReference(messaging) 
+    .WithEnvironment("CONSUL_URL", consul.GetEndpoint("ui"))
+    .WaitFor(consul)
+    .WaitFor(messaging);
 
 builder.Build().Run();

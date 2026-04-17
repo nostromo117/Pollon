@@ -9,6 +9,8 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Logs;
 using Npgsql;
+using Winton.Extensions.Configuration.Consul;
+using Winton.Extensions.Configuration.Consul.Parsers;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -153,5 +155,25 @@ public static class Extensions
         }
 
         return app;
+    }
+
+    public static TBuilder AddConsulConfiguration<TBuilder>(this TBuilder builder, string keyPrefix = "pollon") where TBuilder : IHostApplicationBuilder
+    {
+        var consulAddress = builder.Configuration["CONSUL_URL"] ?? builder.Configuration["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
+        
+        builder.Configuration.AddConsul(
+            keyPrefix,
+            options =>
+            {
+                options.ConsulConfigurationOptions = consulConfig =>
+                {
+                    consulConfig.Address = new Uri(consulAddress);
+                };
+                options.Parser = new SimpleConfigurationParser();
+                options.ReloadOnChange = true;
+                options.Optional = true;
+            });
+
+        return builder;
     }
 }

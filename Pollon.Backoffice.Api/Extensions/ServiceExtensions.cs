@@ -17,7 +17,9 @@ public static class ServiceExtensions
         // Register repositories and domain services
         services.AddScoped(typeof(IRepository<>), typeof(MartenRepository<>));
         services.AddScoped<IContentItemService, ContentItemService>();
+        services.AddHostedService<PluginSyncService>();
 
         return services;
     }
 }
+

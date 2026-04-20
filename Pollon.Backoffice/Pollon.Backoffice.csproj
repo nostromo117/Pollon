@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.MongoDB.Driver" Version="13.2.2" />
+    <PackageReference Include="Consul" Version="1.8.0" />
     <PackageReference Include="Marten" Version="8.30.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.6" />
     <PackageReference Include="WolverineFx" Version="5.21.0" />
   </ItemGroup>
 

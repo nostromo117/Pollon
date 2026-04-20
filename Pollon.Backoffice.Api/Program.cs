@@ -10,9 +10,10 @@ builder.Services.AddBackofficeAuthentication(builder.Configuration);
 builder.AddBackofficeData();
 builder.Services.AddBackofficeServices();
 builder.Services.AddBackofficeHttpClients();
-builder.Host.AddBackofficeMessaging(builder.Configuration);
+builder.Host.AddBackofficeMessaging(builder.Configuration, typeof(Pollon.Backoffice.Handlers.PluginHandler).Assembly);
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pollon.Publication.Models;
+using System.Reflection;
 using Wolverine;
 using Wolverine.RabbitMQ;
 
@@ -32,7 +33,7 @@ public static class BackofficeInfrastructureExtensions
         return builder;
     }
 
-    public static IHostBuilder AddBackofficeMessaging(this IHostBuilder host, IConfiguration configuration)
+    public static IHostBuilder AddBackofficeMessaging(this IHostBuilder host, IConfiguration configuration, params Assembly[] additionalAssemblies)
     {
         host.UseWolverine(opts =>
         {
@@ -40,9 +41,16 @@ public static class BackofficeInfrastructureExtensions
                 .AutoProvision()
                 .UseConventionalRouting();
 
+            // Include any additional assemblies provided (e.g. Domain/Logic assemblies)
+            foreach (var assembly in additionalAssemblies)
+            {
+                opts.Discovery.IncludeAssembly(assembly);
+            }
+
             opts.Policies.UseDurableLocalQueues();
         });
 
         return host;
     }
 }
+

@@ -1,5 +1,8 @@
 <Solution>
   <Project Path="Pollon.Content.Api/Pollon.Content.Api.csproj" />
+  <Folder Name="/Plugins example/">
+    <Project Path="Pollon.Plugin.Example/Pollon.Plugin.Example.csproj" />
+  </Folder>
   <Project Path="Pollon.AppHost/Pollon.AppHost.csproj" />
   <Project Path="Pollon.Backoffice.Api/Pollon.Backoffice.Api.csproj" />
   <Project Path="Pollon.Backoffice/Pollon.Backoffice.csproj" />
@@ -11,5 +14,4 @@
   <Project Path="Pollon.Backoffice.Web/Pollon.Backoffice.Web.csproj" />
   <Project Path="Pollon.Frontend.Web/Pollon.Frontend.Web.csproj" />
   <Project Path="Pollon.Configuration.Seeder/Pollon.Configuration.Seeder.csproj" />
-  <Project Path="Pollon.Plugin.Example/Pollon.Plugin.Example.csproj" />
 </Solution>

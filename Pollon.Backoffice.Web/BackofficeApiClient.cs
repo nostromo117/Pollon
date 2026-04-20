@@ -286,4 +286,9 @@ public class BackofficeApiClient(
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/galleries/{id}");
         await SendWithAuthAsync(request, cancellationToken);
     }
+
+    public async Task<Pollon.Contracts.Models.PluginInfo[]> GetPluginsAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<Pollon.Contracts.Models.PluginInfo[]>("/api/plugins", cancellationToken) ?? [];
+    }
 }

@@ -12,9 +12,23 @@ public static class EndpointExtensions
         endpoints.MapContentItemEndpoints();
         endpoints.MapGalleryEndpoints();
         endpoints.MapMediaEndpoints();
+        endpoints.MapPluginEndpoints();
 
         return endpoints;
     }
+
+    public static IEndpointRouteBuilder MapPluginEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/plugins").WithTags("Plugins").RequireAuthorization();
+
+        group.MapGet("/", async (IRepository<Pollon.Contracts.Models.PluginInfo> repo) =>
+        {
+            return Results.Ok(await repo.GetAllAsync());
+        });
+
+        return endpoints;
+    }
+
 
     public static IEndpointRouteBuilder MapContentTypeEndpoints(this IEndpointRouteBuilder endpoints)
     {

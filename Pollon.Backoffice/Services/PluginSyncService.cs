@@ -36,15 +36,26 @@ public class PluginSyncService : BackgroundService
             try
             {
                 // 1. Fetch current status from Consul
-                // "pollon-plugin" is the name used by all our plugins
-                var services = await client.Health.Service("pollon-plugin", tag: null, passingOnly: false, ct: stoppingToken);
+                var consulServices = await client.Health.Service("pollon-plugin", tag: null, passingOnly: false, ct: stoppingToken);
+                var activeConsulIds = consulServices.Response.Select(s => s.Service.ID).ToHashSet();
 
                 using var session = _store.LightweightSession();
 
-                // 2. Update status in Marten
-                foreach (var entry in services.Response)
+                // 2. Fetch all plugins from DB and delete those missing from Consul
+                var dbPlugins = await session.Query<PluginInfo>().ToListAsync(stoppingToken);
+                foreach (var dbPlugin in dbPlugins)
                 {
-                    // The Plugin ID is stored in the tags (excluding the general "plugin" tag)
+                    if (!activeConsulIds.Contains(dbPlugin.ConsulServiceId))
+                    {
+                        _logger.LogInformation("Plugin {Id} (ConsulID: {ConsulId}) is gone from Consul. Removing from database.", dbPlugin.Id, dbPlugin.ConsulServiceId);
+                        session.Delete(dbPlugin);
+                    }
+                }
+
+
+                // 3. Update status for the ones still in Consul
+                foreach (var entry in consulServices.Response)
+                {
                     var pluginId = entry.Service.Tags.FirstOrDefault(t => t != "plugin");
                     if (string.IsNullOrEmpty(pluginId)) continue;
 
@@ -61,18 +72,16 @@ public class PluginSyncService : BackgroundService
                     }
                 }
 
-                // 3. Optional: Handle plugins that are in DB but completely gone from Consul
-                // (This could be a separate cleanup task or done here by comparing IDs)
-                
                 await session.SaveChangesAsync(stoppingToken);
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error syncing plugin status from Consul.");
             }
 
-            // Poll every 10 seconds
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+            // Poll every 60 seconds
+            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
         }
     }
 }

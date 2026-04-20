@@ -110,11 +110,7 @@ builder.AddProject<Projects.Pollon_Configuration_Seeder>("config-seeder")
     .WaitFor(consul)
     .WaitFor(messaging);
 
-builder.AddProject<Projects.Pollon_Plugin_Example>("plugin-example")
-    .WithReference(messaging)
-    .WithEnvironment("CONSUL_URL", consul.GetEndpoint("ui"))
-    .WaitFor(consul)
-    .WaitFor(messaging);
+
 
 builder.Build().Run();
 

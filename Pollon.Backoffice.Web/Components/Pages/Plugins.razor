@@ -1,0 +1,100 @@
+@page "/plugins"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject BackofficeApiClient ApiClient
+@attribute [StreamRendering]
+
+<PageTitle>Plugins</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <MudText Typo="Typo.h4" GutterBottom="true">Registered Plugins</MudText>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+        Refresh
+    </MudButton>
+</div>
+
+<MudText Typo="Typo.body1" Class="mb-4">
+    Total plugins registered: <b>@(plugins?.Length ?? 0)</b>
+</MudText>
+
+@if (errorMessage != null)
+{
+    <MudAlert Severity="Severity.Error" Class="my-4">
+        <MudText Typo="Typo.h6">Error fetching plugins:</MudText>
+        <MudText Typo="Typo.body2">@errorMessage</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Inherit" OnClick="LoadDataAsync" Class="mt-2">Retry</MudButton>
+    </MudAlert>
+}
+else if (plugins == null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <MudTable Items="@plugins" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info" Elevation="1">
+        <HeaderContent>
+            <MudTh>Status</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>ID / Instance</MudTh>
+            <MudTh>Version</MudTh>
+            <MudTh>Last Seen</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Name">
+                <div class="d-flex flex-column">
+                    <MudText Typo="Typo.body1" Style="font-weight: 500">@context.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="ID / Instance">
+                <div class="d-flex flex-column">
+                    <MudText Typo="Typo.body2">@context.Id</MudText>
+                    <MudText Typo="Typo.caption" Style="font-family: monospace" Color="Color.Secondary">@context.ConsulServiceId</MudText>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Version">@context.Version</MudTd>
+            <MudTd DataLabel="Last Seen">
+                @context.LastSeen.ToLocalTime().ToString("g")
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No plugins registered yet.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    private Pollon.Contracts.Models.PluginInfo[]? plugins;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            plugins = await ApiClient.GetPluginsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Online" => Color.Success,
+        "Warning" => Color.Warning,
+        "Offline" => Color.Error,
+        _ => Color.Default
+    };
+}

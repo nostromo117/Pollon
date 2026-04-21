@@ -6,7 +6,7 @@ using Wolverine;
 
 namespace Pollon.Plugin.Example.Services;
 
-public class PluginRegistrationService : BackgroundService
+public partial class PluginRegistrationService : BackgroundService
 {
     private readonly KeycloakTokenClient _tokenClient;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -43,7 +43,7 @@ public class PluginRegistrationService : BackgroundService
         // and this service is on the host, containers (like Consul) need to use host.docker.internal.
         var healthCheckUrl = selfUrl.Replace("localhost", "host.docker.internal").Replace("127.0.0.1", "host.docker.internal");
 
-        _logger.LogInformation("Registering with Consul at {ConsulAddr}. Self URL: {SelfUrl}", consulAddr, selfUrl);
+        LogRegisteringWithConsul(_logger, consulAddr, selfUrl);
 
         using var client = new ConsulClient(cfg => cfg.Address = new Uri(consulAddr));
 
@@ -68,12 +68,12 @@ public class PluginRegistrationService : BackgroundService
         try
         {
             // Otteniamo il Token JWT prima di procedere
-            _logger.LogInformation("Requesting JWT from Keycloak...");
+            LogRequestingToken(_logger);
             var token = await _tokenClient.GetTokenAsync();
-            _logger.LogInformation("JWT obtained successfully.");
+            LogTokenObtained(_logger);
 
             await client.Agent.ServiceRegister(registration, stoppingToken);
-            _logger.LogInformation("Successfully registered in Consul with ID: {Id}", _consulServiceId);
+            LogConsulRegistrationSuccess(_logger, _consulServiceId);
 
             // 2. Send Registration Message via Wolverine and wait for feedback
             using (var scope = _scopeFactory.CreateScope())
@@ -84,22 +84,23 @@ public class PluginRegistrationService : BackgroundService
                     _pluginName, 
                     _consulServiceId, 
                     $"{healthCheckUrl}/health",
-                    token)); // Passiamo il token JWT
+                    token,
+                    SupportedContentTypes: new List<string> { "blog-post", "page" })); // Supportiamo questi tipi
 
                 if (response.Success)
                 {
-                    _logger.LogInformation("Successfully registered in Backoffice! Dashboard should show the plugin now.");
+                    LogBackofficeRegistrationSuccess(_logger);
                 }
                 else
                 {
-                    _logger.LogError("Backoffice REJECTED registration: {Message}", response.ErrorMessage);
+                    LogBackofficeRegistrationRejected(_logger, response.ErrorMessage);
                     // In real world we might want to shut down or retry
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to register plugin. Security check failed or host unreachable.");
+            LogRegistrationError(_logger, ex);
         }
 
         // 3. Keep the service alive
@@ -109,20 +110,20 @@ public class PluginRegistrationService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Plugin service is stopping...");
+            LogServiceStopping(_logger);
         }
 
         // Cleanup on shutdown
         if (_consulServiceId != null)
         {
-            _logger.LogInformation("Deregistering from Consul...");
+            LogDeregisteringConsul(_logger);
             try 
             {
                 await client.Agent.ServiceDeregister(_consulServiceId);
             }
             catch(Exception ex)
             {
-                _logger.LogWarning("Failed to deregister from Consul: {Message}", ex.Message);
+                LogDeregistrationWarning(_logger, ex.Message);
             }
         }
     }

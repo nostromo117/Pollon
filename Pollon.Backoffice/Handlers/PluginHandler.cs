@@ -5,6 +5,8 @@ using Pollon.Contracts.Messages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Pollon.Backoffice.Handlers;
 
@@ -14,7 +16,8 @@ public partial class PluginHandler
         RegisterPlugin message, 
         IDocumentSession session, 
         ILogger<PluginHandler> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IConfigurationManager<OpenIdConnectConfiguration> oidcManager)
     {
         // 1. Validate JWT
         if (string.IsNullOrEmpty(message.AccessToken))
@@ -31,28 +34,26 @@ public partial class PluginHandler
             var realm = configuration["Keycloak:Realm"] ?? "Pollon";
             var authority = $"{keycloakUrl.TrimEnd('/')}/realms/{realm}";
 
+            // 1. Fetch OIDC configuration (metadata and public keys)
+            var config = await oidcManager.GetConfigurationAsync(CancellationToken.None);
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = authority,
-                ValidateAudience = false, // Spesso per client_credentials l'audience è generic/account
+                ValidIssuer = config.Issuer,
+                IssuerSigningKeys = config.SigningKeys,
+                ValidateIssuerSigningKey = true,
+                ValidateAudience = false, 
                 ValidateLifetime = true,
-                ValidateIssuerSigningKey = false, // Per semplicità in dev non validiamo la firma se non abbiamo JWKS, 
-                                                 // ma in produzione dovremmo usare OIDC configuration manager
-                SignatureValidator = delegate (string token, TokenValidationParameters parameters)
-                {
-                    return new JwtSecurityToken(token);
-                }
+                ClockSkew = TimeSpan.FromMinutes(5)
             };
 
-            // Nota: in un ambiente reale useremmo ConfigurationManager<OpenIdConnectConfiguration>
-            // per scaricare le chiavi pubbliche da Keycloak.
             var principal = tokenHandler.ValidateToken(message.AccessToken, validationParameters, out _);
             
             // Possiamo anche controllare che il client_id nel token corrisponda
             var clientId = principal.FindFirst("azp")?.Value ?? principal.FindFirst("client_id")?.Value;
-            logger.LogInformation("Plugin {ClientId} authenticated successfully.", clientId);
+            logger.LogInformation("Plugin {ClientId} authenticated successfully using OIDC-verified signature.", clientId);
         }
         catch (Exception ex)
         {
@@ -72,6 +73,7 @@ public partial class PluginHandler
         plugin.Description = message.Description;
         plugin.LastSeen = DateTime.UtcNow;
         plugin.Status = "Online";
+        plugin.SupportedContentTypes = message.SupportedContentTypes ?? [];
 
         session.Store(plugin);
         await session.SaveChangesAsync();

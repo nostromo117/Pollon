@@ -6,6 +6,7 @@ using Pollon.Publication.Models;
 using System.Reflection;
 using Wolverine;
 using Wolverine.RabbitMQ;
+using Wolverine.Marten;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -28,7 +29,8 @@ public static class BackofficeInfrastructureExtensions
                 EnumStorage = Weasel.Core.EnumStorage.AsString
             });
         })
-        .UseLightweightSessions();
+        .UseLightweightSessions()
+        .IntegrateWithWolverine(); // <--- Correct integration point
 
         return builder;
     }

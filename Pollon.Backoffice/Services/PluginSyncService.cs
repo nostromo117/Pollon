@@ -7,7 +7,7 @@ using Pollon.Contracts.Models;
 
 namespace Pollon.Backoffice.Services;
 
-public class PluginSyncService : BackgroundService
+public partial class PluginSyncService : BackgroundService
 {
     private readonly IConfiguration _configuration;
     private readonly IDocumentStore _store;
@@ -29,7 +29,7 @@ public class PluginSyncService : BackgroundService
         // We use a single client for the lifetime of the service
         using var client = new ConsulClient(cfg => cfg.Address = new Uri(consulAddr));
 
-        _logger.LogInformation("PluginSyncService started. Polling Consul at {Addr}", consulAddr);
+        LogStarted(_logger, consulAddr);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -47,7 +47,7 @@ public class PluginSyncService : BackgroundService
                 {
                     if (!activeConsulIds.Contains(dbPlugin.ConsulServiceId))
                     {
-                        _logger.LogInformation("Plugin {Id} (ConsulID: {ConsulId}) is gone from Consul. Removing from database.", dbPlugin.Id, dbPlugin.ConsulServiceId);
+                        LogPluginRemoved(_logger, dbPlugin.Id, dbPlugin.ConsulServiceId);
                         session.Delete(dbPlugin);
                     }
                 }
@@ -77,7 +77,7 @@ public class PluginSyncService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error syncing plugin status from Consul.");
+                LogSyncError(_logger, ex);
             }
 
             // Poll every 60 seconds

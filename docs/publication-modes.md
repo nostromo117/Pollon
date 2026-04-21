@@ -18,7 +18,7 @@ Pollon supporta due modalità di pubblicazione, definibili per ogni **ContentTyp
 Il motore di rendering utilizzato è **Scriban**. 
 
 -   **Template**: I template si trovano nella cartella `/Templates` del progetto `Pollon.Content.Api`.
--   **Logica**: Al momento della pubblicazione (evento `ContentPublishedEvent`), il microservizio `Content.Api` intercetta l'evento, recupera i dati, e applica il template scelto (default: `default.sbn`).
+-   **Logica**: Il rendering statico è l'ultima fase di un workflow asincrono orchestrato. Dopo che la **Saga di Pubblicazione** ha validato il contenuto tramite i plug-in, viene emesso il `ContentPublishedEvent` finale che istruisce il microservizio `Content.Api` a procedere con la generazione HTML.
 
 ### Oggetto Dati (Context)
 Il template Scriban ha accesso a un oggetto arricchito:

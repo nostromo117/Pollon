@@ -7,6 +7,7 @@ public record RegisterPlugin(
     string HeartbeatUrl, 
     string? AccessToken = null,
     string Version = "1.0.0", 
-    string? Description = null);
+    string? Description = null,
+    List<string>? SupportedContentTypes = null);
 
 public record RegisterPluginResponse(bool Success, string? ErrorMessage = null);

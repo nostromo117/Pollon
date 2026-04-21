@@ -1,101 +1,79 @@
 # Ciclo di Vita della Pubblicazione in Pollon
 
-Questo documento descrive il flusso end-to-end di come un contenuto viene creato nel Backoffice, processato e infine reso disponibile nel Frontend attraverso un'architettura guidata dagli eventi (Event-Driven).
+Questo documento descrive il flusso end-to-end di come un contenuto viene creato nel Backoffice, processato tramite una Saga di orchestrazione con validazione distribuita via plug-in, e infine reso disponibile nel Frontend.
 
 ## Panoramica del Flusso
 
-Il sistema di pubblicazione di Pollon è completamente asincrono e si basa su RabbitMQ (gestito tramite Wolverine) per la comunicazione tra microservizi.
+Il sistema di pubblicazione di Pollon è asincrono e guidato da una **Saga** (Stateful Orchestrator) gestita tramite **Wolverine** e persistita su **Marten**.
 
-### 1. Fase di Trigger (Backoffice API)
+### 1. Fase di Innesco (Backoffice API)
 Quando un utente preme "Salva e Pubblica" nel Backoffice:
-1. Il `ContentItemService` salva i dati grezzi nel database PostgreSQL (gestito come **Document Store** tramite Marten, vedi [Architettura](file:///c:/Users/user/source/repos/Pollon/docs/architecture.md)).
-2. Viene emesso un evento `ContentPublishedEvent` o `ContentUpdatedEvent` contenente solo l'ID del contenuto.
+1.  Il `ContentItemService` salva i dati nel database PostgreSQL (Marten).
+2.  Lo stato del contenuto viene impostato (o mantenuto) a `Draft` per evitarne la visualizzazione prematura.
+3.  Viene inviato il messaggio di comando `StartContentPublication(Id, ContentType)`.
 
-### 2. Fase di Elaborazione (Content API)
-Il microservizio `Content.Api` è in ascolto di questi eventi:
-1. **Recupero Dati**: Il consumer chiama il Backoffice API per ottenere i dati completi dell'item e le informazioni sul suo `ContentType`.
-2. **Rendering**: Se il tipo di contenuto prevede la modalità `Static` o `Both`, viene invocato lo `ScribanTemplateRenderer`.
-3. **SSG (Static Site Generation)**: L'HTML prodotto viene inviato al `MinioStaticStorage`.
-4. **Persistenza Delivery**: I metadati, il testo per la ricerca (`SearchText`) e il blocco HTML vengono salvati nel database SQL Server dedicato alla lettura. Il campo `SearchText` viene generato aggregando tutti i campi testuali per ottimizzare le performance di ricerca (vedi [Strategia di Ricerca](file:///c:/Users/user/source/repos/Pollon/docs/architecture.md#strategia-di-ricerca-unified-search-text)).
+### 2. Fase di Orchestrazione (ContentPublicationSaga)
+La Saga intercetta il comando e gestisce l'intero ciclo di vita della validazione:
+1.  **Selezione Plug-in**: La Saga interroga il registro dei plug-in online e seleziona solo quelli che supportano il `ContentType` specifico del messaggio.
+2.  **Richiesta di Validazione**: Invia un messaggio `PluginValidationRequest` a tutti i plug-in coinvolti tramite il bus (RabbitMQ).
+3.  **Gestione Risposte**: I plug-in eseguono la propria logica (SEO, conformità legale, analisi immagini, ecc.) e rispondono con `PluginValidationResponse`.
+4.  **Timeout (20s)**: Se uno o più plug-in non rispondono entro 20 secondi, la Saga scatta autonomamente un evento di timeout (`PublicationTimeout`) per evitare blocchi infiniti.
+5.  **Aggregazione Warning**: Eventuali fallimenti o timeout dei plug-in non bloccano la pubblicazione (strategia "Publish with Warning") ma vengono registrati come avvisi nel contenuto finale.
 
-## Diagrammi di Sequenza
+### 3. Fase di Finalizzazione (Backoffice API)
+Al termine della Saga (ricevute tutte le risposte o scattato il timeout):
+1.  Viene emesso il messaggio `PublicationCompleted`.
+2.  Un handler dedicato aggiorna il `ContentItem` nel database:
+    -   Imposta lo stato a `Published`.
+    -   Registra la data di pubblicazione.
+    -   Allega la lista completa dei `Warnings` ricevuti dai plug-in.
+3.  Viene infine emesso il `ContentPublishedEvent` standard.
 
-### Flusso di Pubblicazione Contenuto
+### 4. Fase di Elaborazione Delivery (Content API)
+Il microservizio `Content.Api` intercetta l'evento finale:
+1.  **Rendering**: Se necessario, invoca lo `ScribanTemplateRenderer`.
+2.  **SSG**: L'HTML prodotto viene inviato al `MinioStaticStorage`.
+3.  **Delivery DB**: I metadati e il testo di ricerca (`SearchText`) vengono salvati nel database SQL dedicato alla lettura.
 
-```mermaid
-sequenceDiagram
-    participant BO as Backoffice UI (Blazor)
-    participant BOAPI as Backoffice API
-    participant RMQ as RabbitMQ (Wolverine)
-    participant CAPI as Content API
-    participant MINIO as MinIO Storage
-    participant SQL as SQL Server (Read Model)
-
-    BO->>BOAPI: Crea/Aggiorna Contenuto (Stato: Published)
-    BOAPI->>BOAPI: Salva in PostgreSQL
-    BOAPI-->>RMQ: Pubblica ContentPublishedEvent(ID)
-    BO-->>BO: Notifica successo UI
-
-    Note over RMQ, CAPI: Elaborazione Asincrona
-    RMQ->>CAPI: Consegna Evento al Consumer
-    CAPI->>BOAPI: GET /api/content-items/{id} (Arricchimento)
-    BOAPI-->>CAPI: Ritorna Dati Completi + ContentType
-    
-    CAPI->>CAPI: Scriban Rendering (HTML Generation)
-    
-    par Salvataggio Distribuiti
-        CAPI->>MINIO: Upload File .html (SSG)
-        CAPI->>SQL: Salva Metadati + HTML + SearchText
-    end
-
-    Note right of SQL: Contenuto pronto per il Frontend
-```
-
-### Flusso di Visualizzazione (Frontend + YARP Proxy)
+## Diagramma di Sequenza Aggiornato
 
 ```mermaid
 sequenceDiagram
-    participant USER as Utente Finale
-    participant FRONT_P as Frontend (YARP Proxy)
-    participant FRONT_B as Frontend (Blazor Server)
+    participant UI as Backoffice UI
+    participant BO as Backoffice API
+    participant SAGA as ContentPublicationSaga
+    participant PLG as Plug-ins (Distributed)
     participant CAPI as Content API
     participant MINIO as MinIO Storage
-    participant SQL as SQL Server (Read Model)
 
-    alt Richiesta Pagina Dinamica (/article/{slug})
-        USER->>FRONT_B: Naviga su /article/{slug}
-        FRONT_B->>CAPI: GET /api/content/{slug}
-        CAPI->>SQL: Query per Slug
-        SQL-->>CAPI: Ritorna PublishedContent
-        CAPI-->>FRONT_B: Ritorna JSON (incluso HtmlContent)
-        FRONT_B->>FRONT_B: Renderizza MarkupString
-        FRONT_B-->>USER: Mostra Pagina dinamica
-    else Richiesta Pagina Statica (/published/{slug}.html)
-        USER->>FRONT_P: Naviga su /published/{slug}.html
-        FRONT_P->>MINIO: Proxy Request (Inoltro a bucket statico)
-        MINIO-->>FRONT_P: Ritorna Standalone HTML
-        FRONT_P-->>USER: Serve file statico (Zero overhead Blazor)
+    UI->>BO: Salva e Pubblica (Item ID)
+    BO->>BO: Salva Stato Draft
+    BO-->>SAGA: StartContentPublication(ID)
+    UI-->>UI: Toast: Richiesta inviata...
+    
+    Note over SAGA: Avvio Orchestrazione
+    SAGA->>SAGA: Identifica Plug-in compatibili
+    SAGA-->>PLG: PluginValidationRequest(ID)
+    SAGA->>SAGA: Schedula Timeout (20s)
+    
+    PLG-->>SAGA: PluginValidationResponse(Success/Warning)
+    
+    alt Tutte risposte OK o Timeout
+        SAGA-->>BO: PublicationCompleted(ID, Warnings)
+        BO->>BO: Update Status: Published
+        BO->>BO: Salva Warnings nel DB
+        BO-->>CAPI: ContentPublishedEvent(ID)
+    end
+    
+    Note over CAPI: Elaborazione Statica
+    CAPI->>CAPI: Scriban Rendering
+    par 
+        CAPI->>MINIO: Upload .html (SSG)
+        CAPI->>CAPI: Update Read Model (SQL)
     end
 ```
 
-## Reverse Proxy & Ottimizzazione CDN
-L'integrazione di **YARP (Yet Another Reverse Proxy)** nel Frontend permette di servire i contenuti direttamente dallo storage ma sotto lo stesso dominio dell'applicazione principale.
-- **Vantaggi**: 
-    - Coerenza del dominio per SEO e SSL.
-    - Facilità di cache: una CDN (es. Cloudflare) può caricare in cache l'intero percorso `/published/*`.
-    - Performance: il server Blazor non viene interpellato per il rendering della pagina, riducendo drasticamente l'uso di memoria e CPU.
-
-
-## Stati e Modalità di Pubblicazione
-
-Il ciclo di vita è influenzato dalla configurazione del **ContentType**:
-
-| Modalità | Azione Content API | Destinazione Principale |
-| :--- | :--- | :--- |
-| **Headless** | Salva solo JSON | SQL Server (Delivery DB) |
-| **Static** | Renderizza HTML e salva file | MinIO Storage |
-| **Both** | Esegue SSG e popola API | SQL Server & MinIO |
-
-## Gestione degli Errori e Robustezza
-- **Durable Inbox**: Il sistema utilizza il pattern Outbox/Inbox di Wolverine per garantire che nessun evento di pubblicazione vada perso in caso di downtime temporaneo di un servizio.
-- **Persistence**: Come configurato in `AppHost.cs`, tutti i database e lo storage statico sono persistenti grazie ai volumi Docker, garantendo la disponibilità dei dati tra i riavvii.
+## Robustezza e Tolleranza ai Guasti
+-   **Strategia con Warning**: I plug-in sono considerati cittadini "non critici" per la disponibilità del servizio. Un loro malfunzionamento aggiunge un warning ma non impedisce al contenuto di andare online.
+*   **Persistenza Stato**: La Saga è persistita su Marten, quindi se il BackofficeAPI si riavvia, la Saga riprende esattamente da dove era rimasta una volta ripartito il servizio.
+*   **Timeout Deterministico**: Il timeout di 20 secondi garantisce un tempo di risposta massimo prevedibile per l'utente finale.

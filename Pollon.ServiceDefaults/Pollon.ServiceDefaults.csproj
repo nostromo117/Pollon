@@ -24,6 +24,7 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.1" />
     <PackageReference Include="Winton.Extensions.Configuration.Consul" Version="3.4.0" />
     <PackageReference Include="WolverineFx" Version="5.21.0" />
+    <PackageReference Include="WolverineFx.Marten" Version="5.21.0" />
     <PackageReference Include="WolverineFx.RabbitMQ" Version="5.21.0" />
   </ItemGroup>
 

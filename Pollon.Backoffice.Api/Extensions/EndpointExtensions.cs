@@ -4,7 +4,7 @@ using Pollon.Backoffice.Services;
 
 namespace Pollon.Backoffice.Api.Extensions;
 
-public static class EndpointExtensions
+public static partial class EndpointExtensions
 {
     public static IEndpointRouteBuilder MapBackofficeEndpoints(this IEndpointRouteBuilder endpoints)
     {
@@ -55,7 +55,7 @@ public static class EndpointExtensions
             }
 
             await repo.CreateAsync(item);
-            logger.LogInformation("Created ContentType {DisplayName} ({SystemName}) with {FieldCount} fields.", item.DisplayName, item.SystemName, item.Fields.Count);
+            Log.LogContentTypeCreated(logger, item.DisplayName, item.SystemName, item.Fields.Count);
             return Results.Created($"/api/content-types/{item.Id}", item);
         });
 
@@ -73,8 +73,8 @@ public static class EndpointExtensions
 
             item.Id = id;
             await repo.UpdateAsync(id, item);
-            logger.LogInformation("Updated ContentType {DisplayName} ({SystemName}). Fields updated: {FieldNames}", 
-                item.DisplayName, item.SystemName, string.Join(", ", item.Fields.OrderBy(f => f.Position).Select(f => $"{f.Name} [pos:{f.Position}]")));
+            Log.LogContentTypeUpdated(logger, item.DisplayName, item.SystemName, 
+                string.Join(", ", item.Fields.OrderBy(f => f.Position).Select(f => $"{f.Name} [pos:{f.Position}]")));
             return Results.NoContent();
         });
 

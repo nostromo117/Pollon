@@ -26,6 +26,8 @@ public class ContentItem
     // Flessibile dictionary per contenere i campi dinamici
     public Dictionary<string, object> Data { get; set; } = new();
 
+    public List<string> Warnings { get; set; } = new();
+
     public string SearchText { get; set; } = string.Empty;
 
     public override bool Equals(object? obj)

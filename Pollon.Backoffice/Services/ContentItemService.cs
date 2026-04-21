@@ -5,6 +5,7 @@ using Pollon.Publication.Models;
 using Pollon.Backoffice.Repositories;
 using Pollon.Backoffice.Services;
 using Pollon.Contracts.Events;
+using Pollon.Contracts.Messages;
 
 namespace Pollon.Backoffice.Services;
 
@@ -117,9 +118,12 @@ public class ContentItemService : IContentItemService
 
         if (item.Status == "Published")
         {
-            // Publish Event to RabbitMQ (only ID)
-            var publishedEvent = new ContentPublishedEvent(item.Id);
-            await _messageBus.PublishAsync(publishedEvent);
+            // Reset status to Draft temporarily while Saga runs
+            item.Status = "Draft";
+            await _repository.UpdateAsync(item.Id, item);
+            
+            // Start Saga instead of direct event
+            await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType.SystemName));
         }
 
         await _session.SaveChangesAsync();
@@ -203,8 +207,17 @@ public class ContentItemService : IContentItemService
 
         if (item.Status == "Published")
         {
-            var updatedEvent = new ContentUpdatedEvent(item.Id);
-            await _messageBus.PublishAsync(updatedEvent);
+            // Se prima era Draft/Archived e ora vogliamo pubblicare, avviamo la Saga.
+            // Reimpostiamo temporaneamente a Draft se necessario, o gestiamo lo stato "Pending"
+            // Per ora lasciamo lo stato precedente o mettiamo Draft per evitare che il FE lo veda subito
+            if (existingItem.Status != "Published")
+            {
+                item.Status = existingItem.Status; 
+                await _repository.UpdateAsync(id, item);
+            }
+            
+            var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
+            await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType!.SystemName));
         }
         else if (existingItem.Status == "Published" && item.Status != "Published")
         {

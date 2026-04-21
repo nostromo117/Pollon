@@ -61,6 +61,12 @@ else
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@GetContentTypeName(treeContext.Value!.ContentTypeId)</MudText>
                                         <MudDivider Vertical="true" FlexItem="true" Style="height: 12px;" />
                                         <MudChip T="string" Color="@GetStatusColor(treeContext.Value!.Status)" Size="Size.Small" Variant="Variant.Text" Class="ma-0 pa-0" Style="height: 18px; font-size: 0.7rem;">@treeContext.Value!.Status</MudChip>
+                                        @if (treeContext.Value.Warnings.Any())
+                                        {
+                                            <MudTooltip Text="@(string.Join("\n", treeContext.Value.Warnings))">
+                                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" Class="ml-1" />
+                                            </MudTooltip>
+                                        }
                                     </div>
                                 </div>
                                 <div class="d-flex gap-1 ml-4 justify-end actions-container" style="min-width: 80px;">

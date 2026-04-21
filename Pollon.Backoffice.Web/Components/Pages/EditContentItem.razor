@@ -250,6 +250,19 @@ else
                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="py-3" Disabled="@(string.IsNullOrEmpty(item.ContentTypeId))">Save Content</MudButton>
                     </MudCardActions>
                 </MudCard>
+
+                @if (item.Warnings.Any())
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mt-4" Icon="@Icons.Material.Filled.Warning">
+                        <MudText Typo="Typo.subtitle2" Style="font-weight: bold">Publication Warnings:</MudText>
+                        <ul class="ml-4 mt-2">
+                            @foreach (var warning in item.Warnings)
+                            {
+                                <li><MudText Typo="Typo.body2">@warning</MudText></li>
+                            }
+                        </ul>
+                    </MudAlert>
+                }
                 
                 <MudCard Elevation="1" Class="mt-4">
                     <MudCardHeader>
@@ -638,7 +651,14 @@ else
             await ApiClient.CreateContentItemAsync(item);
         }
         
-        Snackbar.Add($"Contenuto salvato con successo (Mode: {item.PublishModeOverride?.ToString() ?? "Default"})", Severity.Success);
+        if (item.Status == "Published")
+        {
+            Snackbar.Add("Richiesta di pubblicazione inviata. I plug-in stanno validando il contenuto.", Severity.Info);
+        }
+        else
+        {
+            Snackbar.Add($"Contenuto salvato con successo (Stato: {item.Status})", Severity.Success);
+        }
         
         // Refresh sidebar
         await LoadSidebarAsync();

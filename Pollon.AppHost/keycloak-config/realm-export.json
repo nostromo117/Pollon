@@ -57,6 +57,22 @@
         "profile",
         "email"
       ]
+    },
+    {
+      "clientId": "plugin-example",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "plugin-example-secret",
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ]
     }
   ]
 }

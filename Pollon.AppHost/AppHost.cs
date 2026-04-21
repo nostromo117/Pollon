@@ -107,8 +107,20 @@ var frontendWeb = builder.AddProject<Projects.Pollon_Frontend_Web>("frontend-web
 builder.AddProject<Projects.Pollon_Configuration_Seeder>("config-seeder")
     .WithReference(messaging) 
     .WithEnvironment("CONSUL_URL", consul.GetEndpoint("ui"))
+    .WithEnvironment("KEYCLOAK_URL", keycloak.GetEndpoint("http"))
     .WaitFor(consul)
-    .WaitFor(messaging);
+    .WaitFor(messaging)
+    .WaitFor(keycloak);
+
+var pluginExample = builder.AddProject<Projects.Pollon_Plugin_Example>("plugin-example");
+
+pluginExample.WithReference(messaging)
+    .WithReference(keycloak)
+    .WithEnvironment("CONSUL_URL", consul.GetEndpoint("ui"))
+    .WithEnvironment("Plugin__SelfUrl", pluginExample.GetEndpoint("http"))
+    .WaitFor(messaging)
+    .WaitFor(keycloak)
+    .WaitFor(consul);
 
 
 

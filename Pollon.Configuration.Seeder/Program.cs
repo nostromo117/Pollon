@@ -8,6 +8,7 @@ var config = new ConfigurationBuilder()
     .Build();
 
 var messagingConnString = config.GetConnectionString("messaging") ?? config["ConnectionStrings:messaging"];
+var keycloakUrl = config["KEYCLOAK_URL"] ?? "http://localhost:8080";
 var consulAddr = config["CONSUL_URL"] ?? config["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
 
 if (string.IsNullOrEmpty(messagingConnString))
@@ -23,6 +24,7 @@ if (string.IsNullOrEmpty(messagingConnString))
 
 Console.WriteLine($"Seeding Consul at {consulAddr}...");
 Console.WriteLine($"Value for pollon/messaging: {messagingConnString}");
+Console.WriteLine($"Value for pollon/Keycloak/Url: {keycloakUrl}");
 
 using var client = new ConsulClient(cfg => 
 {
@@ -38,13 +40,15 @@ while (retries < 10 && !success)
     {
         var putPair = new KVPair("pollon/messaging")
         {
-            // We store it as a simple string. 
-            // Winton Consul Provider will see "pollon" as prefix, 
-            // and "messaging" as the key under it.
             Value = System.Text.Encoding.UTF8.GetBytes(messagingConnString)
         };
+        await client.KV.Put(putPair);
 
-        var putRes = await client.KV.Put(putPair);
+        var keycloakPair = new KVPair("pollon/Keycloak/Url")
+        {
+            Value = System.Text.Encoding.UTF8.GetBytes(keycloakUrl)
+        };
+        var putRes = await client.KV.Put(keycloakPair);
         if (putRes.StatusCode == System.Net.HttpStatusCode.OK)
         {
             Console.WriteLine("Consul seeded successfully!");

@@ -30,6 +30,7 @@ builder.Host.UseWolverine(opts =>
 
 
 // 4. Register Plugin Registration & Heartbeat Service
+builder.Services.AddHttpClient<KeycloakTokenClient>();
 builder.Services.AddHostedService<PluginRegistrationService>();
 
 var app = builder.Build();

@@ -8,6 +8,7 @@ namespace Pollon.Plugin.Example.Services;
 
 public class PluginRegistrationService : BackgroundService
 {
+    private readonly KeycloakTokenClient _tokenClient;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<PluginRegistrationService> _logger;
@@ -16,10 +17,12 @@ public class PluginRegistrationService : BackgroundService
     private string? _consulServiceId;
 
     public PluginRegistrationService(
+        KeycloakTokenClient tokenClient,
         IServiceScopeFactory scopeFactory, 
         IConfiguration configuration, 
         ILogger<PluginRegistrationService> logger)
     {
+        _tokenClient = tokenClient;
         _scopeFactory = scopeFactory;
         _configuration = configuration;
         _logger = logger;
@@ -34,13 +37,13 @@ public class PluginRegistrationService : BackgroundService
         await Task.Delay(5000, stoppingToken);
 
         var consulAddr = _configuration["CONSUL_URL"] ?? _configuration["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
-        var selfUrl = _configuration["ASPNETCORE_URLS"]?.Split(';').FirstOrDefault() ?? "http://localhost:5500";
+        var selfUrl = _configuration["Plugin:SelfUrl"] ?? _configuration["ASPNETCORE_URLS"]?.Split(';').FirstOrDefault() ?? "http://localhost:5500";
         
-        // Se stiamo lanciando standalone (fuori da Aspire), ma Consul è in Docker, 
-        // localhost non funzionerà per l'health check. Usiamo l'IP dell'host.
+        // If we are running in a container-orchestrated environment (like Aspire with some containers), 
+        // and this service is on the host, containers (like Consul) need to use host.docker.internal.
         var healthCheckUrl = selfUrl.Replace("localhost", "host.docker.internal").Replace("127.0.0.1", "host.docker.internal");
 
-        _logger.LogInformation("Registering with Consul at {ConsulAddr}. Self URL: {SelfUrl}, HealthCheck: {HC}", consulAddr, selfUrl, healthCheckUrl);
+        _logger.LogInformation("Registering with Consul at {ConsulAddr}. Self URL: {SelfUrl}", consulAddr, selfUrl);
 
         using var client = new ConsulClient(cfg => cfg.Address = new Uri(consulAddr));
 
@@ -51,7 +54,7 @@ public class PluginRegistrationService : BackgroundService
         {
             ID = _consulServiceId,
             Name = "pollon-plugin",
-            Address = "host.docker.internal", // Comunica a Consul di cercare sull'host
+            Address = "host.docker.internal",
             Port = uri.Port,
             Tags = new[] { "plugin", _pluginId },
             Check = new AgentServiceCheck()
@@ -64,25 +67,39 @@ public class PluginRegistrationService : BackgroundService
 
         try
         {
+            // Otteniamo il Token JWT prima di procedere
+            _logger.LogInformation("Requesting JWT from Keycloak...");
+            var token = await _tokenClient.GetTokenAsync();
+            _logger.LogInformation("JWT obtained successfully.");
+
             await client.Agent.ServiceRegister(registration, stoppingToken);
             _logger.LogInformation("Successfully registered in Consul with ID: {Id}", _consulServiceId);
 
-            // 2. Send Registration Message via Wolverine
+            // 2. Send Registration Message via Wolverine and wait for feedback
             using (var scope = _scopeFactory.CreateScope())
             {
                 var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
-                await bus.SendAsync(new RegisterPlugin(
+                var response = await bus.InvokeAsync<RegisterPluginResponse>(new RegisterPlugin(
                     _pluginId, 
                     _pluginName, 
                     _consulServiceId, 
-                    $"{healthCheckUrl}/health"));
-            }
+                    $"{healthCheckUrl}/health",
+                    token)); // Passiamo il token JWT
 
-            _logger.LogInformation("Sent RegisterPlugin message to Host.");
+                if (response.Success)
+                {
+                    _logger.LogInformation("Successfully registered in Backoffice! Dashboard should show the plugin now.");
+                }
+                else
+                {
+                    _logger.LogError("Backoffice REJECTED registration: {Message}", response.ErrorMessage);
+                    // In real world we might want to shut down or retry
+                }
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to register plugin in Consul or send registration message.");
+            _logger.LogError(ex, "Failed to register plugin. Security check failed or host unreachable.");
         }
 
         // 3. Keep the service alive
@@ -101,7 +118,6 @@ public class PluginRegistrationService : BackgroundService
             _logger.LogInformation("Deregistering from Consul...");
             try 
             {
-                // Qui non usiamo stoppingToken perché è già cancellato
                 await client.Agent.ServiceDeregister(_consulServiceId);
             }
             catch(Exception ex)

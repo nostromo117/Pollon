@@ -3,6 +3,7 @@ using Pollon.Backoffice.Api.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddConsulConfiguration();
 
 builder.Services.AddOpenApi();
 

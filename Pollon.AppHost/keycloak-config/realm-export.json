@@ -83,5 +83,15 @@
       "publicClient": false,
       "protocol": "openid-connect"
     }
-  ]
+  ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "pollon-identity-manager",
+        "roles": [
+          "manage-clients"
+        ]
+      }
+    ]
+  }
 }

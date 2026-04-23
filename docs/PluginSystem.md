@@ -37,13 +37,14 @@ sequenceDiagram
     end
 ```
 
-## 🔐 Sicurezza e Autenticazione
+## 🔐 Sicurezza e Identità Certificata
 
-Tutte le richieste di registrazione devono essere autenticate per prevenire registrazioni di plug-in non autorizzati.
+Il sistema implementa un modello di **Identità Certificata** per prevenire spoofing e registrazioni non autorizzate.
 
-1.  **Ottimizzazione Token**: All'avvio, il plug-in utilizza un `KeycloakTokenClient` per ottenere un token JWT da Keycloak utilizzando il flow `client_credentials`.
-2.  **Iniezione del Token**: Il token viene incluso nel messaggio di registrazione `RegisterPlugin`.
-3.  **Validazione**: Il `PluginHandler` nel Backoffice valida il token contro l'Issuer di Keycloak prima di processare la registrazione. In ambiente di sviluppo (Aspire), l'Issuer viene risolto dinamicamente tramite Consul o Connection Strings.
+1.  **Identity Provisioning**: L'amministratore crea un'identità per il plugin tramite il Backoffice Web. Questo genera un `client_id` (es. `plugin-newsletter-123`) e un `client_secret` in Keycloak tramite un account amministrativo privilegiato (`pollon-identity-manager`).
+2.  **Autenticazione**: Il plugin utilizza queste credenziali per ottenere un token JWT tramite il flow `client_credentials`.
+3.  **Enforcement dell'Identità**: Il `PluginHandler` nel Backoffice valida il token e **impone** che il `client_id` contenuto nel JWT corrisponda esattamente all'ID dichiarato nel messaggio di registrazione. Se un plugin tenta di registrarsi con un ID diverso da quello certificato dal token, la registrazione viene rifiutata.
+4.  **Stabilità**: Poiché il `client_id` è unico e immutabile, le associazioni tra plugin e Content Type (`EnabledContentTypes`) rimangono stabili nel tempo.
 
 ## 🚀 Pipeline di Registrazione
 
@@ -52,19 +53,22 @@ Tutte le richieste di registrazione devono essere autenticate per prevenire regi
     
 2.  **Annuncio Metadati (Wolverine)**:
     Il plug-in invia un messaggio `RegisterPlugin` contenente:
-    - ID univoco (es. `plugin-example-01`)
+    - **ID univoco** (deve coincidere con il `client_id` di Keycloak)
     - Nome visualizzato
     - Versione
     - Descrizione
     - URL di Health Check
     - **Access Token (JWT)**
+    - Elenco dei **Supported Content Types** (i tipi di contenuto che il plugin è in grado di processare)
 
 ## 🩺 Monitoraggio Salute (Health Check)
 
 Il monitoraggio è di tipo **Active-Pull** da parte dell'Host:
 - **Plug-in**: Espone un endpoint `/health` (standard ASP.NET Core Health Checks).
 - **Consul**: Interroga l'endpoint ogni 10 secondi.
-- **Host (Service Sync)**: Il `PluginSyncService` interroga periodicamente Consul per tutti i servizi denominati `pollon-plugin` e aggiorna lo stato nel database Marten.
+- **Host (Service Sync)**: Il `PluginSyncService` interroga periodicamente Consul. 
+  - Se un plugin è presente e sano, lo marca come `Online`.
+  - Se un plugin scompare da Consul, viene marcato come `Offline` nel database Marten, ma **non viene rimosso**. Questo preserva le impostazioni di configurazione dell'utente (associazioni ai Content Type) tra un riavvio e l'altro.
 
 ## 💻 Componenti Principali
 

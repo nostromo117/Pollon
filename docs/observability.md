@@ -22,6 +22,24 @@ Per evitare "punti ciechi" nell'osservabilità, abbiamo strumentato i database p
 - **PostgreSQL (Marten)**: Le query verso il Backoffice DB sono visibili con dettagli sull'operazione Marten.
 - **SQL Server**: Tutte le query EF Core e SqlClient per la delivery sono tracciate, inclusi i tempi di esecuzione e lo stato di successo.
 
+## Filtraggio del Rumore Infrastrutturale
+
+Per mantenere la Dashboard pulita e focalizzata sulla logica di business, Pollon implementa un sistema avanzato di filtraggio del "rumore" generato dalle attività di background (polling, leader election, maintenance).
+
+### Strategia di Filtraggio Trace
+Il progetto `Pollon.ServiceDefaults` utilizza un **`NoisySpansProcessor`** (custom OTel Processor) che analizza gli span nella fase `OnEnd`. Questo permette di filtrare le query Npgsql basandosi sul loro contenuto SQL, anche se i tag vengono aggiunti dopo l'inizio dello span.
+
+Vengono scartati automaticamente gli span che contengono:
+- **Pattern di Database**: `pg_catalog` (query di sistema), `advisory` (lock di sistema Postgres), `mt_` (tabelle interne Marten).
+- **Pattern Wolverine**: `wolverine_`, `wolverine.persistence`, `wolverine.polling`.
+- **Pattern Marten**: `mt_node_config`.
+
+### Strategia di Filtraggio Log
+Per evitare che i log di esecuzione dei comandi SQL inondino la console, il sistema alza il livello minimo di log a `Warning` per le categorie infrastrutturali:
+- `Npgsql.Command`: Nasconde i log "Command execution completed".
+- `Microsoft.EntityFrameworkCore.Database.Command`: Nasconde il rumore di EF Core.
+- `Wolverine`: Filtra i log interni del bus di messaggistica.
+
 ## Come tracciare una richiesta
 
 Per vedere il percorso completo di una chiamata, segui questi passi nella **Dashboard di Aspire**:

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ public static class Extensions
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
 
+
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         builder.ConfigureOpenTelemetry();
@@ -39,17 +41,16 @@ public static class Extensions
             http.AddServiceDiscovery();
         });
 
-        // Uncomment the following to restrict the allowed schemes for service discovery.
-        // builder.Services.Configure<ServiceDiscoveryOptions>(options =>
-        // {
-        //     options.AllowedSchemes = ["https"];
-        // });
-
         return builder;
     }
 
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        // Suppress noisy database command logs
+        builder.Logging.AddFilter("Npgsql.Command", LogLevel.Warning);
+        builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+        builder.Logging.AddFilter("Wolverine", LogLevel.Warning);
+
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;
@@ -68,14 +69,17 @@ public static class Extensions
                 tracing.AddSource(builder.Environment.ApplicationName)
                     .AddSource("Wolverine") // Capture Wolverine messaging traces
                     .AddAspNetCoreInstrumentation(tracing =>
+                    {
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>
                             !context.Request.Path.StartsWithSegments(HealthEndpointPath)
-                            && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
-                    )
+                            && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath);
+                    })
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation() // Trace EF Core database calls
-                    .AddNpgsql(); // Trace PostgreSQL calls
+                    .AddNpgsql()
+                    .SetSampler(new NoisySpansSampler(new AlwaysOnSampler()))
+                    .AddProcessor(new NoisySpansProcessor());
             });
 
         builder.AddOpenTelemetryExporters();
@@ -119,13 +123,6 @@ public static class Extensions
                 });
         }
 
-        // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.AspNetCore package)
-        //if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
-        //{
-        //    builder.Services.AddOpenTelemetry()
-        //       .UseAzureMonitor();
-        //}
-
         return builder;
     }
 
@@ -160,7 +157,7 @@ public static class Extensions
     public static TBuilder AddConsulConfiguration<TBuilder>(this TBuilder builder, string keyPrefix = "pollon") where TBuilder : IHostApplicationBuilder
     {
         var consulAddress = builder.Configuration["CONSUL_URL"] ?? builder.Configuration["CONSUL_HTTP_ADDR"] ?? "http://localhost:8500";
-        
+
         builder.Configuration.AddConsul(
             keyPrefix,
             options =>
@@ -175,5 +172,65 @@ public static class Extensions
             });
 
         return builder;
+    }
+}
+
+/// <summary>
+/// Custom Sampler to drop noisy background spans from Wolverine, Marten, and PostgreSQL polling.
+/// </summary>
+internal class NoisySpansSampler : Sampler
+{
+    private readonly Sampler _innerSampler;
+
+    public NoisySpansSampler(Sampler innerSampler)
+    {
+        _innerSampler = innerSampler;
+    }
+
+    public override SamplingResult ShouldSample(in SamplingParameters samplingParameters)
+    {
+        var spanName = samplingParameters.Name ?? "";
+
+        // Filter out Wolverine background tasks by span name (if known at start)
+        if (spanName.Contains("wolverine.persistence", StringComparison.OrdinalIgnoreCase) ||
+            spanName.Contains("wolverine.polling", StringComparison.OrdinalIgnoreCase))
+        {
+            return new SamplingResult(SamplingDecision.Drop);
+        }
+
+        return _innerSampler.ShouldSample(samplingParameters);
+    }
+}
+
+/// <summary>
+/// Custom Processor to drop noisy Npgsql and Wolverine spans by checking names and tags.
+/// </summary>
+internal class NoisySpansProcessor : BaseProcessor<Activity>
+{
+    public override void OnEnd(Activity activity)
+    {
+        // Check both the span name (for Wolverine/Marten internal tasks) 
+        // and the SQL query text (for Npgsql spans).
+        if (IsNoisy(activity.DisplayName) || 
+            IsNoisy(activity.GetTagItem("db.query.text") as string) || 
+            IsNoisy(activity.GetTagItem("db.statement") as string))
+        {
+            // Setting flags to None effectively drops the span from being exported by most Otel exporters
+            activity.ActivityTraceFlags = ActivityTraceFlags.None;
+        }
+    }
+
+    private static bool IsNoisy(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return false;
+        
+        var lower = text.ToLowerInvariant();
+        return lower.Contains("wolverine_") || 
+               lower.Contains("mt_") || 
+               lower.Contains("pg_catalog") ||
+               lower.Contains("wolverine.persistence") ||
+               lower.Contains("wolverine.polling") ||
+               lower.Contains("mt_node_config") ||
+               lower.Contains("advisory");
     }
 }

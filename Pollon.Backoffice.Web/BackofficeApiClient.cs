@@ -291,4 +291,13 @@ public class BackofficeApiClient(
     {
         return await GetAsync<Pollon.Contracts.Models.PluginInfo[]>("/api/plugins", cancellationToken) ?? [];
     }
+
+    public async Task UpdatePluginAsync(string id, Pollon.Contracts.Models.PluginInfo plugin, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/plugins/{id}")
+        {
+            Content = JsonContent.Create(plugin)
+        };
+        await SendWithAuthAsync(request, cancellationToken);
+    }
 }

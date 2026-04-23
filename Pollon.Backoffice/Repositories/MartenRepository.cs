@@ -16,7 +16,12 @@ public class MartenRepository<T> : IRepository<T> where T : class
         return await _session.Query<T>().ToListAsync();
     }
 
-    public async Task<T> GetByIdAsync(string id)
+    public IQueryable<T> Query()
+    {
+        return _session.Query<T>();
+    }
+
+    public async Task<T?> GetByIdAsync(string id)
     {
         return await _session.LoadAsync<T>(id);
     }

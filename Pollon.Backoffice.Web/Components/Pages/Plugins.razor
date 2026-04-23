@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @inject BackofficeApiClient ApiClient
+@inject IDialogService DialogService
 @attribute [StreamRendering]
 
 <PageTitle>Plugins</PageTitle>
@@ -36,8 +37,9 @@ else
             <MudTh>Status</MudTh>
             <MudTh>Name</MudTh>
             <MudTh>ID / Instance</MudTh>
-            <MudTh>Version</MudTh>
+            <MudTh>Enabled types</MudTh>
             <MudTh>Last Seen</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Status">
@@ -57,9 +59,26 @@ else
                     <MudText Typo="Typo.caption" Style="font-family: monospace" Color="Color.Secondary">@context.ConsulServiceId</MudText>
                 </div>
             </MudTd>
-            <MudTd DataLabel="Version">@context.Version</MudTd>
+            <MudTd DataLabel="Enabled types">
+                @if (context.EnabledContentTypes?.Any() == true)
+                {
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach (var type in context.EnabledContentTypes)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@type</MudChip>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">None</MudText>
+                }
+            </MudTd>
             <MudTd DataLabel="Last Seen">
                 @context.LastSeen.ToLocalTime().ToString("g")
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Small" OnClick="() => ConfigurePlugin(context)" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -87,6 +106,20 @@ else
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+        }
+    }
+
+    private async Task ConfigurePlugin(Pollon.Contracts.Models.PluginInfo plugin)
+    {
+        var parameters = new DialogParameters<PluginConfigDialog> { { x => x.Plugin, plugin } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<PluginConfigDialog>("Configure Plugin", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadDataAsync();
         }
     }
 

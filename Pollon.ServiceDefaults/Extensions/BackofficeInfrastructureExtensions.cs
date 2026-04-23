@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using Npgsql;
 using Marten;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +10,7 @@ using System.Reflection;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Marten;
+using Wolverine.Postgresql;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -18,7 +22,7 @@ public static class BackofficeInfrastructureExtensions
         builder.AddNpgsqlDataSource("backofficedb");
 
         // Setup Marten
-        builder.Services.AddMarten(opts => 
+        builder.Services.AddMarten(opts =>
         {
             opts.Connection(builder.Configuration.GetConnectionString("backofficedb")!);
             opts.Schema.For<ContentItem>().NgramIndex(x => x.SearchText);
@@ -30,7 +34,7 @@ public static class BackofficeInfrastructureExtensions
             });
         })
         .UseLightweightSessions()
-        .IntegrateWithWolverine(); // <--- Correct integration point
+        .IntegrateWithWolverine(); // Reverting to original for now
 
         return builder;
     }

@@ -5,6 +5,8 @@ using Pollon.Contracts.Messages;
 using Pollon.Contracts.Models;
 using Pollon.Publication.Models;
 using Wolverine;
+using Pollon.Backoffice.Repositories;
+using System.Text.Json;
 
 namespace Pollon.Backoffice.Handlers;
 
@@ -19,7 +21,9 @@ public partial class ContentPublicationSaga : Saga
     // 1. START the Saga
     public async Task<object[]> Start(
         StartContentPublication command, 
-        IDocumentSession session,
+        IRepository<ContentItem> itemRepo,
+        IRepository<ContentType> typeRepo,
+        IRepository<PluginInfo> pluginRepo,
         IMessageBus bus,
         ILogger<ContentPublicationSaga> logger)
     {
@@ -28,14 +32,27 @@ public partial class ContentPublicationSaga : Saga
         this.Id = command.Id;
         this.ContentType = command.ContentType;
 
-        // Find plugins that support this content type and are online
-        var plugins = await session.Query<PluginInfo>()
-            .Where(x => x.Status == "Online")
+        // 1. Fetch data using repositories
+        var item = await itemRepo.GetByIdAsync(command.Id);
+        var contentType = await typeRepo.GetByIdAsync(command.ContentType);
+        var targetPlugins = await pluginRepo.Query()
+            .Where(x => x.Status == "Online" && x.EnabledContentTypes.Contains(command.ContentType))
             .ToListAsync();
-            
-        var targetPlugins = plugins
-            .Where(p => p.SupportedContentTypes.Contains(command.ContentType, StringComparer.OrdinalIgnoreCase))
-            .ToList();
+
+        // 2. Optimized Payload Preparation: Direct mapping from schema (excluding Images)
+        var contentJson = "{}";
+        if (item != null && contentType != null)
+        {
+            var filteredData = new Dictionary<string, object>();
+            foreach (var field in contentType.Fields)
+            {
+                if (field.FieldType != ContentFieldType.Image && item.Data.TryGetValue(field.Name, out var value))
+                {
+                    filteredData[field.Name] = value;
+                }
+            }
+            contentJson = JsonSerializer.Serialize(filteredData);
+        }
 
         var messages = new List<object>();
 
@@ -48,8 +65,8 @@ public partial class ContentPublicationSaga : Saga
             
             LogWaitingForPlugins(logger, targetPlugins.Count, string.Join(", ", this.PendingPlugins));
 
-            // Request validation from all selected plugins
-            messages.Add(new PluginValidationRequest(command.Id));
+            // Request validation from all selected plugins with the filtered JSON payload
+            messages.Add(new PluginValidationRequest(command.Id, contentJson));
             
             // Schedule timeout in 20 seconds using the bus
             await bus.ScheduleAsync(new PublicationTimeout(command.Id), TimeSpan.FromSeconds(20));

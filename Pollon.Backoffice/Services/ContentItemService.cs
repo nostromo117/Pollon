@@ -14,23 +14,20 @@ public class ContentItemService : IContentItemService
     private readonly IRepository<ContentItem> _repository;
     private readonly IMessageBus _messageBus;
     private readonly IRepository<ContentType> _contentTypeRepository;
-    private readonly IDocumentSession _session;
 
     public ContentItemService(
         IRepository<ContentItem> repository,
-        IMessageBus messageBus,
-        IRepository<ContentType> contentTypeRepository,
-        IDocumentSession session)
+        IMessageBus bus,
+        IRepository<ContentType> contentTypeRepository)
     {
         _repository = repository;
-        _messageBus = messageBus;
+        _messageBus = bus;
         _contentTypeRepository = contentTypeRepository;
-        _session = session;
     }
 
     public async Task<IEnumerable<ContentItem>> GetAllAsync(string? status = null, string? sortBy = null, bool sortDescending = true, string? searchTerm = null)
     {
-        IQueryable<ContentItem> query = _session.Query<ContentItem>();
+        var query = _repository.Query();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -73,16 +70,10 @@ public class ContentItemService : IContentItemService
 
     public async Task<ContentItem?> GetByIdAsync(string id)
     {
-        var batch = _session.CreateBatchQuery();
-        var itemTask = batch.Load<ContentItem>(id);
-        var childrenTask = batch.Query<ContentItem>().Where(x => x.ParentId == id).ToList();
-
-        await batch.Execute();
-
-        var item = await itemTask;
+        var item = await _repository.GetByIdAsync(id);
         if (item != null)
         {
-            var children = await childrenTask;
+            var children = await _repository.Query().Where(x => x.ParentId == id).ToListAsync();
             item.Children = children.ToList();
         }
         return item;
@@ -113,7 +104,7 @@ public class ContentItemService : IContentItemService
 
         PopulateSearchText(item);
         
-        // Save to Marten
+        // Save to Marten via repository
         await _repository.CreateAsync(item);
 
         if (item.Status == "Published")
@@ -126,7 +117,6 @@ public class ContentItemService : IContentItemService
             await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType.SystemName));
         }
 
-        await _session.SaveChangesAsync();
         return item;
     }
 
@@ -208,8 +198,6 @@ public class ContentItemService : IContentItemService
         if (item.Status == "Published")
         {
             // Se prima era Draft/Archived e ora vogliamo pubblicare, avviamo la Saga.
-            // Reimpostiamo temporaneamente a Draft se necessario, o gestiamo lo stato "Pending"
-            // Per ora lasciamo lo stato precedente o mettiamo Draft per evitare che il FE lo veda subito
             if (existingItem.Status != "Published")
             {
                 item.Status = existingItem.Status; 
@@ -227,20 +215,18 @@ public class ContentItemService : IContentItemService
             await _messageBus.PublishAsync(deletedEvent);
         }
 
-        await _session.SaveChangesAsync();
         return item;
     }
 
     public async Task DeleteAndPublishAsync(string id)
     {
         await DeleteRecursiveAsync(id);
-        await _session.SaveChangesAsync();
     }
 
     private async Task DeleteRecursiveAsync(string id)
     {
         // Find all children IDs first to recurse
-        var childrenIds = await _session.Query<ContentItem>()
+        var childrenIds = await _repository.Query()
             .Where(x => x.ParentId == id)
             .Select(x => x.Id)
             .ToListAsync();
@@ -250,8 +236,8 @@ public class ContentItemService : IContentItemService
             await DeleteRecursiveAsync(childId);
         }
 
-        // Delete the item itself from the session
-        _session.Delete<ContentItem>(id);
+        // Delete the item itself via repository
+        await _repository.DeleteAsync(id);
 
         // Publish the deletion event for this specific ID
         var deletedEvent = new ContentDeletedEvent(id);
@@ -260,7 +246,7 @@ public class ContentItemService : IContentItemService
 
     public async Task RepublishAllAsync()
     {
-        var publishedItems = await _session.Query<ContentItem>()
+        var publishedItems = await _repository.Query()
             .Where(x => x.Status == "Published")
             .ToListAsync();
 

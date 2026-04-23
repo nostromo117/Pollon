@@ -1,0 +1,69 @@
+@using MudBlazor
+@using Pollon.Contracts.Models
+@using Pollon.Publication.Models
+@inject BackofficeApiClient ApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Configura Plug-in: @Plugin.Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">Seleziona i Content Type per i quali questo plug-in deve essere eseguito durante la pubblicazione.</MudText>
+        
+        @if (contentTypes == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            <MudSelect T="string" Label="Content Types Abilitati" MultiSelection="true" SelectedValues="selectedTypes" SelectedValuesChanged="OnSelectedValuesChanged" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var ct in contentTypes)
+                {
+                    <MudSelectItem Value="@ct.SystemName">@ct.DisplayName (@ct.SystemName)</MudSelectItem>
+                }
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Annulla</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Salva</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudBlazor.IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public PluginInfo Plugin { get; set; } = default!;
+
+    private ContentType[]? contentTypes;
+    private IReadOnlyCollection<string> selectedTypes = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        contentTypes = await ApiClient.GetContentTypesAsync();
+        selectedTypes = (Plugin.EnabledContentTypes ?? new List<string>()).AsReadOnly();
+    }
+
+    private void OnSelectedValuesChanged(IEnumerable<string> values)
+    {
+        selectedTypes = values.ToList().AsReadOnly();
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    async Task Submit()
+    {
+        Plugin.EnabledContentTypes = selectedTypes.ToList();
+        try
+        {
+            await ApiClient.UpdatePluginAsync(Plugin.Id, Plugin);
+            Snackbar.Add($"Configurazione per {Plugin.Name} salvata con successo.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Errore durante il salvataggio: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -4,6 +4,7 @@ using Pollon.Contracts.Events;
 using Pollon.Contracts.Messages;
 using Pollon.Publication.Models;
 using Wolverine;
+using Pollon.Backoffice.Repositories;
 
 namespace Pollon.Backoffice.Handlers;
 
@@ -11,13 +12,13 @@ public partial class PublicationCompletedHandler
 {
     public async Task Handle(
         PublicationCompleted message, 
-        IDocumentSession session,
+        IRepository<ContentItem> repository,
         IMessageBus bus,
         ILogger<PublicationCompletedHandler> logger)
     {
         LogFinalizingInDb(logger, message.Id);
 
-        var item = await session.LoadAsync<ContentItem>(message.Id);
+        var item = await repository.GetByIdAsync(message.Id);
         if (item == null)
         {
             LogItemNotFound(logger, message.Id);
@@ -29,8 +30,7 @@ public partial class PublicationCompletedHandler
         item.Warnings = message.Warnings;
         item.UpdatedAt = DateTime.UtcNow;
 
-        session.Store(item);
-        await session.SaveChangesAsync();
+        await repository.UpdateAsync(item.Id, item);
 
         await bus.PublishAsync(new ContentPublishedEvent(item.Id));
 

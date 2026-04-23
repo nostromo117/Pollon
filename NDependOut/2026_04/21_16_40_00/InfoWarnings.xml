@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<InfoWarnings>
+  <Info>Begin full analysis with NDepend v2026.1.2 on 21 Apr 2026 16:40:06. Runtime .NET Framework 4.8.9325.0</Info>
+  <Info>Visual Studio solution file resolved to absolute file path: from    {.\Pollon.slnx}    to    {C:\Users\user\source\repos\Pollon\Pollon.slnx}</Info>
+  <Info>Output directory resolved to absolute directory path: C:\Users\user\source\repos\Pollon\NDependOut</Info>
+  <Info>.NET Assemblies resolved from the Visual Studio solution file {C:\Users\user\source\repos\Pollon\Pollon.slnx}
+   C:\Users\user\source\repos\Pollon\Pollon.AppHost\bin\Debug\net10.0\Pollon.AppHost.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Api\bin\Debug\net10.0\Pollon.Backoffice.Api.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Mcp\bin\Debug\net10.0\Pollon.Backoffice.Mcp.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Web\bin\Debug\net10.0\Pollon.Backoffice.Web.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Backoffice\bin\Debug\net10.0\Pollon.Backoffice.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Configuration.Seeder\bin\Debug\net10.0\Pollon.Configuration.Seeder.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Content.Api\bin\Debug\net10.0\Pollon.Content.Api.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Contracts\bin\Debug\net10.0\Pollon.Contracts.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Frontend.Web\bin\Debug\net10.0\Pollon.Frontend.Web.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Media.Api\bin\Debug\net10.0\Pollon.Media.Api.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Plugin.Example\bin\Debug\net10.0\Pollon.Plugin.Example.dll
+   C:\Users\user\source\repos\Pollon\Pollon.Publication\bin\Debug\net10.0\Pollon.Publication.dll
+   C:\Users\user\source\repos\Pollon\Pollon.ServiceDefaults\bin\Debug\net10.0\Pollon.ServiceDefaults.dll</Info>
+  <Info>No .NET Assembly filtered out from the Visual Studio solution file {C:\Users\user\source\repos\Pollon\Pollon.slnx}.</Info>
+  <Info>Concurrent mode</Info>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.6} 
+   System.Collections.dll   v10.0.0.0
+   System.ComponentModel.dll   v10.0.0.0
+   System.ComponentModel.Primitives.dll   v10.0.0.0
+   System.Console.dll   v10.0.0.0
+   System.Data.Common.dll   v10.0.0.0
+   System.Diagnostics.DiagnosticSource.dll   v10.0.0.0
+   System.Linq.dll   v10.0.0.0
+   System.Linq.Expressions.dll   v10.0.0.0
+   System.Linq.Queryable.dll   v10.0.0.0
+   System.Net.Http.dll   v10.0.0.0
+   System.Net.Http.Json.dll   v10.0.0.0
+   System.Net.Primitives.dll   v10.0.0.0
+   System.Net.Sockets.dll   v10.0.0.0
+   System.Runtime.dll   v10.0.0.0
+   System.Runtime.InteropServices.dll   v10.0.0.0
+   System.Security.Claims.dll   v10.0.0.0
+   System.Text.Json.dll   v10.0.0.0
+   System.Text.RegularExpressions.dll   v10.0.0.0</Info>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.6}  [ 0 , 19 ]
+   Microsoft.AspNetCore.Antiforgery.dll   v10.0.0.0
+   Microsoft.AspNetCore.Authentication.Abstractions.dll   v10.0.0.0
+   Microsoft.AspNetCore.Authentication.Cookies.dll   v10.0.0.0
+   Microsoft.AspNetCore.Authentication.dll   v10.0.0.0
+   Microsoft.AspNetCore.Authorization.dll   v10.0.0.0
+   Microsoft.AspNetCore.Authorization.Policy.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.Authorization.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.Endpoints.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.Forms.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.Server.dll   v10.0.0.0
+   Microsoft.AspNetCore.Components.Web.dll   v10.0.0.0
+   Microsoft.AspNetCore.Diagnostics.dll   v10.0.0.0
+   Microsoft.AspNetCore.Diagnostics.HealthChecks.dll   v10.0.0.0
+   Microsoft.AspNetCore.dll   v10.0.0.0
+   Microsoft.AspNetCore.Hosting.Abstractions.dll   v10.0.0.0
+   Microsoft.AspNetCore.Http.Abstractions.dll   v10.0.0.0
+   Microsoft.AspNetCore.Http.dll   v10.0.0.0
+   Microsoft.AspNetCore.Http.Extensions.dll   v10.0.0.0
+   Microsoft.AspNetCore.Http.Features.dll   v10.0.0.0</Info>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.6}  [ 20 , 34 ]
+   Microsoft.AspNetCore.Http.Results.dll   v10.0.0.0
+   Microsoft.AspNetCore.HttpsPolicy.dll   v10.0.0.0
+   Microsoft.AspNetCore.Mvc.Abstractions.dll   v10.0.0.0
+   Microsoft.AspNetCore.Mvc.Core.dll   v10.0.0.0
+   Microsoft.AspNetCore.OutputCaching.dll   v10.0.0.0
+   Microsoft.AspNetCore.Routing.dll   v10.0.0.0
+   Microsoft.AspNetCore.StaticAssets.dll   v10.0.0.0
+   Microsoft.Extensions.Configuration.UserSecrets.dll   v10.0.0.0
+   Microsoft.Extensions.DependencyInjection.Abstractions.dll   v10.0.0.0
+   Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll   v10.0.0.0
+   Microsoft.Extensions.Diagnostics.HealthChecks.dll   v10.0.0.0
+   Microsoft.Extensions.Hosting.Abstractions.dll   v10.0.0.0
+   Microsoft.Extensions.Http.dll   v10.0.0.0
+   Microsoft.Extensions.Logging.Abstractions.dll   v10.0.0.0
+   Microsoft.Net.Http.Headers.dll   v10.0.0.0</Info>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Content_Api.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Backoffice_Web.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Backoffice_Api.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Frontend_Web.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Media_Api.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Backoffice_Mcp.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Configuration_Seeder.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\Pollon_Plugin_Example.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\user\source\repos\Pollon\Pollon.AppHost\obj\Debug\net10.0\Aspire\references\_AppHost.ProjectMetadata.g.cs} (last modified 21 Apr 2026 16:39:48) and the PDB file of the assembly {Pollon.AppHost} (last modified 21 Apr 2026 11:20:09) are not in-sync.</Warning>
+  <Info>95 source files parsed ; 7 source files not found ; 9 source files not in-sync with PDB</Info>
+  <Info>0 code rule has been extracted from code.</Info>
+  <Info>No issue have been imported. No directory that contains issue files have been resolved from the project Pollon</Info>
+  <Info>No dependency cycle detected in assemblies reference graph.</Info>
+  <Info>Do merge code generated by compiler into application code.</Info>
+  <Info>Analysis Results Retention: No previous analysis result older than 60 days found to delete.</Info>
+  <Info>Analyze dependencies of your application.</Info>
+  <Info>No SuppressMessageAttribute found in the analyzed code base. Since NDepend v2018.2 SuppressMessageAttribute can be used to suppress NDepend issues. Don't forget to set in your projects the compilation symbol CODE_ANALYSIS to use this attribute to suppress NDepend issues.</Info>
+  <Info>Persisting code model snapshot in {C:\Users\user\source\repos\Pollon\NDependOut\NDependAnalysisResult_Pollon_2026Apr21_16h40m00.ndar}</Info>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Content.Api\obj\Debug\net10.0\Microsoft.AspNetCore.OpenApi.SourceGenerators\Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator} referenced by the PDB file of the assembly {Pollon.Content.Api} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Content.Api\obj\Debug\net10.0\Microsoft.Gen.Logging\Microsoft.Gen.Logging.LoggingGenerator} referenced by the PDB file of the assembly {Pollon.Content.Api} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Plugin.Example\obj\Debug\net10.0\Microsoft.Gen.Logging\Microsoft.Gen.Logging.LoggingGenerator} referenced by the PDB file of the assembly {Pollon.Plugin.Example} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Backoffice\obj\Debug\net10.0\Microsoft.Extensions.Logging.Generators\Microsoft.Extensions.Logging.Generators.LoggerMessageGenerator} referenced by the PDB file of the assembly {Pollon.Backoffice} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Api\obj\Debug\net10.0\Microsoft.AspNetCore.OpenApi.SourceGenerators\Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator} referenced by the PDB file of the assembly {Pollon.Backoffice.Api} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Backoffice.Api\obj\Debug\net10.0\Microsoft.Gen.Logging\Microsoft.Gen.Logging.LoggingGenerator} referenced by the PDB file of the assembly {Pollon.Backoffice.Api} can't be found.</Warning>
+  <Warning>The source directory {C:\Users\user\source\repos\Pollon\Pollon.Media.Api\obj\Debug\net10.0\Microsoft.AspNetCore.OpenApi.SourceGenerators\Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator} referenced by the PDB file of the assembly {Pollon.Media.Api} can't be found.</Warning>
+  <Info>Log trend metrics values.</Info>
+  <Warning>Execution of 13 rules was skipped on both snapshots because they require code coverage data, which has not been imported in both baseline and newer code base snapshots:
+   Assemblies and Namespaces should be tested
+   Avoid decreasing code coverage by tests of types
+   Code should be tested
+   Complex Methods should be 100% tested
+   From now, all types added should be 100% covered by tests
+   Methods refactored should be tested
+   Methods should have a low C.R.A.P score
+   Namespaces almost 100% tested should be 100% tested
+   New Types and Methods should be tested
+   Types 100% covered should be tagged with FullCoveredAttribute
+   Types almost 100% tested should be 100% tested
+   Types tagged with FullCoveredAttribute should be 100% covered
+   Types that used to be 100% covered by tests should still be 100% covered</Warning>
+  <Warning>Execution of 3 quality gates was skipped on both snapshots because they require code coverage data, which has not been imported in both baseline and newer code base snapshots:
+   Percentage Coverage
+   Percentage Coverage on New Code
+   Percentage Coverage on Refactored Code</Warning>
+  <Info>Execute queries and rules</Info>
+  <Info>Output report projects</Info>
+  <Info>Output report source files</Info>
+  <Warning>The baseline versions of source files modified are not available in the report.
+Reason: Cannot find the file {SourceFiles.zip} in the analysis result directory {C:\Users\user\source\repos\Pollon\NDependOut}.
+Make sure that the NDepend Project Properties &gt; Analysis &gt; Zip Source Files setting is enabled.</Warning>
+  <Info>The report lists 15 sources files (0 new and 0 modified since the baseline) on a total of 102 source files for the application analyzed.
+See 'Project Properties &gt; Report' to adjust the set of source files listed in the report.</Info>
+  <Error>2 quality gates fail:
+  - 'Critical Rules Violated' value 3 rules greater than fail threshold 0 rules
+  - 'Debt Rating per Namespace' value 3 namespaces greater than fail threshold 0 namespaces</Error>
+  <Info>Building the report (standard, compressed).</Info>
+  <Info>NDepend analysis done. Duration: 00:59.553</Info>
+</InfoWarnings>

@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Pollon.Backoffice.Repositories;
 
 namespace Pollon.Backoffice.Handlers;
 
@@ -14,7 +15,7 @@ public partial class PluginHandler
 {
     public async Task<RegisterPluginResponse> Handle(
         RegisterPlugin message, 
-        IDocumentSession session, 
+        IRepository<PluginInfo> repository, 
         ILogger<PluginHandler> logger,
         IConfiguration configuration,
         IConfigurationManager<OpenIdConnectConfiguration> oidcManager)
@@ -64,7 +65,7 @@ public partial class PluginHandler
         // 2. Register Plugin
         LogRegisteringPlugin(logger, message.Name, message.Id, message.ConsulServiceId);
 
-        var plugin = await session.LoadAsync<PluginInfo>(message.Id) ?? new PluginInfo { Id = message.Id };
+        var plugin = await repository.GetByIdAsync(message.Id) ?? new PluginInfo { Id = message.Id };
         
         plugin.Name = message.Name;
         plugin.ConsulServiceId = message.ConsulServiceId;
@@ -74,11 +75,17 @@ public partial class PluginHandler
         plugin.LastSeen = DateTime.UtcNow;
         plugin.Status = "Online";
         plugin.SupportedContentTypes = message.SupportedContentTypes ?? [];
+        // EnabledContentTypes is managed by the user via UI and should not be overwritten by registration
 
-        session.Store(plugin);
-        await session.SaveChangesAsync();
+        if (string.IsNullOrEmpty(plugin.Id) || (await repository.GetByIdAsync(message.Id)) == null)
+        {
+             await repository.CreateAsync(plugin);
+        }
+        else 
+        {
+             await repository.UpdateAsync(plugin.Id, plugin);
+        }
 
         return new RegisterPluginResponse(true);
     }
 }
-

@@ -9,6 +9,7 @@ public class PluginInfo
     public string Version { get; set; } = "1.0.0";
     public string? Description { get; set; }
     public List<string> SupportedContentTypes { get; set; } = new();
+    public List<string> EnabledContentTypes { get; set; } = new();
     public DateTime LastSeen { get; set; }
     public string Status { get; set; } = "Offline";
 }

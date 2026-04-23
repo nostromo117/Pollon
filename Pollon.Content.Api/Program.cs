@@ -1,6 +1,10 @@
+using System;
+using System.Linq;
+using Npgsql;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.EntityFrameworkCore;
+using Wolverine.Postgresql;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Pollon.Content.Api.Data;
@@ -13,7 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
-// Add PostgreSQL DbContext
+// Add PostgreSQL DataSource and DbContext
+builder.AddNpgsqlDataSource("contentdb");
+
 builder.AddNpgsqlDbContext<ApiDbContext>("contentdb");
 
 // Setup Keycloak Token Service (for service-to-service auth)
@@ -36,6 +42,10 @@ builder.Services.AddSingleton<IStaticStorage, MinioStaticStorage>();
 // Setup Wolverine and configure RabbitMQ
 builder.Host.UseWolverine(opts =>
 {
+    var connectionString = builder.Configuration.GetConnectionString("contentdb")!;
+
+    opts.PersistMessagesWithPostgresql(connectionString);
+
     opts.UseRabbitMq(builder.Configuration.GetConnectionString("messaging")!)
         .AutoProvision()
         .UseConventionalRouting();

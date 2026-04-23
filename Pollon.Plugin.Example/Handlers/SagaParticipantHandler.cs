@@ -20,6 +20,7 @@ public partial class SagaParticipantHandler
     public async Task<PluginValidationResponse> Handle(PluginValidationRequest request)
     {
         LogReceivedValidationRequest(_logger, request.Id);
+        _logger.LogInformation("Plugin received JSON payload: {Json}", request.ContentJson);
 
         // Simulate some processing (e.g. SEO check, image analysis, etc.)
         await Task.Delay(2000);

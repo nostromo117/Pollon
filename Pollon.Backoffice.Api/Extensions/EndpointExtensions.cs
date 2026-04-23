@@ -25,6 +25,16 @@ public static partial class EndpointExtensions
         {
             return Results.Ok(await repo.GetAllAsync());
         });
+        
+        group.MapPut("/{id}", async (string id, Pollon.Contracts.Models.PluginInfo item, IRepository<Pollon.Contracts.Models.PluginInfo> repo) =>
+        {
+            var existing = await repo.GetByIdAsync(id);
+            if (existing is null) return Results.NotFound();
+            
+            existing.EnabledContentTypes = item.EnabledContentTypes;
+            await repo.UpdateAsync(id, existing);
+            return Results.NoContent();
+        });
 
         return endpoints;
     }

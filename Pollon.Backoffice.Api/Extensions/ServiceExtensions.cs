@@ -17,6 +17,7 @@ public static class ServiceExtensions
         // Register repositories and domain services
         services.AddScoped(typeof(IRepository<>), typeof(MartenRepository<>));
         services.AddScoped<IContentItemService, ContentItemService>();
+        services.AddScoped<IKeycloakAdminClient, KeycloakAdminClient>();
         services.AddHostedService<PluginSyncService>();
 
         return services;

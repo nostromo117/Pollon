@@ -300,4 +300,20 @@ public class BackofficeApiClient(
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
+
+    public async Task<KeycloakCredentials?> CreatePluginIdentityAsync(string name, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/plugins/identity")
+        {
+            Content = JsonContent.Create(new { Name = name })
+        };
+        var response = await SendWithAuthAsync(request, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<KeycloakCredentials>(_options, cancellationToken);
+        }
+        return null;
+    }
+
+    public record KeycloakCredentials(string ClientId, string ClientSecret);
 }

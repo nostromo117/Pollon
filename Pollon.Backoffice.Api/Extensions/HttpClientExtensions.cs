@@ -1,3 +1,5 @@
+using Pollon.Backoffice.Services;
+
 namespace Pollon.Backoffice.Api.Extensions;
 
 public static class HttpClientExtensions
@@ -8,6 +10,8 @@ public static class HttpClientExtensions
         {
             client.BaseAddress = new("https+http://mediaapi");
         });
+
+        services.AddHttpClient<IKeycloakAdminClient, KeycloakAdminClient>();
 
         return services;
     }

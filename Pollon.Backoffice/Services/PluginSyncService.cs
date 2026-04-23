@@ -41,14 +41,18 @@ public partial class PluginSyncService : BackgroundService
 
                 using var session = _store.LightweightSession();
 
-                // 2. Fetch all plugins from DB and delete those missing from Consul
+                // 2. Fetch all plugins from DB and update status for those missing from Consul
                 var dbPlugins = await session.Query<PluginInfo>().ToListAsync(stoppingToken);
                 foreach (var dbPlugin in dbPlugins)
                 {
                     if (!activeConsulIds.Contains(dbPlugin.ConsulServiceId))
                     {
-                        LogPluginRemoved(_logger, dbPlugin.Id, dbPlugin.ConsulServiceId);
-                        session.Delete(dbPlugin);
+                        if (dbPlugin.Status != "Offline")
+                        {
+                            LogPluginOffline(_logger, dbPlugin.Id, dbPlugin.ConsulServiceId);
+                            dbPlugin.Status = "Offline";
+                            session.Store(dbPlugin);
+                        }
                     }
                 }
 

@@ -52,9 +52,22 @@ public partial class PluginHandler
 
             var principal = tokenHandler.ValidateToken(message.AccessToken, validationParameters, out _);
             
-            // Possiamo anche controllare che il client_id nel token corrisponda
-            var clientId = principal.FindFirst("azp")?.Value ?? principal.FindFirst("client_id")?.Value;
-            logger.LogInformation("Plugin {ClientId} authenticated successfully using OIDC-verified signature.", clientId);
+            // 2. Enforce identity: the Id in the message must match the authenticated clientId from the token
+            var authenticatedClientId = principal.FindFirst("azp")?.Value ?? principal.FindFirst("client_id")?.Value;
+            
+            if (string.IsNullOrEmpty(authenticatedClientId))
+            {
+                logger.LogWarning("Plugin registration rejected: Could not determine clientId from token.");
+                return new RegisterPluginResponse(false, "Authentication token is missing identity information.");
+            }
+
+            if (authenticatedClientId != message.Id)
+            {
+                logger.LogWarning("Plugin identity mismatch! Claimed: {ClaimedId}, Authenticated: {AuthenticatedId}", message.Id, authenticatedClientId);
+                return new RegisterPluginResponse(false, "Plugin identity mismatch. You must register using your assigned Client ID.");
+            }
+
+            logger.LogInformation("Plugin {ClientId} authenticated and identity verified successfully.", authenticatedClientId);
         }
         catch (Exception ex)
         {
@@ -62,7 +75,7 @@ public partial class PluginHandler
             return new RegisterPluginResponse(false, $"Invalid authentication token: {ex.Message}");
         }
 
-        // 2. Register Plugin
+        // 3. Register Plugin
         LogRegisteringPlugin(logger, message.Name, message.Id, message.ConsulServiceId);
 
         var plugin = await repository.GetByIdAsync(message.Id) ?? new PluginInfo { Id = message.Id };

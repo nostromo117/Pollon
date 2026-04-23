@@ -36,8 +36,18 @@ public static partial class EndpointExtensions
             return Results.NoContent();
         });
 
+        group.MapPost("/identity", async (PluginIdentityRequest request, IKeycloakAdminClient adminClient) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("Plugin name is required.");
+            
+            var credentials = await adminClient.CreatePluginClientAsync(request.Name);
+            return credentials != null ? Results.Ok(credentials) : Results.Problem("Failed to create plugin identity in Keycloak.");
+        });
+
         return endpoints;
     }
+
+    public record PluginIdentityRequest(string Name);
 
 
     public static IEndpointRouteBuilder MapContentTypeEndpoints(this IEndpointRouteBuilder endpoints)

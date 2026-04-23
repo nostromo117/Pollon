@@ -1,0 +1,25 @@
+@using MudBlazor
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create Plugin Identity</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Class="mb-4">Enter a name for the new plugin. This will generate a unique Client ID and Secret in Keycloak.</MudText>
+        <MudTextField @bind-Value="pluginName" Label="Plugin Name" Variant="Variant.Outlined" AutoFocus="true" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(string.IsNullOrWhiteSpace(pluginName))">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudBlazor.IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string? pluginName;
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(pluginName));
+    private void Cancel() => MudDialog.Cancel();
+}

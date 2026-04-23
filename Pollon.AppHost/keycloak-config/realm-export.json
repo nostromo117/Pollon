@@ -73,6 +73,15 @@
         "profile",
         "email"
       ]
+    },
+    {
+      "clientId": "pollon-identity-manager",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "identity-manager-secret",
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
     }
   ]
 }

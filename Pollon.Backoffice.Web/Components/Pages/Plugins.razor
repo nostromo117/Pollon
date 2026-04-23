@@ -9,10 +9,27 @@
 
 <div class="d-flex justify-content-between align-items-center mb-6">
     <MudText Typo="Typo.h4" GutterBottom="true">Registered Plugins</MudText>
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
-        Refresh
-    </MudButton>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateNewIdentity">
+            Create New Identity
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+    </div>
 </div>
+
+@if (newCredentials != null)
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="my-4" CloseIcon="@Icons.Material.Filled.Close" CloseIconClicked="() => newCredentials = null">
+        <MudText Typo="Typo.h6">New Plugin Identity Created!</MudText>
+        <MudText Typo="Typo.body2" Class="mb-2">Copy these credentials into your plugin configuration. You won't be able to see the secret again.</MudText>
+        <div class="pa-4 mud-theme-dark rounded">
+            <MudText Typo="Typo.body2"><b>Client ID:</b> <code>@newCredentials.ClientId</code></MudText>
+            <MudText Typo="Typo.body2"><b>Client Secret:</b> <code>@newCredentials.ClientSecret</code></MudText>
+        </div>
+    </MudAlert>
+}
 
 <MudText Typo="Typo.body1" Class="mb-4">
     Total plugins registered: <b>@(plugins?.Length ?? 0)</b>
@@ -90,10 +107,36 @@ else
 @code {
     private Pollon.Contracts.Models.PluginInfo[]? plugins;
     private string? errorMessage;
+    private BackofficeApiClient.KeycloakCredentials? newCredentials;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
+    }
+
+    private async Task CreateNewIdentity()
+    {
+        var parameters = new DialogParameters();
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<PluginIdentityDialog>("New Plugin Identity", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is string pluginName)
+        {
+            try 
+            {
+                newCredentials = await ApiClient.CreatePluginIdentityAsync(pluginName);
+                if (newCredentials == null)
+                {
+                    errorMessage = "Failed to create identity in Keycloak. Check logs.";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
     }
 
     private async Task LoadDataAsync()

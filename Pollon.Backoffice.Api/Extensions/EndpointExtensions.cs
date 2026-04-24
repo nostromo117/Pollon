@@ -44,6 +44,18 @@ public static partial class EndpointExtensions
             return credentials != null ? Results.Ok(credentials) : Results.Problem("Failed to create plugin identity in Keycloak.");
         });
 
+        group.MapDelete("/identity/{clientId}", async (string clientId, IKeycloakAdminClient adminClient) =>
+        {
+            var success = await adminClient.DeletePluginClientAsync(clientId);
+            return success ? Results.NoContent() : Results.Problem("Failed to delete plugin identity in Keycloak.");
+        });
+
+        group.MapPost("/identity/{clientId}/regenerate", async (string clientId, IKeycloakAdminClient adminClient) =>
+        {
+            var credentials = await adminClient.RegeneratePluginSecretAsync(clientId);
+            return credentials != null ? Results.Ok(credentials) : Results.Problem("Failed to regenerate plugin secret in Keycloak.");
+        });
+
         return endpoints;
     }
 
@@ -81,8 +93,7 @@ public static partial class EndpointExtensions
 
         group.MapPut("/{id}", async (string id, ContentType item, IRepository<ContentType> repo, ILogger<ContentType> logger) =>
         {
-            var existingItem = await repo.GetByIdAsync(id);
-            if (existingItem is null) return Results.NotFound();
+            if (!await repo.ExistsAsync(id)) return Results.NotFound();
             
             if (string.IsNullOrWhiteSpace(item.DisplayName) || 
                 string.IsNullOrWhiteSpace(item.SystemName) || 
@@ -93,15 +104,14 @@ public static partial class EndpointExtensions
 
             item.Id = id;
             await repo.UpdateAsync(id, item);
-            Log.LogContentTypeUpdated(logger, item.DisplayName, item.SystemName, 
+            Log.LogContentTypeUpdated(logger, item.DisplayName, item.SystemName, item.PublishMode.ToString(), 
                 string.Join(", ", item.Fields.OrderBy(f => f.Position).Select(f => $"{f.Name} [pos:{f.Position}]")));
             return Results.NoContent();
         });
 
         group.MapDelete("/{id}", async (string id, IRepository<ContentType> repo) =>
         {
-            var existingItem = await repo.GetByIdAsync(id);
-            if (existingItem is null) return Results.NotFound();
+            if (!await repo.ExistsAsync(id)) return Results.NotFound();
 
             await repo.DeleteAsync(id);
             return Results.NoContent();
@@ -230,8 +240,7 @@ public static partial class EndpointExtensions
 
         group.MapPut("/{id}", async (string id, MediaGallery item, IRepository<MediaGallery> repo) =>
         {
-            var existing = await repo.GetByIdAsync(id);
-            if (existing is null) return Results.NotFound();
+            if (!await repo.ExistsAsync(id)) return Results.NotFound();
             item.Id = id;
             await repo.UpdateAsync(id, item);
             return Results.NoContent();

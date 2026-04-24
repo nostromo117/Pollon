@@ -10,6 +10,8 @@ public interface IKeycloakAdminClient
 {
     Task<KeycloakClientCredentials?> CreatePluginClientAsync(string pluginName);
     Task<IEnumerable<string>> GetPluginClientsAsync();
+    Task<bool> DeletePluginClientAsync(string clientId);
+    Task<KeycloakClientCredentials?> RegeneratePluginSecretAsync(string clientId);
 }
 
 public class KeycloakAdminClient : IKeycloakAdminClient
@@ -113,6 +115,50 @@ public class KeycloakAdminClient : IKeycloakAdminClient
         
         var clients = await _httpClient.GetFromJsonAsync<List<KeycloakClientInfo>>(adminUrl);
         return clients?.Where(c => c.ClientId.StartsWith("plugin-")).Select(c => c.ClientId) ?? Enumerable.Empty<string>();
+    }
+
+    public async Task<bool> DeletePluginClientAsync(string clientId)
+    {
+        var token = await GetAdminTokenAsync();
+        if (token == null) return false;
+
+        var keycloakUrl = _configuration.GetConnectionString("keycloak") ?? _configuration["Keycloak:Url"] ?? "http://localhost:8080";
+        var realm = _configuration["Keycloak:Realm"] ?? "Pollon";
+        var adminUrl = $"{keycloakUrl.TrimEnd('/')}/admin/realms/{realm}/clients";
+
+        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
+        // Find internal ID
+        var clients = await _httpClient.GetFromJsonAsync<List<KeycloakClientInfo>>(adminUrl);
+        var client = clients?.FirstOrDefault(c => c.ClientId == clientId);
+        if (client == null) return false;
+
+        var response = await _httpClient.DeleteAsync($"{adminUrl}/{client.Id}");
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<KeycloakClientCredentials?> RegeneratePluginSecretAsync(string clientId)
+    {
+        var token = await GetAdminTokenAsync();
+        if (token == null) return null;
+
+        var keycloakUrl = _configuration.GetConnectionString("keycloak") ?? _configuration["Keycloak:Url"] ?? "http://localhost:8080";
+        var realm = _configuration["Keycloak:Realm"] ?? "Pollon";
+        var adminUrl = $"{keycloakUrl.TrimEnd('/')}/admin/realms/{realm}/clients";
+
+        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
+        // Find internal ID
+        var clients = await _httpClient.GetFromJsonAsync<List<KeycloakClientInfo>>(adminUrl);
+        var client = clients?.FirstOrDefault(c => c.ClientId == clientId);
+        if (client == null) return null;
+
+        var secretUrl = $"{adminUrl}/{client.Id}/client-secret";
+        var response = await _httpClient.PostAsync(secretUrl, null);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var secretResult = await response.Content.ReadFromJsonAsync<SecretResponse>();
+        return new KeycloakClientCredentials(clientId, secretResult?.Value ?? "");
     }
 
     private record TokenResponse([property: System.Text.Json.Serialization.JsonPropertyName("access_token")] string AccessToken);

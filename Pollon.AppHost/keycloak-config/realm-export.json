@@ -19,6 +19,18 @@
       "realmRoles": [
         "admin"
       ]
+    },
+    {
+      "username": "service-account-pollon-identity-manager",
+      "enabled": true,
+      "serviceAccountClientId": "pollon-identity-manager",
+      "clientRoles": {
+        "realm-management": [
+          "manage-clients",
+          "query-clients",
+          "view-clients"
+        ]
+      }
     }
   ],
   "roles": {
@@ -83,15 +95,5 @@
       "publicClient": false,
       "protocol": "openid-connect"
     }
-  ],
-  "clientScopeMappings": {
-    "realm-management": [
-      {
-        "client": "pollon-identity-manager",
-        "roles": [
-          "manage-clients"
-        ]
-      }
-    ]
-  }
+  ]
 }

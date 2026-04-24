@@ -104,15 +104,17 @@ public class ContentItemService : IContentItemService
 
         PopulateSearchText(item);
         
+        var isPublished = item.Status == "Published";
+        if (isPublished)
+        {
+            item.Status = "Draft";
+        }
+
         // Save to Marten via repository
         await _repository.CreateAsync(item);
 
-        if (item.Status == "Published")
+        if (isPublished)
         {
-            // Reset status to Draft temporarily while Saga runs
-            item.Status = "Draft";
-            await _repository.UpdateAsync(item.Id, item);
-            
             // Start Saga instead of direct event
             await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType.SystemName));
         }
@@ -193,21 +195,28 @@ public class ContentItemService : IContentItemService
 
         item.CreatedAt = existingItem.CreatedAt;
         
-        await _repository.UpdateAsync(id, item);
+        var shouldStartSaga = false;
+        var originalStatus = item.Status;
 
         if (item.Status == "Published")
         {
-            // Se prima era Draft/Archived e ora vogliamo pubblicare, avviamo la Saga.
+            // Se prima era Draft/Archived e ora vogliamo pubblicare, impostiamo lo stato a quello precedente
+            // e avviamo la Saga. Il PublicationCompletedHandler lo metterà a "Published".
             if (existingItem.Status != "Published")
             {
                 item.Status = existingItem.Status; 
-                await _repository.UpdateAsync(id, item);
             }
-            
+            shouldStartSaga = true;
+        }
+
+        await _repository.UpdateAsync(id, item);
+
+        if (shouldStartSaga)
+        {
             var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
             await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType!.SystemName));
         }
-        else if (existingItem.Status == "Published" && item.Status != "Published")
+        else if (existingItem.Status == "Published" && originalStatus != "Published")
         {
             // Se prima era pubblicato e ora non lo è più (es. "Archived" o "Draft"), 
             // lo trattiamo come un'eliminazione per la read model, così viene rimosso dal front-end.

@@ -10,6 +10,7 @@ public static class ServiceExtensions
         // Configure JSON options
         services.ConfigureHttpJsonOptions(options =>
         {
+            options.SerializerOptions.PropertyNameCaseInsensitive = true;
             options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });

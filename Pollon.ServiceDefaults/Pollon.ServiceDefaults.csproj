@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pollon.Publication\Pollon.Publication.csproj" />
+    <ProjectReference Include="..\Pollon.Contracts\Pollon.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

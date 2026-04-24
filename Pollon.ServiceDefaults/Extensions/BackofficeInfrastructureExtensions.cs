@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Npgsql;
 using Marten;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pollon.Publication.Models;
-using System.Reflection;
+using Pollon.Contracts.Messages;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Marten;
@@ -54,6 +55,13 @@ public static class BackofficeInfrastructureExtensions
             }
 
             opts.Policies.UseDurableLocalQueues();
+
+            // Configure targeted routing for plugin validation
+            opts.PublishMessage<PluginValidationRequest>()
+                .ToRabbitExchange("plugin-validation", exchange => 
+                {
+                    exchange.ExchangeType = Wolverine.RabbitMQ.ExchangeType.Topic;
+                });
         });
 
         return host;

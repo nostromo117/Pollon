@@ -150,7 +150,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/content-types")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -159,7 +159,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Put, $"/api/content-types/{id}")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -194,7 +194,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/content-items")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -203,7 +203,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Put, $"/api/content-items/{id}")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -248,7 +248,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/galleries")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         var response = await SendWithAuthAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)
@@ -276,7 +276,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Put, $"/api/galleries/{id}")
         {
-            Content = JsonContent.Create(item)
+            Content = JsonContent.Create(item, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -296,7 +296,7 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Put, $"/api/plugins/{id}")
         {
-            Content = JsonContent.Create(plugin)
+            Content = JsonContent.Create(plugin, options: _options)
         };
         await SendWithAuthAsync(request, cancellationToken);
     }
@@ -305,8 +305,26 @@ public class BackofficeApiClient(
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/plugins/identity")
         {
-            Content = JsonContent.Create(new { Name = name })
+            Content = JsonContent.Create(new { Name = name }, options: _options)
         };
+        var response = await SendWithAuthAsync(request, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<KeycloakCredentials>(_options, cancellationToken);
+        }
+        return null;
+    }
+
+    public async Task<bool> DeletePluginIdentityAsync(string clientId, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/plugins/identity/{clientId}");
+        var response = await SendWithAuthAsync(request, cancellationToken);
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<KeycloakCredentials?> RegeneratePluginIdentityAsync(string clientId, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/plugins/identity/{clientId}/regenerate");
         var response = await SendWithAuthAsync(request, cancellationToken);
         if (response.IsSuccessStatusCode)
         {

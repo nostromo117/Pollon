@@ -21,8 +21,12 @@ builder.Host.UseWolverine(opts =>
     if (!string.IsNullOrEmpty(connectionString))
     {
         Console.WriteLine($"[Plugin] Configuring RabbitMQ from Consul: {connectionString}");
-        opts.UseRabbitMq(new Uri(connectionString)).AutoProvision()
+        var rabbit = opts.UseRabbitMq(new Uri(connectionString)).AutoProvision()
             .UseConventionalRouting();
+
+        // Targeted validation queue using Routing Key
+        var pluginId = builder.Configuration["Plugin:Id"] ?? "plugin-example-01";
+        opts.ListenToRabbitQueue($"validation-{pluginId}");
     }
     
     opts.ListenToRabbitQueue("plugin-example-events");

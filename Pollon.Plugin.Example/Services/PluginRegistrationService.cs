@@ -119,7 +119,7 @@ public partial class PluginRegistrationService : BackgroundService
             LogDeregisteringConsul(_logger);
             try 
             {
-                await client.Agent.ServiceDeregister(_consulServiceId);
+                await client.Agent.ServiceDeregister(_consulServiceId, CancellationToken.None);
             }
             catch(Exception ex)
             {

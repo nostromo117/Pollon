@@ -72,8 +72,8 @@ else
             </MudTd>
             <MudTd DataLabel="ID / Instance">
                 <div class="d-flex flex-column">
-                    <MudText Typo="Typo.body2">@context.Id</MudText>
-                    <MudText Typo="Typo.caption" Style="font-family: monospace" Color="Color.Secondary">@context.ConsulServiceId</MudText>
+                    <MudText Typo="Typo.body2"><b>ID:</b> @context.Id</MudText>
+                    <MudText Typo="Typo.caption" Style="font-family: monospace" Color="Color.Secondary">Instance: @context.ConsulServiceId</MudText>
                 </div>
             </MudTd>
             <MudTd DataLabel="Enabled types">
@@ -95,7 +95,11 @@ else
                 @context.LastSeen.ToLocalTime().ToString("g")
             </MudTd>
             <MudTd DataLabel="Actions">
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Small" OnClick="() => ConfigurePlugin(context)" />
+                <div class="d-flex">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Small" OnClick="() => ConfigurePlugin(context)" Title="Configure" />
+                    <MudIconButton Icon="@Icons.Material.Filled.VpnKey" Color="Color.Warning" Size="Size.Small" OnClick="() => RegenerateIdentity(context.Id)" Title="Regenerate Secret" />
+                    <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" Size="Size.Small" OnClick="() => RevokeIdentity(context.Id)" Title="Revoke Identity" />
+                </div>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -163,6 +167,58 @@ else
         if (result != null && !result.Canceled)
         {
             await LoadDataAsync();
+        }
+    }
+
+    private async Task RevokeIdentity(string clientId)
+    {
+        bool? result = await DialogService.ShowMessageBoxAsync(
+            "Revoke Identity", 
+            "Are you sure you want to delete this plugin identity from Keycloak? The plugin will no longer be able to authenticate.", 
+            yesText: "Revoke", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try 
+            {
+                var success = await ApiClient.DeletePluginIdentityAsync(clientId);
+                if (success)
+                {
+                    await DialogService.ShowMessageBoxAsync("Success", "Identity revoked successfully.");
+                }
+                else 
+                {
+                    errorMessage = "Failed to revoke identity. The client might not exist in Keycloak.";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+
+    private async Task RegenerateIdentity(string clientId)
+    {
+        bool? result = await DialogService.ShowMessageBoxAsync(
+            "Regenerate Secret", 
+            "Are you sure you want to regenerate the secret for this plugin? You will need to update the plugin's configuration.", 
+            yesText: "Regenerate", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try 
+            {
+                newCredentials = await ApiClient.RegeneratePluginIdentityAsync(clientId);
+                if (newCredentials == null)
+                {
+                    errorMessage = "Failed to regenerate secret.";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
         }
     }
 

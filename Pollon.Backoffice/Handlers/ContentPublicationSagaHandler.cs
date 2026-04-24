@@ -61,12 +61,12 @@ public partial class ContentPublicationSaga : Saga
             foreach (var plugin in targetPlugins)
             {
                 this.PendingPlugins.Add(plugin.Id);
+                // Targeted validation request using Routing Key (TopicName)
+                var request = new PluginValidationRequest(command.Id, contentJson, command.ContentType, plugin.Id);
+                messages.Add(new Envelope(request) { TopicName = plugin.Id });
             }
             
             LogWaitingForPlugins(logger, targetPlugins.Count, string.Join(", ", this.PendingPlugins));
-
-            // Request validation from all selected plugins with the filtered JSON payload
-            messages.Add(new PluginValidationRequest(command.Id, contentJson));
             
             // Schedule timeout in 20 seconds using the bus
             await bus.ScheduleAsync(new PublicationTimeout(command.Id), TimeSpan.FromSeconds(20));
@@ -74,7 +74,8 @@ public partial class ContentPublicationSaga : Saga
         else
         {
             LogNoPluginsFound(logger, command.ContentType);
-            messages.Add(new PluginValidationResponse(command.Id, "System", true));
+            // Finalize directly to avoid race condition with Saga persistence
+            return await FinalizePublication(logger);
         }
 
         return messages.ToArray();

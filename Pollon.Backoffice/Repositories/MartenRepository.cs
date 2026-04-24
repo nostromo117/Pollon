@@ -26,6 +26,20 @@ public class MartenRepository<T> : IRepository<T> where T : class
         return await _session.LoadAsync<T>(id);
     }
 
+    // Checks for existence without loading the document. 
+    // We use Expressions because T doesn't have a common interface with an Id property, 
+    // but Marten uses 'Id' as the primary key by convention.
+    public async Task<bool> ExistsAsync(string id)
+    {
+        var parameter = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var property = System.Linq.Expressions.Expression.Property(parameter, "Id");
+        var constant = System.Linq.Expressions.Expression.Constant(id);
+        var equal = System.Linq.Expressions.Expression.Equal(property, constant);
+        var lambda = System.Linq.Expressions.Expression.Lambda<Func<T, bool>>(equal, parameter);
+
+        return await _session.Query<T>().AnyAsync(lambda);
+    }
+
     public async Task CreateAsync(T item)
     {
         _session.Store(item);
@@ -34,12 +48,8 @@ public class MartenRepository<T> : IRepository<T> where T : class
 
     public async Task UpdateAsync(string id, T item)
     {
-        var existing = await _session.LoadAsync<T>(id);
-        if (existing != null)
-        {
-            _session.Store(item);
-            await _session.SaveChangesAsync();
-        }
+        _session.Store(item);
+        await _session.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(string id)

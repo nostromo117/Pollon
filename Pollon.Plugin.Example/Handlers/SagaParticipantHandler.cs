@@ -17,10 +17,16 @@ public partial class SagaParticipantHandler
         _pluginId = _configuration["Plugin:Id"] ?? "plugin-example-01";
     }
 
-    public async Task<PluginValidationResponse> Handle(PluginValidationRequest request)
+    public async Task<PluginValidationResponse?> Handle(PluginValidationRequest request)
     {
+        // 1. Verify if this request is targeted to THIS plugin
+        if (request.TargetPluginId != _pluginId)
+        {
+            return null; // Ignore messages not meant for us
+        }
+
         LogReceivedValidationRequest(_logger, request.Id);
-        _logger.LogInformation("Plugin received JSON payload: {Json}", request.ContentJson);
+        _logger.LogInformation("Plugin received validation request for ContentType: {Type}. JSON payload: {Json}", request.ContentType, request.ContentJson);
 
         // Simulate some processing (e.g. SEO check, image analysis, etc.)
         await Task.Delay(2000);

@@ -11,6 +11,9 @@ Interfaccia di amministrazione per la gestione dei contenuti del CMS Pollon. Cos
   - [Content Items](#content-items)
   - [Content Types](#content-types)
   - [Content Templates](#content-templates)
+    - [Template Code inline](#template-code-inline)
+    - [Variabili di configurazione](#variabili-di-configurazione)
+    - [Tag e stato attivo](#tag-e-stato-attivo)
 - [Sezione MEDIA](#sezione-media)
   - [Gallerie Media](#gallerie-media)
 - [Sezione SETTINGS](#sezione-settings)
@@ -171,7 +174,15 @@ Quando un item di tipo `Prodotto` viene pubblicato, il `Content.Api` renderizza 
 
 **URL:** `/content-templates`
 
-Registro dei template grafici `.sbn` (Scriban) disponibili per la pubblicazione statica. Ogni template è un file HTML + Scriban presente nella cartella `Templates/` del servizio `Pollon.Content.Api`.
+Registro dei template grafici `.sbn` (Scriban) disponibili per la pubblicazione statica. Ogni template può essere basato su un **file fisico** nella cartella `Templates/` del `Pollon.Content.Api`, oppure avere il **codice inline** salvato direttamente nel database e modificabile dal backoffice senza deploy.
+
+Il dialog di creazione/modifica è organizzato in **tre tab**:
+
+| Tab | Contenuto |
+|---|---|
+| **Generale** | Nome, file di riferimento, descrizione, tag, URL anteprima, switch attivo/inattivo |
+| **Variabili** | Dizionario chiave/valore iniettato nel contesto Scriban come `{{ vars.chiave }}` |
+| **Template Code** | Sorgente HTML/Scriban inline — ha **priorità** sul file `.sbn` su disco |
 
 #### Template predefiniti disponibili
 
@@ -182,56 +193,91 @@ Registro dei template grafici `.sbn` (Scriban) disponibili per la pubblicazione 
 | `minimal.sbn` | Minimal | Tipografico, colonna singola, font Cormorant Garamond, barra di lettura |
 | `dark-card.sbn` | Dark Card | Dark mode tech, card per campo, font Space Grotesk, accenti neon |
 
-#### Registrare un nuovo template
+#### Registrare un template basato su file
 
 1. **Crea il file** `<nome>.sbn` nella cartella `Pollon.Content.Api/Templates/`
 2. Nel backoffice vai su **Content Templates** → **New Template**
-3. Compila:
+3. Tab **Generale** — compila:
    - **Nome visualizzato**: es. `Landing Page Moderna`
    - **Nome file template**: es. `landing-modern.sbn` (deve corrispondere esattamente al file)
-   - **Descrizione**: descrizione opzionale
-   - **URL anteprima immagine**: URL di uno screenshot del template (opzionale)
-4. Salva
+   - **Descrizione** e **Tag** opzionali
+4. Lascia vuoto il tab **Template Code**
+5. Salva
 
-Il template sarà ora selezionabile nel dropdown dei Content Types.
+#### Template Code inline
 
-#### Variabili disponibili nei template `.sbn`
+Il tab **Template Code** permette di scrivere il sorgente HTML/Scriban direttamente nel backoffice, senza toccare il filesystem. Il template inline ha sempre precedenza sul file `.sbn` indicato nel campo "Nome file template".
 
-```scriban
-{{ title }}          # Titolo dell'item (ricavato da campo "title" o "Title" o "name")
-{{ slug }}           # Slug dell'item
-{{ published_at }}   # Data di pubblicazione (DateTime)
-{{ content_type }}   # Display name del Content Type
-{{ id }}             # ID univoco dell'item
-{{ images }}         # Lista immagini della galleria associata (array con .url e .alt)
-
-# Tutti gli altri campi dell'item sono accessibili per nome:
-{{ titolo }}
-{{ corpo }}
-{{ prezzo }}
-# oppure iterando:
-{{ for pair in this }}
-    {{ pair.key }} = {{ pair.value }}
-{{ end }}
-```
-
-**Esempio di template custom minimale:**
+**Esempio di template inline minimale:**
 
 ```html
 <!DOCTYPE html>
 <html>
-<head><title>{{ title }}</title></head>
+<head>
+  <title>{{ title }}</title>
+  <style>
+    body { background: {{ vars.bg_color }}; font-family: {{ vars.font_family }}; }
+    h1   { color: {{ vars.accent_color }}; }
+  </style>
+</head>
 <body>
   <h1>{{ title }}</h1>
   <p>Pubblicato il {{ published_at | date.to_string "%d/%m/%Y" }}</p>
+  {{ for img in images }}
+    <img src="{{ img.url }}" alt="{{ img.alt }}" />
+  {{ end }}
   {{ for pair in this }}
-    {{ if pair.key != "title" && pair.key != "id" }}
+    {{ if pair.key != "title" && pair.key != "id" && pair.key != "images" }}
       <div><strong>{{ pair.key }}:</strong> {{ pair.value }}</div>
     {{ end }}
   {{ end }}
 </body>
 </html>
 ```
+
+#### Variabili di configurazione
+
+Le variabili sono coppie chiave/valore definite nel tab **Variabili** e iniettate nel contesto Scriban sotto il namespace `vars`. Permettono di cambiare l'aspetto del template (colori, font, ecc.) senza modificarne il codice sorgente.
+
+**Esempio — creare un template "Branded" con variabili:**
+
+| Chiave | Valore |
+|---|---|
+| `bg_color` | `#1a1a2e` |
+| `accent_color` | `#e94560` |
+| `font_family` | `'Inter', sans-serif` |
+| `logo_url` | `https://cdn.example.com/logo.png` |
+
+Nel codice Scriban:
+
+```scriban
+<style>
+  body  { background: {{ vars.bg_color }}; font-family: {{ vars.font_family }}; }
+  h1    { color: {{ vars.accent_color }}; }
+</style>
+<img src="{{ vars.logo_url }}" alt="Logo" />
+```
+
+Modificando le variabili dal backoffice, il prossimo contenuto pubblicato con quel template userà i nuovi valori senza deploy.
+
+#### Variabili di sistema sempre disponibili
+
+```scriban
+{{ title }}          # Titolo dell'item
+{{ slug }}           # Slug dell'item
+{{ published_at }}   # Data di pubblicazione (DateTime)
+{{ content_type }}   # Display name del Content Type
+{{ id }}             # ID univoco dell'item
+{{ images }}         # Lista immagini della galleria (array con .url e .alt)
+{{ vars.chiave }}    # Variabili personalizzate definite nel template
+```
+
+#### Tag e stato attivo
+
+- **Tag**: etichette libere (es. `blog, magazine, dark`) per categorizzare i template nella lista.
+- **Attivo/Inattivo**: un template inattivo non compare nel dropdown di selezione dei Content Types ma rimane nel registro. Utile per nascondere template in manutenzione senza eliminarli.
+
+Le card nella lista mostrano un badge **Inline** (verde) se il template ha codice inline, i tag come chip e il numero di variabili configurate.
 
 ---
 
@@ -346,7 +392,11 @@ L'override sul singolo Content Item permette di cambiare la modalità rispetto a
       │  4. Recupera i dati completi dell'item (ContentType, Gallery)
       │  5. Serializza i dati in JSON
       │  6. Se mode = Static | Both:
-      │       - Renderizza il template .sbn con Scriban
+      │       - Risolve il ContentTemplate dal registro (by-filename)
+      │       - Se il template ha TemplateContent inline → usa quello
+      │       - Altrimenti legge il file .sbn da disco
+      │       - Inietta le Variables del template come {{ vars.* }}
+      │       - Renderizza con Scriban
       │       - Salva il file HTML su MinIO
       │  7. Salva/aggiorna il record in PostgreSQL (contentdb)
       │
@@ -370,21 +420,33 @@ Pollon.Backoffice.Web/
 ├── Components/
 │   ├── Layout/
 │   │   ├── MainLayout.razor        # Layout principale con MudBlazor drawer
-│   │   └── NavMenu.razor           # Menu di navigazione laterale
+│   │   └── NavMenu.razor           # Menu di navigazione laterale (sezioni CONTENT, MEDIA, SETTINGS)
 │   └── Pages/
 │       ├── Home.razor              # Dashboard
-│       ├── ContentItems.razor      # Lista ad albero dei content items
-│       ├── EditContentItem.razor   # Form creazione/modifica content item
+│       ├── ContentItems.razor      # Lista ad albero dei content items (ricerca, filtri, CRUD)
+│       ├── EditContentItem.razor   # Form creazione/modifica content item con campi dinamici
 │       ├── ContentTypes.razor      # Lista dei content types
-│       ├── EditContentType.razor   # Form creazione/modifica content type
-│       ├── ContentTemplates.razor  # Registro template grafici
+│       ├── EditContentType.razor   # Form creazione/modifica content type + selezione template
+│       ├── ContentTemplates.razor  # Registro template grafici (Generale / Variabili / Template Code)
 │       ├── MediaGalleries.razor    # Lista gallerie media
 │       ├── EditMediaGallery.razor  # Form galleria con upload immagini
 │       └── Plugins.razor           # Gestione plugin e identità Keycloak
 ├── Services/
 │   ├── IContentTreeService.cs      # Interfaccia per la gestione dell'albero
 │   └── ContentTreeService.cs       # Logica di costruzione albero gerarchico
-├── BackofficeApiClient.cs          # HTTP client verso Backoffice.Api
+├── BackofficeApiClient.cs          # HTTP client verso Backoffice.Api (CRUD + template)
 ├── TokenProvider.cs                # Gestione token OAuth2 + refresh
 └── Program.cs                      # Bootstrap dell'applicazione
+```
+
+### Modelli condivisi (`Pollon.Publication`)
+
+```
+Pollon.Publication/Models/
+├── ContentItem.cs        # Item di contenuto con campi dinamici, slug, status, GalleryId
+├── ContentType.cs        # Schema dei campi + PublishMode + TemplateName
+├── ContentTemplate.cs    # Template grafico con TemplateContent inline, Variables, Tags, IsActive
+├── ContentField.cs       # Definizione di un campo (nome, tipo, posizione, required)
+├── MediaGallery.cs       # Galleria con lista AssetId
+└── PublishedContent.cs   # Record pubblicato su PostgreSQL (slug, html, json, mode)
 ```

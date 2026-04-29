@@ -94,25 +94,27 @@ public partial class ContentPublishedConsumer
             {
                 LogTriggeringRender(_logger, contentItemId, contentType.TemplateName);
                 try
-            {
-               MediaGallery? gallery = null;
-               if (!string.IsNullOrEmpty(contentItem.GalleryId))
-               {
-                 gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
-               }
-                  // Enrich data for template
-                  html = await RenderTemplate.RenderContent(contentItem, contentType, _renderer, gallery);
+                {
+                    MediaGallery? gallery = null;
+                    if (!string.IsNullOrEmpty(contentItem.GalleryId))
+                        gallery = await _apiClient.GetGalleryByIdAsync(contentItem.GalleryId);
 
-               // Push to Static Storage (MinIO)
-               if (!string.IsNullOrEmpty(html))
-               {
-                  var fileName = $"{publishedSlug}.html";
+                    // Resolve the ContentTemplate record (for inline content and variables)
+                    ContentTemplate? contentTemplate = null;
+                    if (!string.IsNullOrEmpty(contentType.TemplateName))
+                        contentTemplate = await _apiClient.GetContentTemplateByFileNameAsync(contentType.TemplateName);
 
-                  await _staticStorage.SaveFileAsync(fileName, html, "text/html");
-                  LogStaticFileSaved(_logger, fileName);
-               }
-            }
-            catch (Exception ex) {
+                    html = await RenderTemplate.RenderContent(contentItem, contentType, _renderer, gallery, contentTemplate);
+
+                    if (!string.IsNullOrEmpty(html))
+                    {
+                        var fileName = $"{publishedSlug}.html";
+                        await _staticStorage.SaveFileAsync(fileName, html, "text/html");
+                        LogStaticFileSaved(_logger, fileName);
+                    }
+                }
+                catch (Exception ex)
+                {
                     LogRenderFailed(_logger, ex, contentItemId);
                 }
             }

@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @inject BackofficeApiClient ApiClient
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @attribute [StreamRendering]
 
 <PageTitle>Content Templates</PageTitle>
@@ -45,19 +46,42 @@ else
                     }
                     else
                     {
-                        <div style="height: 180px; background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-secondary-lighten) 100%); display: flex; align-items: center; justify-content: center;">
+                        <div style="height: 180px; background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-secondary-lighten) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;">
                             <MudIcon Icon="@Icons.Material.Filled.Dashboard" Style="font-size: 4rem; opacity: 0.4; color: white;" />
+                            @if (!string.IsNullOrWhiteSpace(template.TemplateContent))
+                            {
+                                <MudChip T="string" Icon="@Icons.Material.Filled.Code" Color="Color.Success" Size="Size.Small">Inline</MudChip>
+                            }
                         </div>
                     }
                     <MudCardContent>
-                        <MudText Typo="Typo.h6">@template.DisplayName</MudText>
+                        <div class="d-flex align-center justify-space-between">
+                            <MudText Typo="Typo.h6">@template.DisplayName</MudText>
+                            @if (!template.IsActive)
+                            {
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small">Inattivo</MudChip>
+                            }
+                        </div>
                         @if (!string.IsNullOrWhiteSpace(template.Description))
                         {
                             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">@template.Description</MudText>
                         }
-                        <MudChip T="string" Icon="@Icons.Material.Filled.Code" Color="Color.Default" Size="Size.Small" Class="mt-2">
-                            @template.FileName
-                        </MudChip>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <MudChip T="string" Icon="@Icons.Material.Filled.Code" Color="Color.Default" Size="Size.Small">
+                                @template.FileName
+                            </MudChip>
+                            @foreach (var tag in template.Tags)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">@tag</MudChip>
+                            }
+                        </div>
+                        @if (template.Variables.Any())
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Class="mr-1" />
+                                @template.Variables.Count variabil@(template.Variables.Count == 1 ? "e" : "i") configurata@(template.Variables.Count == 1 ? "" : "e")
+                            </MudText>
+                        }
                     </MudCardContent>
                     <MudCardActions>
                         <MudButton StartIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Text"
@@ -86,28 +110,109 @@ else
     <DialogContent>
         @if (_editingTemplate != null)
         {
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Nome visualizzato" @bind-Value="_editingTemplate.DisplayName"
-                        Required="true" Variant="Variant.Outlined"
-                        HelperText="Es: Article Modern, Blog Classic..." />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Nome file template" @bind-Value="_editingTemplate.FileName"
-                        Required="true" Variant="Variant.Outlined"
-                        HelperText="Es: article-modern.sbn (file presente nella cartella Templates del Content.Api)" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Descrizione" @bind-Value="_editingTemplate.Description"
-                        Variant="Variant.Outlined" Lines="3"
-                        HelperText="Descrizione opzionale del template" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="URL anteprima immagine" @bind-Value="_editingTemplate.PreviewImageUrl"
-                        Variant="Variant.Outlined"
-                        HelperText="URL di un'immagine di anteprima del template (opzionale)" />
-                </MudItem>
-            </MudGrid>
+            <MudTabs Elevation="0" Rounded="false" ApplyEffectsToContainer="true" PanelClass="pt-4">
+
+                @* TAB 1 — GENERALE *@
+                <MudTabPanel Text="Generale" Icon="@Icons.Material.Filled.Info">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Nome visualizzato" @bind-Value="_editingTemplate.DisplayName"
+                                Required="true" Variant="Variant.Outlined"
+                                HelperText="Es: Article Modern, Blog Classic..." />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Nome file template" @bind-Value="_editingTemplate.FileName"
+                                Required="true" Variant="Variant.Outlined"
+                                HelperText="Es: article-modern.sbn — usato come fallback se non c'è Template Code" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Descrizione" @bind-Value="_editingTemplate.Description"
+                                Variant="Variant.Outlined" Lines="2" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Tag (separati da virgola)" Value="@string.Join(", ", _editingTemplate.Tags)"
+                                ValueChanged="OnTagsChanged"
+                                Variant="Variant.Outlined"
+                                HelperText="Es: blog, magazine, dark — aiutano a categorizzare i template" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="URL anteprima immagine" @bind-Value="_editingTemplate.PreviewImageUrl"
+                                Variant="Variant.Outlined"
+                                HelperText="URL di uno screenshot del template (opzionale)" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSwitch T="bool" @bind-Value="_editingTemplate.IsActive" Color="Color.Primary"
+                                Label="Template attivo (visibile nella selezione)" />
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+
+                @* TAB 2 — VARIABILI *@
+                <MudTabPanel Text="Variabili" Icon="@Icons.Material.Filled.Tune">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Definisci variabili chiave/valore iniettate nel contesto Scriban.
+                        Usabili nel template come <code>@("{{ vars.primary_color }}")</code>.
+                    </MudText>
+
+                    @foreach (var key in _editingTemplate.Variables.Keys.ToList())
+                    {
+                        <div class="d-flex gap-2 mb-2 align-center">
+                            <MudTextField T="string" Label="Chiave" Value="@key"
+                                ValueChanged="newKey => RenameVariable(key, newKey)"
+                                Variant="Variant.Outlined" Margin="Margin.Dense" Style="width: 200px;" />
+                            <MudTextField T="string" Label="Valore" Value="@_editingTemplate.Variables[key]"
+                                ValueChanged="val => _editingTemplate.Variables[key] = val"
+                                Variant="Variant.Outlined" Margin="Margin.Dense" Style="flex: 1;" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                OnClick="() => RemoveVariable(key)" />
+                        </div>
+                    }
+
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Text" Color="Color.Primary"
+                        OnClick="AddVariable" Class="mt-1">
+                        Aggiungi variabile
+                    </MudButton>
+
+                    @if (!_editingTemplate.Variables.Any())
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-3">
+                            Nessuna variabile definita. Aggiungi variabili per rendere il template configurabile
+                            senza modificarne il codice sorgente.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-3">
+                            <strong>Esempi di uso nel template:</strong><br />
+                            <code>background-color: @("{{ vars.primary_color }}");</code><br />
+                            <code>font-family: @("{{ vars.font_family }}");</code>
+                        </MudAlert>
+                    }
+                </MudTabPanel>
+
+                @* TAB 3 — TEMPLATE CODE *@
+                <MudTabPanel Text="Template Code" Icon="@Icons.Material.Filled.Code">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                        Scrivi il template HTML/Scriban inline. Se valorizzato, ha <strong>priorità</strong>
+                        rispetto al file <code>.sbn</code> su disco.
+                        Lascia vuoto per usare il file fisico indicato nel campo "Nome file template".
+                    </MudText>
+                    <MudTextField T="string" @bind-Value="_editingTemplate.TemplateContent"
+                        Lines="22" Variant="Variant.Outlined"
+                        Placeholder="Scrivi qui il codice HTML/Scriban del template..."
+                        Style="font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px;" />
+                    <MudAlert Severity="Severity.Normal" Class="mt-2">
+                        <strong>Variabili disponibili:</strong>
+                        <code>@("{{ title }}")</code> &nbsp;
+                        <code>@("{{ slug }}")</code> &nbsp;
+                        <code>@("{{ published_at }}")</code> &nbsp;
+                        <code>@("{{ content_type }}")</code> &nbsp;
+                        <code>@("{{ images }}")</code> &nbsp;
+                        <code>@("{{ vars.chiave }}")</code>
+                    </MudAlert>
+                </MudTabPanel>
+
+            </MudTabs>
         }
     </DialogContent>
     <DialogActions>
@@ -130,7 +235,7 @@ else
 
     private readonly DialogOptions _dialogOptions = new()
     {
-        MaxWidth = MaxWidth.Small,
+        MaxWidth = MaxWidth.Medium,
         FullWidth = true,
         CloseOnEscapeKey = true
     };
@@ -147,7 +252,7 @@ else
 
     private void OpenCreateDialog()
     {
-        _editingTemplate = new ContentTemplate();
+        _editingTemplate = new ContentTemplate { IsActive = true };
         _dialogVisible = true;
     }
 
@@ -161,9 +266,42 @@ else
             Description = template.Description,
             FileName = template.FileName,
             PreviewImageUrl = template.PreviewImageUrl,
+            TemplateContent = template.TemplateContent,
+            Variables = new Dictionary<string, string>(template.Variables),
+            Tags = new List<string>(template.Tags),
+            IsActive = template.IsActive,
             CreatedAt = template.CreatedAt
         };
         _dialogVisible = true;
+    }
+
+    private void OnTagsChanged(string value)
+    {
+        if (_editingTemplate == null) return;
+        _editingTemplate.Tags = value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private void AddVariable()
+    {
+        if (_editingTemplate == null) return;
+        var key = $"variable_{_editingTemplate.Variables.Count + 1}";
+        _editingTemplate.Variables[key] = string.Empty;
+    }
+
+    private void RenameVariable(string oldKey, string newKey)
+    {
+        if (_editingTemplate == null || oldKey == newKey) return;
+        if (string.IsNullOrWhiteSpace(newKey)) return;
+        var value = _editingTemplate.Variables[oldKey];
+        _editingTemplate.Variables.Remove(oldKey);
+        _editingTemplate.Variables[newKey] = value;
+    }
+
+    private void RemoveVariable(string key)
+    {
+        _editingTemplate?.Variables.Remove(key);
     }
 
     private void CloseDialog()
@@ -176,22 +314,26 @@ else
     {
         if (_editingTemplate == null) return;
         if (string.IsNullOrWhiteSpace(_editingTemplate.DisplayName) || string.IsNullOrWhiteSpace(_editingTemplate.FileName))
+        {
+            Snackbar.Add("Nome visualizzato e Nome file sono obbligatori.", Severity.Warning);
             return;
+        }
 
         _isSaving = true;
         try
         {
             if (string.IsNullOrEmpty(_editingTemplate.Id))
-            {
                 await ApiClient.CreateContentTemplateAsync(_editingTemplate);
-            }
             else
-            {
                 await ApiClient.UpdateContentTemplateAsync(_editingTemplate.Id, _editingTemplate);
-            }
 
+            Snackbar.Add("Template salvato con successo.", Severity.Success);
             CloseDialog();
             await LoadDataAsync();
+        }
+        catch
+        {
+            Snackbar.Add("Errore durante il salvataggio del template.", Severity.Error);
         }
         finally
         {
@@ -207,6 +349,7 @@ else
             yesText: "Elimina", cancelText: "Annulla") == true)
         {
             await ApiClient.DeleteContentTemplateAsync(id);
+            Snackbar.Add("Template eliminato.", Severity.Info);
             await LoadDataAsync();
         }
     }

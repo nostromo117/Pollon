@@ -154,7 +154,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        availableTemplates = await ApiClient.GetContentTemplatesAsync();
+        var allTemplates = await ApiClient.GetContentTemplatesAsync();
+        availableTemplates = allTemplates?.Where(t => t.IsActive).ToArray() ?? [];
 
         if (IsEdit)
         {

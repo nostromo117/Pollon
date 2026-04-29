@@ -43,4 +43,17 @@ public class BackofficeApiClient(HttpClient httpClient, KeycloakTokenService tok
             return null;
         }
     }
+
+    public async Task<ContentTemplate?> GetContentTemplateByFileNameAsync(string fileName, CancellationToken cancellationToken = default)
+    {
+        await PrepareClientAsync();
+        try
+        {
+            return await httpClient.GetFromJsonAsync<ContentTemplate>($"/api/content-templates/by-filename/{Uri.EscapeDataString(fileName)}", _options, cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
 }

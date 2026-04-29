@@ -1,12 +1,11 @@
 using Scriban;
-using System.Text.Json;
-using Microsoft.Extensions.FileProviders;
+using Scriban.Runtime;
 
 namespace Pollon.Content.Api.Services;
 
 public interface ITemplateRenderer
 {
-    Task<string> RenderAsync(string templateName, object data);
+    Task<string> RenderAsync(string templateName, object data, string? inlineContent = null, Dictionary<string, string>? variables = null);
 }
 
 public partial class ScribanTemplateRenderer : ITemplateRenderer
@@ -21,36 +20,39 @@ public partial class ScribanTemplateRenderer : ITemplateRenderer
         _logger = logger;
     }
 
-    public async Task<string> RenderAsync(string templateName, object data)
+    public async Task<string> RenderAsync(string templateName, object data, string? inlineContent = null, Dictionary<string, string>? variables = null)
     {
-        // Fallback to default if not specified
-        if (string.IsNullOrEmpty(templateName))
+        string templateSource;
+
+        if (!string.IsNullOrWhiteSpace(inlineContent))
         {
-            templateName = "default";
+            // Inline content stored in DB has priority over filesystem files
+            templateSource = inlineContent;
         }
-
-        // Ensure extension
-        if (!templateName.EndsWith(".sbn"))
+        else
         {
-            templateName += ".sbn";
-        }
+            if (string.IsNullOrEmpty(templateName))
+                templateName = "default";
 
-        var templatePath = Path.Combine(_env.ContentRootPath, TemplatesFolder, templateName);
+            if (!templateName.EndsWith(".sbn"))
+                templateName += ".sbn";
 
-        if (!File.Exists(templatePath))
-        {
-            LogTemplateNotFound(_logger, templatePath);
-            templatePath = Path.Combine(_env.ContentRootPath, TemplatesFolder, "default.sbn");
-            
+            var templatePath = Path.Combine(_env.ContentRootPath, TemplatesFolder, templateName);
+
             if (!File.Exists(templatePath))
             {
-                throw new FileNotFoundException($"Template not found: {templateName} and default fallback also missing.");
+                LogTemplateNotFound(_logger, templatePath);
+                templatePath = Path.Combine(_env.ContentRootPath, TemplatesFolder, "default.sbn");
+
+                if (!File.Exists(templatePath))
+                    throw new FileNotFoundException($"Template not found: {templateName} and default fallback also missing.");
             }
+
+            templateSource = await File.ReadAllTextAsync(templatePath);
         }
 
         try
         {
-            var templateSource = await File.ReadAllTextAsync(templatePath);
             var template = Template.Parse(templateSource);
 
             if (template.HasErrors)
@@ -60,11 +62,32 @@ public partial class ScribanTemplateRenderer : ITemplateRenderer
                 throw new Exception($"Template parsing errors: {errors}");
             }
 
-            // If data is a JsonElement or Dictionary, Scriban can handle it, 
-            // but for better compatibility we might want to normalize it.
-            // Scriban natively supports anonymous objects and dictionaries.
-            
-            var result = await template.RenderAsync(data);
+            var scriptObject = new ScriptObject();
+
+            // Inject data fields
+            if (data is Dictionary<string, object> dict)
+            {
+                foreach (var kv in dict)
+                    scriptObject.SetValue(kv.Key, kv.Value, readOnly: false);
+            }
+            else
+            {
+                scriptObject.Import(data);
+            }
+
+            // Inject template variables under the "vars" key
+            if (variables is { Count: > 0 })
+            {
+                var varsObj = new ScriptObject();
+                foreach (var kv in variables)
+                    varsObj.SetValue(kv.Key, kv.Value, readOnly: false);
+                scriptObject.SetValue("vars", varsObj, readOnly: false);
+            }
+
+            var context = new TemplateContext();
+            context.PushGlobal(scriptObject);
+
+            var result = await template.RenderAsync(context);
             return result;
         }
         catch (Exception ex)

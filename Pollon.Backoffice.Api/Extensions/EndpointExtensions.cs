@@ -33,6 +33,13 @@ public static partial class EndpointExtensions
             return item is not null ? Results.Ok(item) : Results.NotFound();
         });
 
+        group.MapGet("/by-filename/{fileName}", async (string fileName, IRepository<ContentTemplate> repo) =>
+        {
+            var all = await repo.GetAllAsync();
+            var item = all.FirstOrDefault(t => t.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+            return item is not null ? Results.Ok(item) : Results.NotFound();
+        });
+
         group.MapPost("/", async (ContentTemplate item, IRepository<ContentTemplate> repo) =>
         {
             if (string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.FileName))

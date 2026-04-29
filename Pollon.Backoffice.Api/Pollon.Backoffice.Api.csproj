@@ -7,13 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Npgsql" Version="13.2.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Aspire.Npgsql" Version="13.2.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
-    <PackageReference Include="WolverineFx" Version="5.32.0" />
-    <PackageReference Include="WolverineFx.Marten" Version="5.32.0" />
-    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.32.0" />
+    <PackageReference Include="WolverineFx" Version="5.34.0" />
+    <PackageReference Include="WolverineFx.Marten" Version="5.34.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.34.0" />
   </ItemGroup>
 
   <ItemGroup>

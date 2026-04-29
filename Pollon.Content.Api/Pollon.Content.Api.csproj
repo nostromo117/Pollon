@@ -13,14 +13,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.2.3" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.2.4" />
     <PackageReference Include="CommunityToolkit.Aspire.Minio.Client" Version="13.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.*" />
-    <PackageReference Include="Scriban" Version="7.0.6" />
-    <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="5.32.0" />
-    <PackageReference Include="WolverineFx.Postgresql" Version="5.32.0" />
-    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.32.0" />
+    <PackageReference Include="Scriban" Version="7.1.0" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="5.34.0" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="5.34.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="5.34.0" />
   </ItemGroup>
 
 </Project>

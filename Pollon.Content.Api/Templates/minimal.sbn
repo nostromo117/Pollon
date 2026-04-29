@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title ?? "Content Item" }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink: #111111;
+            --ink-light: #555555;
+            --ink-faint: #999999;
+            --paper: #fdfbf7;
+            --rule: #e8e4de;
+            --accent: #2d6a4f;
+        }
+
+        html { font-size: 18px; }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        /* PROGRESS BAR */
+        .reading-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: var(--accent);
+            width: 0;
+            z-index: 100;
+            transition: width 0.1s linear;
+        }
+
+        /* NAV */
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(253, 251, 247, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--rule);
+            padding: 16px 0;
+            z-index: 50;
+        }
+        nav .nav-inner {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--ink);
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        nav .nav-date {
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+        }
+
+        /* HERO */
+        .hero {
+            max-width: 680px;
+            margin: 80px auto 0;
+            padding: 0 24px 60px;
+            border-bottom: 1px solid var(--rule);
+        }
+        .hero .kicker {
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hero .kicker::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--rule);
+        }
+        .hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.2rem;
+            font-weight: 300;
+            line-height: 1.15;
+            color: var(--ink);
+            letter-spacing: -0.5px;
+            margin-bottom: 24px;
+        }
+        .hero .lede {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.35rem;
+            font-style: italic;
+            color: var(--ink-light);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .hero .meta {
+            display: flex;
+            gap: 24px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--ink-faint);
+        }
+        .hero .meta span strong {
+            color: var(--ink-light);
+            font-weight: 500;
+        }
+
+        /* ARTICLE */
+        article {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        .field-entry {
+            margin-bottom: 48px;
+        }
+        .field-entry .field-key {
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .field-entry .field-val {
+            font-size: 1rem;
+            line-height: 1.9;
+            color: var(--ink);
+        }
+        .field-entry .field-val img {
+            width: 100%;
+            height: auto;
+            margin-top: 12px;
+            filter: grayscale(15%);
+        }
+
+        /* DIVIDER */
+        .ornament {
+            text-align: center;
+            color: var(--ink-faint);
+            font-size: 1.4rem;
+            letter-spacing: 16px;
+            margin: 40px 0;
+        }
+
+        /* GALLERY */
+        .gallery-section {
+            border-top: 1px solid var(--rule);
+            padding-top: 48px;
+            margin-top: 0;
+        }
+        .gallery-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 300;
+            margin-bottom: 28px;
+            color: var(--ink);
+        }
+        .masonry {
+            columns: 2;
+            column-gap: 12px;
+        }
+        .masonry img {
+            width: 100%;
+            display: block;
+            margin-bottom: 12px;
+            break-inside: avoid;
+            filter: grayscale(10%);
+        }
+
+        /* FOOTER */
+        footer {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+            border-top: 1px solid var(--rule);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--ink-faint);
+            letter-spacing: 1px;
+        }
+        footer .footer-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            color: var(--ink-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="reading-bar" id="readingBar"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="/" class="logo">Pollon</a>
+            <span class="nav-date">{{ published_at | date.to_string "%d %B %Y" }}</span>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="kicker">{{ content_type }}</div>
+        <h1>{{ title ?? "Senza titolo" }}</h1>
+        <div class="meta">
+            <span><strong>{{ published_at | date.to_string "%d %B %Y" }}</strong></span>
+            <span>Slug: <strong>/{{ slug }}</strong></span>
+        </div>
+    </div>
+
+    <article>
+        {{ for pair in this -}}
+            {{
+               $key = pair.key | string.downcase
+               if ($key == "title" || $key == "published_at" || $key == "id" || $key == "slug" || $key == "content_type" || $key == "images")
+                  continue
+               end
+            }}
+            <div class="field-entry">
+                <div class="field-key">{{ pair.key }}</div>
+                <div class="field-val">
+                    {{- $val = "" + pair.value -}}
+                    {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
+                        <img src="{{ $val }}" alt="{{ pair.key }}" />
+                    {{- else -}}
+                        {{ pair.value }}
+                    {{- end -}}
+                </div>
+            </div>
+        {{ end }}
+
+        <div class="ornament">&#10022; &nbsp; &#10022; &nbsp; &#10022;</div>
+
+        {{ if images }}
+        <div class="gallery-section">
+            <h2>Immagini</h2>
+            <div class="masonry">
+                {{ for img in images }}
+                    <img src="{{ img.url }}" alt="{{ img.alt }}" />
+                {{ end }}
+            </div>
+        </div>
+        {{ end }}
+    </article>
+
+    <footer>
+        <span class="footer-brand">Pollon</span>
+        <span>&copy; {{ date.now.year }} &mdash; Template Minimal</span>
+    </footer>
+
+    <script>
+        const bar = document.getElementById('readingBar');
+        window.addEventListener('scroll', () => {
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
+            bar.style.width = pct + '%';
+        });
+    </script>
+</body>
+</html>

@@ -50,7 +50,21 @@ else
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" sm="6">
-                                <MudTextField T="string" Label="Template Name" @bind-Value="contentType.TemplateName" Variant="Variant.Outlined" HelperText="e.g. article.html" For="@(() => contentType.TemplateName)" Disabled="@(contentType.PublishMode == PublishMode.Headless)" />
+                                <MudSelect T="string" Label="Template" @bind-Value="contentType.TemplateName"
+                                    Variant="Variant.Outlined"
+                                    HelperText="@(contentType.PublishMode == PublishMode.Headless ? "Seleziona un Publish Mode diverso da Headless per usare un template" : "Template grafico per la pubblicazione statica")"
+                                    Clearable="true">
+                                    @foreach (var t in availableTemplates)
+                                    {
+                                        <MudSelectItem Value="@t.FileName">
+                                            <div class="d-flex align-center gap-2">
+                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                                @t.DisplayName
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">(@t.FileName)</MudText>
+                                            </div>
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
                             </MudItem>
                         </MudGrid>
                     </MudCardContent>
@@ -136,9 +150,12 @@ else
     private ContentType contentType = new();
     private EditContext _editContext = default!;
     private bool _hasUnsavedChanges = false;
+    private ContentTemplate[] availableTemplates = [];
 
     protected override async Task OnInitializedAsync()
     {
+        availableTemplates = await ApiClient.GetContentTemplatesAsync();
+
         if (IsEdit)
         {
             var existing = await ApiClient.GetContentTypeByIdAsync(Id!);

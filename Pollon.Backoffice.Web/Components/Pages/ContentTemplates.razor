@@ -1,0 +1,213 @@
+@page "/content-templates"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject BackofficeApiClient ApiClient
+@inject IDialogService DialogService
+@attribute [StreamRendering]
+
+<PageTitle>Content Templates</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-6">
+    <MudText Typo="Typo.h4" GutterBottom="true">Content Templates</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+        OnClick="OpenCreateDialog">
+        New Template
+    </MudButton>
+</div>
+
+@if (templates == null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else if (!templates.Any())
+{
+    <MudPaper Elevation="1" Class="pa-8 d-flex flex-column align-center gap-4">
+        <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Large" Color="Color.Default" Style="font-size: 4rem; opacity: 0.3;" />
+        <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Default">Nessun template trovato</MudText>
+        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+            Crea un template grafico per poterlo associare ai Content Types durante la pubblicazione.
+        </MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Crea il primo Template
+        </MudButton>
+    </MudPaper>
+}
+else
+{
+    <MudGrid>
+        @foreach (var template in templates)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="1" Style="height: 100%;">
+                    @if (!string.IsNullOrWhiteSpace(template.PreviewImageUrl))
+                    {
+                        <MudCardMedia Image="@template.PreviewImageUrl" Height="180" />
+                    }
+                    else
+                    {
+                        <div style="height: 180px; background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-secondary-lighten) 100%); display: flex; align-items: center; justify-content: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Style="font-size: 4rem; opacity: 0.4; color: white;" />
+                        </div>
+                    }
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">@template.DisplayName</MudText>
+                        @if (!string.IsNullOrWhiteSpace(template.Description))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">@template.Description</MudText>
+                        }
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Code" Color="Color.Default" Size="Size.Small" Class="mt-2">
+                            @template.FileName
+                        </MudChip>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton StartIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Text"
+                            OnClick="() => OpenEditDialog(template)">
+                            Modifica
+                        </MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Text"
+                            OnClick="() => DeleteTemplate(template.Id)">
+                            Elimina
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@* Dialog per creare/modificare un template *@
+<MudDialog @bind-Visible="_dialogVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="mr-2" />
+            @(_editingTemplate?.Id == null ? "Nuovo Template" : "Modifica Template")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_editingTemplate != null)
+        {
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Nome visualizzato" @bind-Value="_editingTemplate.DisplayName"
+                        Required="true" Variant="Variant.Outlined"
+                        HelperText="Es: Article Modern, Blog Classic..." />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Nome file template" @bind-Value="_editingTemplate.FileName"
+                        Required="true" Variant="Variant.Outlined"
+                        HelperText="Es: article-modern.sbn (file presente nella cartella Templates del Content.Api)" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Descrizione" @bind-Value="_editingTemplate.Description"
+                        Variant="Variant.Outlined" Lines="3"
+                        HelperText="Descrizione opzionale del template" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="URL anteprima immagine" @bind-Value="_editingTemplate.PreviewImageUrl"
+                        Variant="Variant.Outlined"
+                        HelperText="URL di un'immagine di anteprima del template (opzionale)" />
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Variant="Variant.Text">Annulla</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveTemplate" Disabled="_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Salva
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private ContentTemplate[]? templates;
+    private bool _dialogVisible;
+    private bool _isSaving;
+    private ContentTemplate? _editingTemplate;
+
+    private readonly DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+        CloseOnEscapeKey = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        templates = await ApiClient.GetContentTemplatesAsync();
+    }
+
+    private void OpenCreateDialog()
+    {
+        _editingTemplate = new ContentTemplate();
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(ContentTemplate template)
+    {
+        _editingTemplate = new ContentTemplate
+        {
+            Id = template.Id,
+            Name = template.Name,
+            DisplayName = template.DisplayName,
+            Description = template.Description,
+            FileName = template.FileName,
+            PreviewImageUrl = template.PreviewImageUrl,
+            CreatedAt = template.CreatedAt
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+        _editingTemplate = null;
+    }
+
+    private async Task SaveTemplate()
+    {
+        if (_editingTemplate == null) return;
+        if (string.IsNullOrWhiteSpace(_editingTemplate.DisplayName) || string.IsNullOrWhiteSpace(_editingTemplate.FileName))
+            return;
+
+        _isSaving = true;
+        try
+        {
+            if (string.IsNullOrEmpty(_editingTemplate.Id))
+            {
+                await ApiClient.CreateContentTemplateAsync(_editingTemplate);
+            }
+            else
+            {
+                await ApiClient.UpdateContentTemplateAsync(_editingTemplate.Id, _editingTemplate);
+            }
+
+            CloseDialog();
+            await LoadDataAsync();
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteTemplate(string id)
+    {
+        if (await DialogService.ShowMessageBoxAsync(
+            "Conferma Eliminazione",
+            "Sei sicuro di voler eliminare questo template? Questa operazione è irreversibile.",
+            yesText: "Elimina", cancelText: "Annulla") == true)
+        {
+            await ApiClient.DeleteContentTemplateAsync(id);
+            await LoadDataAsync();
+        }
+    }
+}

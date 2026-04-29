@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title ?? "Content Item" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #c0392b;
+            --accent-light: #f9eae8;
+            --text-dark: #1a1a1a;
+            --text-muted: #6c757d;
+            --border: #e0e0e0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: #f4f1ec;
+            font-family: 'Source Sans 3', sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        /* MASTHEAD */
+        .masthead {
+            background: white;
+            border-bottom: 4px solid var(--accent);
+            padding: 20px 0 16px;
+        }
+        .masthead .brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            letter-spacing: -1px;
+            text-decoration: none;
+        }
+        .masthead .brand span { color: var(--accent); }
+        .masthead-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* CATEGORY BADGE */
+        .category-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            margin-bottom: 16px;
+        }
+
+        /* ARTICLE HEADER */
+        .article-header {
+            background: white;
+            padding: 40px 0 32px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+        .article-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        .article-header .byline {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 16px;
+        }
+        .article-header .byline strong { color: var(--text-dark); }
+
+        /* LAYOUT */
+        .article-body { padding: 0 0 60px; }
+
+        .main-col { padding-right: 40px; }
+
+        /* SIDEBAR */
+        .sidebar {
+            border-left: 1px solid var(--border);
+            padding-left: 32px;
+        }
+        .sidebar-box {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .sidebar-box h5 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        /* FIELD BLOCKS */
+        .field-block {
+            margin-bottom: 28px;
+        }
+        .field-block .field-key {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .field-block .field-val {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: var(--text-dark);
+        }
+        .field-block .field-val img {
+            width: 100%;
+            height: auto;
+            margin-top: 8px;
+        }
+
+        /* PULL QUOTE */
+        blockquote.pull-quote {
+            border-left: 5px solid var(--accent);
+            background: var(--accent-light);
+            padding: 20px 24px;
+            margin: 32px 0;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-style: italic;
+            color: var(--text-dark);
+        }
+
+        /* GALLERY */
+        .gallery-section { margin-top: 40px; }
+        .gallery-section h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            border-bottom: 3px double var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .gallery-grid img { width: 100%; height: 180px; object-fit: cover; display: block; }
+
+        /* FOOTER */
+        footer {
+            background: var(--text-dark);
+            color: #aaa;
+            text-align: center;
+            padding: 24px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">Pollon CMS &mdash; Contenuto Pubblicato</div>
+
+    <div class="masthead">
+        <div class="container">
+            <a href="/" class="brand">Pollon<span>.</span></a>
+            <div class="masthead-meta">{{ date.now | date.to_string "%A, %d %B %Y" }}</div>
+        </div>
+    </div>
+
+    <div class="article-header">
+        <div class="container">
+            <div class="category-badge">{{ content_type }}</div>
+            <h1>{{ title ?? "Articolo" }}</h1>
+            <div class="byline">
+                Pubblicato il <strong>{{ published_at | date.to_string "%d %B %Y" }}</strong>
+                &nbsp;&bull;&nbsp; <strong>{{ content_type }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="container article-body">
+        <div class="row">
+            <!-- MAIN CONTENT -->
+            <div class="col-lg-8 main-col">
+                {{ for pair in this -}}
+                    {{
+                       $key = pair.key | string.downcase
+                       if ($key == "title" || $key == "published_at" || $key == "id" || $key == "slug" || $key == "content_type" || $key == "images")
+                          continue
+                       end
+                    }}
+                    <div class="field-block">
+                        <div class="field-key">{{ pair.key }}</div>
+                        <div class="field-val">
+                            {{- $val = "" + pair.value -}}
+                            {{- if ($val | string.contains "/api/media/") || ($val | string.starts_with "http") -}}
+                                <img src="{{ $val }}" alt="{{ pair.key }}" />
+                            {{- else -}}
+                                {{ pair.value }}
+                            {{- end -}}
+                        </div>
+                    </div>
+                {{ end }}
+
+                {{ if images }}
+                <div class="gallery-section">
+                    <h3>Galleria Immagini</h3>
+                    <div class="gallery-grid">
+                        {{ for img in images }}
+                            <img src="{{ img.url }}" alt="{{ img.alt }}" />
+                        {{ end }}
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+
+            <!-- SIDEBAR -->
+            <div class="col-lg-4">
+                <div class="sidebar">
+                    <div class="sidebar-box">
+                        <h5>Dettagli Articolo</h5>
+                        <div class="field-block">
+                            <div class="field-key">Tipo</div>
+                            <div class="field-val">{{ content_type }}</div>
+                        </div>
+                        <div class="field-block">
+                            <div class="field-key">Pubblicato</div>
+                            <div class="field-val">{{ published_at | date.to_string "%d %B %Y" }}</div>
+                        </div>
+                        <div class="field-block">
+                            <div class="field-key">Slug</div>
+                            <div class="field-val" style="font-size:0.85rem; color: var(--text-muted);">/{{ slug }}</div>
+                        </div>
+                    </div>
+                    <div class="sidebar-box">
+                        <h5>Pollon CMS</h5>
+                        <p style="font-size:0.85rem; color: var(--text-muted); margin:0;">
+                            Contenuto generato e pubblicato tramite Pollon Content Management System.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; {{ date.now.year }} &mdash; Pollon CMS &mdash; Template Magazine
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -10,9 +10,63 @@ public static partial class EndpointExtensions
     {
         endpoints.MapContentTypeEndpoints();
         endpoints.MapContentItemEndpoints();
+        endpoints.MapContentTemplateEndpoints();
         endpoints.MapGalleryEndpoints();
         endpoints.MapMediaEndpoints();
         endpoints.MapPluginEndpoints();
+
+        return endpoints;
+    }
+
+    public static IEndpointRouteBuilder MapContentTemplateEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("/api/content-templates").WithTags("Content Templates").RequireAuthorization();
+
+        group.MapGet("/", async (IRepository<ContentTemplate> repo) =>
+        {
+            return Results.Ok(await repo.GetAllAsync());
+        });
+
+        group.MapGet("/{id}", async (string id, IRepository<ContentTemplate> repo) =>
+        {
+            var item = await repo.GetByIdAsync(id);
+            return item is not null ? Results.Ok(item) : Results.NotFound();
+        });
+
+        group.MapPost("/", async (ContentTemplate item, IRepository<ContentTemplate> repo) =>
+        {
+            if (string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.FileName))
+                return Results.BadRequest("DisplayName and FileName are required.");
+
+            item.Id = Guid.NewGuid().ToString();
+            item.Name = item.DisplayName.ToLowerInvariant().Replace(" ", "-");
+            item.CreatedAt = DateTime.UtcNow;
+            item.UpdatedAt = DateTime.UtcNow;
+            await repo.CreateAsync(item);
+            return Results.Created($"/api/content-templates/{item.Id}", item);
+        });
+
+        group.MapPut("/{id}", async (string id, ContentTemplate item, IRepository<ContentTemplate> repo) =>
+        {
+            if (!await repo.ExistsAsync(id)) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.FileName))
+                return Results.BadRequest("DisplayName and FileName are required.");
+
+            item.Id = id;
+            item.Name = item.DisplayName.ToLowerInvariant().Replace(" ", "-");
+            item.UpdatedAt = DateTime.UtcNow;
+            await repo.UpdateAsync(id, item);
+            return Results.NoContent();
+        });
+
+        group.MapDelete("/{id}", async (string id, IRepository<ContentTemplate> repo) =>
+        {
+            if (!await repo.ExistsAsync(id)) return Results.NotFound();
+
+            await repo.DeleteAsync(id);
+            return Results.NoContent();
+        });
 
         return endpoints;
     }

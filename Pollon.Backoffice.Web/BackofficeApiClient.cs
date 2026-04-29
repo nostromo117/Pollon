@@ -333,5 +333,46 @@ public class BackofficeApiClient(
         return null;
     }
 
+    // --- Content Templates ---
+
+    public async Task<ContentTemplate[]> GetContentTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<ContentTemplate[]>("/api/content-templates", cancellationToken) ?? [];
+    }
+
+    public async Task<ContentTemplate?> GetContentTemplateByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        return await GetAsync<ContentTemplate>($"/api/content-templates/{id}", cancellationToken);
+    }
+
+    public async Task<ContentTemplate?> CreateContentTemplateAsync(ContentTemplate item, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/content-templates")
+        {
+            Content = JsonContent.Create(item, options: _options)
+        };
+        var response = await SendWithAuthAsync(request, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<ContentTemplate>(_options, cancellationToken);
+        }
+        return null;
+    }
+
+    public async Task UpdateContentTemplateAsync(string id, ContentTemplate item, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/api/content-templates/{id}")
+        {
+            Content = JsonContent.Create(item, options: _options)
+        };
+        await SendWithAuthAsync(request, cancellationToken);
+    }
+
+    public async Task DeleteContentTemplateAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/content-templates/{id}");
+        await SendWithAuthAsync(request, cancellationToken);
+    }
+
     public record KeycloakCredentials(string ClientId, string ClientSecret);
 }

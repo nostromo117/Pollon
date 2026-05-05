@@ -10,7 +10,7 @@ Il sistema è orchestrato da **.NET Aspire** ed è composto dai seguenti compone
 - **Pollon.Backoffice.Api**: REST API core per la gestione di tipi di contenuto dinamici ed elementi. Utilizza **Marten** su **PostgreSQL** come database a documenti, permettendo schemi flessibili senza migrazioni SQL.
 - **Pollon.Backoffice.Web**: Applicazione amministrativa basata su **Blazor Server** e **MudBlazor**. Gestisce la configurazione dei contenuti, il caricamento media e la pubblicazione.
 - **Pollon.Media.Api**: Microservizio dedicato alla gestione degli asset multimediali. Gestisce l'upload e serve i contenuti binari archiviati in PostgreSQL via Marten. Funge da CDN interna, completamente svincolato dalla logica di business del Backoffice.
-- **Pollon.Content.Api**: API di delivery ad alte prestazioni. Utilizza **SQL Server** ed **EntityFramework Core** per i modelli di lettura (Read Models), sincronizzati in tempo reale tramite eventi.
+- **Pollon.Content.Api**: API di delivery ad alte prestazioni. Utilizza **PostgreSQL** ed **EntityFramework Core** per i modelli di lettura (Read Models), sincronizzati in tempo reale tramite eventi.
 - **Pollon.Frontend.Web**: Sito consumer basato su Blazor con routing ottimizzato SEO e gestione gerarchica degli slug.
 - **Pollon.Contracts**: Libreria di modelli e record condivisi per la comunicazione cross-service e gli eventi RabbitMQ.
 - **Pollon.ServiceDefaults**: Configurazioni standard per osservabilità, telemetria e health checks.
@@ -19,7 +19,7 @@ Il sistema è orchestrato da **.NET Aspire** ed è composto dai seguenti compone
 
 - **Orchestrazione**: .NET Aspire
 - **Database (Backoffice & Media)**: PostgreSQL + Marten (Document Database)
-- **Database (Content/Read Models)**: SQL Server (Entity Framework Core)
+- **Database (Content/Read Models)**: PostgreSQL (Entity Framework Core)
 - **Messaggistica**: Wolverine + RabbitMQ (Sincronizzazione event-driven)
 - **Autenticazione**: Keycloak (OIDC / OAuth2)
 - **UI Framework**: MudBlazor & Blazor Server
@@ -29,7 +29,7 @@ Il sistema è orchestrato da **.NET Aspire** ed è composto dai seguenti compone
 Per eseguire l'ambiente di sviluppo:
 
 1. **.NET 10 SDK** (o versione superiore)
-2. **Docker Desktop**: Necessario per i container SQL Server, PostgreSQL, RabbitMQ e Keycloak.
+2. **Docker Desktop**: Necessario per i container PostgreSQL, RabbitMQ e Keycloak.
 3. **Aspire Workload**: `dotnet workload install aspire`
 4. **EF Core Tooling**: `dotnet tool install --global dotnet-ef`
 

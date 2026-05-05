@@ -33,7 +33,7 @@ erDiagram
 ## Come gestisce i dati Marten?
 
 ### 1. Schema-less e Flessibilità (JSONB)
-A differenza dei database relazionali tradizionali (come Entity Framework su SQL Server), Marten permette di evolvere il domain model senza costose migrazioni SQL. Se aggiungi una proprietà a `ContentItem`, PostgreSQL aggiorna semplicemente il blob `jsonb` alla successiva operazione di scrittura. Questo elimina il rischio di lock sulla tabella durante l'I/O e accelera drasticamente il ciclo di sviluppo.
+A differenza dei database relazionali tradizionali (come un normale approccio Entity Framework basato su tabelle e migrazioni SQL), Marten permette di evolvere il domain model senza costose migrazioni. Se aggiungi una proprietà a `ContentItem`, PostgreSQL aggiorna semplicemente il blob `jsonb` alla successiva operazione di scrittura. Questo elimina il rischio di lock sulla tabella durante l'I/O e accelera drasticamente il ciclo di sviluppo.
 
 ### 2. Query ad Alte Prestazioni (Indexing & LINQ)
 Marten traduce le query LINQ in C# direttamente in query SQL ottimizzate per il tipo JSONB.
@@ -64,11 +64,11 @@ I risultati vengono mappati asincronamente sulle variabili C# corrispondenti, ab
 
 ### Key takeaways per lo Sviluppatore
 - **Transazionalità ACID**: Nonostante il comportamento da NoSQL, Marten garantisce transazioni atomiche e sicure grazie alla robustezza di PostgreSQL.
-- **Relazioni Logiche**: Le relazioni parent-child o i dizionari di dati (usati in `EditContentItem`) vengono serializzati direttamente nel campo `data`, evitando complessi SQL JOIN.
+- **Relazioni Logiche**: Le relazioni parent-child o i dizionari di dati dinamici (la proprietà `Data` in `ContentItem`) vengono serializzati direttamente nel campo jsonb principale, evitando complessi SQL JOIN.
 - **Evoluzione Continua**: La possibilità di modificare il modello dati in C# senza agire sullo schema fisico rende Pollon ideale per progetti in rapida evoluzione.
 
 
 ### In Breve
 - **Sviluppo Rapido**: È potente come MongoDB perché ti libera dal dover fare Migrazioni SQL, Foreign Keys o tabelle multiple complesse.
-- **Relazioni**: Le parentela, associazioni C# e `[Dictionary]` che abbiamo implementato in `EditContentItem` vengono serializzati direttamente all'interno della cella `data`. Non ci snodi e incastri di SQL JOINS sfiancanti.
+- **Relazioni**: Le parentele, associazioni C# e la proprietà Dictionary (`Data`) che abbiamo in `ContentItem` vengono serializzati in blocco all'interno del record JSON. Non ci sono incastri di SQL JOINS sfiancanti.
 - **Transazionale ACID e SQL**: A differenza di altri NoSQL, siccome i dati sono dentro PostgreSQL in modo sicuro, puoi contare sui rollback atomici (transazioni rigorose) e sfruttare estensioni formidabili come la ricerca Testuale, GIS o CTE ricorsive di SQL se mai servisse.

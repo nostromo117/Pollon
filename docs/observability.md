@@ -20,7 +20,7 @@ Quando una richiesta entra nel sistema (es: tramite il Frontend), viene generato
 
 Per evitare "punti ciechi" nell'osservabilità, abbiamo strumentato i database per includere ogni comando SQL come uno "span" nella traccia:
 - **PostgreSQL (Marten)**: Le query verso il Backoffice DB sono visibili con dettagli sull'operazione Marten.
-- **SQL Server**: Tutte le query EF Core e SqlClient per la delivery sono tracciate, inclusi i tempi di esecuzione e lo stato di successo.
+- **PostgreSQL (EF Core)**: Tutte le query EF Core per la delivery sono tracciate, inclusi i tempi di esecuzione e lo stato di successo.
 
 ## Filtraggio del Rumore Infrastrutturale
 
@@ -53,7 +53,7 @@ Per vedere il percorso completo di una chiamata, segui questi passi nella **Dash
 1.  `frontend-web`: L'utente preme "Pubblica".
 2.  `backofficeapi`: Riceve la richiesta HTTP, valida i dati e scrive su **PostgreSQL**.
 3.  `backofficeapi (Wolverine)`: Invia il messaggio `ContentPublishedEvent` a RabbitMQ.
-4.  `contentapi (Wolverine)`: Riceve l'evento, esegue il rendering Scriban e scrive su **SQL Server** e **MinIO**.
+4.  `contentapi (Wolverine)`: Riceve l'evento, esegue il rendering Scriban e scrive su **PostgreSQL** e **MinIO**.
 
 Tutti questi passaggi appariranno come un'unica timeline continua, permettendoti di identificare esattamente dove si verificano eventuali ritardi o errori.
 

@@ -6,17 +6,7 @@ namespace Pollon.Content.Api.Templates
 {
     public static class RenderTemplate
     {
-        private static string GetItemDisplayName(ContentItem ci)
-        {
-            if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) ||
-                ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
-            {
-                if (t is JsonElement el && el.ValueKind == JsonValueKind.String)
-                    return el.GetString() ?? ci.Id;
-                return t.ToString() ?? ci.Id;
-            }
-            return ci.Id;
-        }
+
 
         public static async Task<string?> RenderContent(
             ContentItem contentItem,
@@ -34,7 +24,7 @@ namespace Pollon.Content.Api.Templates
             templateData["content_type"] = contentType.DisplayName;
 
             if (!templateData.ContainsKey("title") && !templateData.ContainsKey("Title"))
-                templateData["title"] = GetItemDisplayName(contentItem);
+                templateData["title"] = contentItem.GetTitle();
 
             if (gallery != null && gallery.AssetIds.Any())
             {

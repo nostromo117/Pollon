@@ -11,7 +11,7 @@
 @using System.Text.Json
 @using Microsoft.AspNetCore.Components.Web
 
-<PageTitle>@(IsEdit ? $"Edit: {TreeService.GetItemDisplayName(item)}" : "New Content Item")</PageTitle>
+<PageTitle>@(IsEdit ? $"Edit: {item.GetTitle()}" : "New Content Item")</PageTitle>
 
 <MudGrid Class="mt-2" Spacing="4">
     <!-- Left Sidebar: Hierarchy & Search -->
@@ -24,43 +24,52 @@
                 </MudTooltip>
             </div>
 
-            <MudTextField T="string" Label="Search Content..." @bind-Value="treeSearch" Immediate="true" 
-                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
-                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="ma-0" />
+            <div class="mb-2">
+                <MudTextField T="string" Label="Search Content..." @bind-Value="treeSearch" Immediate="true" 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Class="ma-0 flex-none" Style="flex: 0 0 auto !important;" />
+            </div>
 
-            <div style="flex-grow: 1; overflow-y: auto;" class="mt-2">
+            <div style="flex-grow: 1; overflow-y: auto; display: block;" class="mt-2">
                 @if (allRoots == null)
                 {
                     <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
                 }
                 else
                 {
-                    <MudTreeView Items="@FilteredRoots" Hover="true" T="ContentItem" 
-                                 SelectionMode="SelectionMode.SingleSelection"
-                                 ExpandOnClick="true" Dense="true" Class="pa-0 mt-n2">
-                        <ItemTemplate Context="treeContext">
-                             <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
-                                              @bind-Expanded="@treeContext.Expanded" 
-                                              Selected="@(treeContext.Value?.Id == Id)">
-                                 <Content>
-                                     <MudTreeViewItemToggleButton @bind-Expanded="@treeContext.Expanded" Visible="@treeContext.HasChildren" />
-                                     <div class="d-flex align-center py-1 flex-grow-1 cursor-pointer @(treeContext.Value?.Id == Id ? "mud-theme-primary-light rounded px-2" : "")" 
-                                          @onclick='() => NavigateToItem(treeContext.Value?.Id)'>
-                                         <MudIcon Icon="@TreeService.GetItemIcon(treeContext.Value!)" Size="Size.Small" Class="mr-2" 
-                                                  Color="@(treeContext.Value?.Id == Id ? Color.Primary : Color.Default)" />
-                                         <MudText Typo="Typo.body2" Class="text-truncate flex-grow-1" 
-                                                  Style="@(treeContext.Value?.Id == Id ? "font-weight: bold" : "")">
-                                             @TreeService.GetItemDisplayName(treeContext.Value!)
-                                         </MudText>
-                                        <div @onclick:stopPropagation="true">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Primary" 
-                                                           OnClick="@(() => AddChild(treeContext.Value?.Id))" />
+                    <div style="height: max-content; margin-top: 0;">
+                        <MudTreeView Items="@FilteredRoots" Hover="true" T="ContentItem" 
+                                     SelectionMode="SelectionMode.SingleSelection"
+                                     ExpandOnClick="true" Dense="true" Class="pa-0">
+                            <ItemTemplate Context="treeContext">
+                                 <MudTreeViewItem Items="@treeContext.Children" Value="@treeContext.Value" 
+                                                  @bind-Expanded="@treeContext.Expanded" 
+                                                  Selected="@(treeContext.Value?.Id == Id)">
+                                     <Content>
+                                         <div style="width: 32px; display: flex; justify-content: center; align-items: center;">
+                                             @if (treeContext.HasChildren)
+                                             {
+                                                 <MudTreeViewItemToggleButton @bind-Expanded="@treeContext.Expanded" />
+                                             }
+                                         </div>
+                                         <div class="d-flex align-center py-2 flex-grow-1 cursor-pointer @(treeContext.Value?.Id == Id ? "mud-theme-primary-light rounded px-2" : "")" 
+                                              @onclick='() => NavigateToItem(treeContext.Value?.Id)'>
+                                             <MudIcon Icon="@TreeService.GetItemIcon(treeContext.Value!)" Size="Size.Small" Class="mr-3" 
+                                                      Color="@(treeContext.Value?.Status == "Published" ? Color.Primary : Color.Default)" />
+                                             <MudText Typo="Typo.body1" Class="text-truncate flex-grow-1" 
+                                                      Style="@(treeContext.Value?.Id == Id ? "font-weight: 700" : "font-weight: 500")">
+                                                 @treeContext.Value!.GetTitle()
+                                             </MudText>
+                                            <div @onclick:stopPropagation="true">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Primary" 
+                                                               OnClick="@(() => AddChild(treeContext.Value?.Id))" />
+                                            </div>
                                         </div>
-                                    </div>
-                                </Content>
-                            </MudTreeViewItem>
-                        </ItemTemplate>
-                    </MudTreeView>
+                                    </Content>
+                                </MudTreeViewItem>
+                            </ItemTemplate>
+                        </MudTreeView>
+                    </div>
                 }
             </div>
         </MudPaper>
@@ -563,7 +572,7 @@ else
         
         // Lookup in the flat list of all items or the tree
         var found = FindInTree(parentTreeItems, item.ParentId);
-        return found != null ? TreeService.GetItemDisplayName(found.Value!) : item.ParentId;
+        return found != null ? found.Value!.GetTitle() : item.ParentId;
     }
 
     private TreeItemData<ContentItem>? FindInTree(IEnumerable<ITreeItemData<ContentItem>> items, string id)

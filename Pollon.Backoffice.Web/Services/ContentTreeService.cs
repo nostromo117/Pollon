@@ -96,17 +96,7 @@ namespace Pollon.Backoffice.Web.Services
             }
         }
 
-        public string GetItemDisplayName(ContentItem ci)
-        {
-            if (ci.Data.TryGetValue("Title", out var t) || ci.Data.TryGetValue("title", out t) || 
-                ci.Data.TryGetValue("Name", out t) || ci.Data.TryGetValue("name", out t))
-            {
-                if (t is JsonElement el && el.ValueKind == JsonValueKind.String)
-                    return el.GetString() ?? ci.Id;
-                return t.ToString() ?? ci.Id;
-            }
-            return ci.Id;
-        }
+
 
         public string GetItemIcon(ContentItem ci)
         {
@@ -128,7 +118,7 @@ namespace Pollon.Backoffice.Web.Services
 
         private TreeItemData<ContentItem>? MatchAndClone(TreeItemData<ContentItem> node, string search)
         {
-            bool nameMatch = GetItemDisplayName(node.Value!).Contains(search, StringComparison.OrdinalIgnoreCase);
+            bool nameMatch = node.Value!.GetTitle().Contains(search, StringComparison.OrdinalIgnoreCase);
             
             var filteredChildren = new List<TreeItemData<ContentItem>>();
             if (node.Children != null)

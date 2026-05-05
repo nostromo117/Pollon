@@ -56,7 +56,7 @@ else
                                 <MudTreeViewItemToggleButton @bind-Expanded="@treeContext.Expanded" Visible="@(treeContext.Children != null && treeContext.Children.Any())" />
                                  <MudIcon Icon="@TreeService.GetItemIcon(treeContext.Value!)" Color="@(treeContext.Value?.Status == "Published" ? Color.Primary : Color.Default)" Class="mr-3" />
                                  <div class="flex-grow-1">
-                                     <MudText Typo="Typo.body1" Style="font-weight: 500">@TreeService.GetItemDisplayName(treeContext.Value!)</MudText>
+                                     <MudText Typo="Typo.body1" Style="font-weight: 500">@treeContext.Value!.GetTitle()</MudText>
                                     <div class="d-flex align-center gap-2">
                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@GetContentTypeName(treeContext.Value!.ContentTypeId)</MudText>
                                         <MudDivider Vertical="true" FlexItem="true" Style="height: 12px;" />

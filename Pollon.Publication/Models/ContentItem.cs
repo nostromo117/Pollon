@@ -30,6 +30,32 @@ public class ContentItem
 
     public string SearchText { get; set; } = string.Empty;
 
+    public string? UseAsTitle { get; set; }
+
+    public string GetTitle()
+    {
+        if (!string.IsNullOrEmpty(UseAsTitle) && Data.TryGetValue(UseAsTitle, out var val) && val != null)
+        {
+            if (val is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
+                return el.GetString() ?? Id;
+            return val.ToString() ?? Id;
+        }
+
+        if (string.IsNullOrEmpty(UseAsTitle))
+        {
+            if (Data.TryGetValue("Title", out var t) || Data.TryGetValue("title", out t) || 
+                Data.TryGetValue("Name", out t) || Data.TryGetValue("name", out t))
+            {
+                if (t is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
+                    return el.GetString() ?? Id;
+                return t.ToString() ?? Id;
+            }
+            return Id;
+        }
+
+        return UseAsTitle!;
+    }
+
     public override bool Equals(object? obj)
     {
         if (obj is ContentItem other)

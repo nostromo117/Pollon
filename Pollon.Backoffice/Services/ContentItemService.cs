@@ -96,6 +96,9 @@ public class ContentItemService : IContentItemService
             item.PublishedAt = DateTime.UtcNow;
         }
 
+        var titleField = contentType.Fields.FirstOrDefault(f => f.UseAsTitle);
+        item.UseAsTitle = titleField != null ? titleField.Name : contentType.SystemName;
+
         // Auto-generate Slug if missing
         if (string.IsNullOrWhiteSpace(item.Slug))
         {
@@ -124,11 +127,9 @@ public class ContentItemService : IContentItemService
 
     private string GenerateSlugFromData(ContentItem item)
     {
-        string? title = null;
-        if (item.Data.TryGetValue("title", out var t) && t != null) title = t.ToString();
-        else if (item.Data.TryGetValue("name", out var n) && n != null) title = n.ToString();
+        var title = item.GetTitle();
 
-        if (string.IsNullOrWhiteSpace(title)) return item.Id;
+        if (string.IsNullOrWhiteSpace(title) || title == item.Id) return item.Id;
 
         var str = title.ToLowerInvariant();
         str = System.Text.RegularExpressions.Regex.Replace(str, @"\s+", "-");
@@ -161,15 +162,14 @@ public class ContentItemService : IContentItemService
         if (existingItem == null)
             return null;
 
-        // Validation: Verify ContentType exists if changed
-        if (item.ContentTypeId != existingItem.ContentTypeId)
+        var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
+        if (contentType == null)
         {
-            var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
-            if (contentType == null)
-            {
-                throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
-            }
+            throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
         }
+
+        var titleField = contentType.Fields.FirstOrDefault(f => f.UseAsTitle);
+        item.UseAsTitle = titleField != null ? titleField.Name : contentType.SystemName;
 
         item.Id = id;
         item.UpdatedAt = DateTime.UtcNow;
@@ -213,7 +213,6 @@ public class ContentItemService : IContentItemService
 
         if (shouldStartSaga)
         {
-            var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
             await _messageBus.PublishAsync(new StartContentPublication(item.Id, contentType!.SystemName));
         }
         else if (existingItem.Status == "Published" && originalStatus != "Published")

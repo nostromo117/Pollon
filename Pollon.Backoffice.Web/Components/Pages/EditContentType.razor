@@ -87,6 +87,7 @@ else
                                 <MudTh>Label</MudTh>
                                 <MudTh>Type</MudTh>
                                 <MudTh>Required</MudTh>
+                                <MudTh>Title</MudTh>
                                 <MudTh Style="text-align: right">Actions</MudTh>
                             </HeaderContent>
                             <RowTemplate Context="field">
@@ -106,6 +107,9 @@ else
                                 </MudTd>
                                 <MudTd>
                                     <MudCheckBox @bind-Value="field.IsRequired" Color="Color.Primary" Dense="true" />
+                                </MudTd>
+                                <MudTd>
+                                    <MudCheckBox Value="@field.UseAsTitle" ValueChanged="@((bool v) => UpdateUseAsTitle(field, v))" Color="Color.Primary" Dense="true" />
                                 </MudTd>
                                 <MudTd Style="text-align: right">
                                     <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Color="Color.Default" Size="Size.Small" OnClick="() => MoveFieldUp(field)" Disabled="@(field.Position == 0)" />
@@ -209,6 +213,19 @@ else
         contentType.Fields = contentType.Fields.OrderBy(f => f.Position).ToList(); 
         _hasUnsavedChanges = true;
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateUseAsTitle(ContentField field, bool value)
+    {
+        field.UseAsTitle = value;
+        if (value)
+        {
+            foreach (var f in contentType.Fields.Where(x => x != field))
+            {
+                f.UseAsTitle = false;
+            }
+        }
+        _hasUnsavedChanges = true;
     }
 
     private async Task MoveFieldUp(ContentField field)

@@ -10,7 +10,7 @@ public class ContentItem
     public string Status { get; set; } = "Draft"; // Draft, Published, Archived
     public string Slug { get; set; } = string.Empty;
     public string? Icon { get; set; }
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PublishedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -18,42 +18,34 @@ public class ContentItem
 
     public string? ParentId { get; set; }
     public List<ContentItem> Children { get; set; } = new();
-    
+
     public string? GalleryId { get; set; }
-    
+
     public PublishMode? PublishModeOverride { get; set; }
 
-    // Flessibile dictionary per contenere i campi dinamici
-    public Dictionary<string, object> Data { get; set; } = new();
+    public List<FieldItem> Data { get; set; } = new();
 
     public List<string> Warnings { get; set; } = new();
 
     public string SearchText { get; set; } = string.Empty;
 
-    public string? UseAsTitle { get; set; }
-
     public string GetTitle()
     {
-        if (!string.IsNullOrEmpty(UseAsTitle) && Data.TryGetValue(UseAsTitle, out var val) && val != null)
-        {
-            if (val is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
-                return el.GetString() ?? Id;
-            return val.ToString() ?? Id;
-        }
+        var titleField = Data.FirstOrDefault(f => f.IsTitle) ?? 
+                         Data.FirstOrDefault(f => 
+                             f.Name.Equals("Title", StringComparison.OrdinalIgnoreCase) || 
+                             f.Name.Equals("Name", StringComparison.OrdinalIgnoreCase));
 
-        if (string.IsNullOrEmpty(UseAsTitle))
+        if (titleField?.Value is not null)
         {
-            if (Data.TryGetValue("Title", out var t) || Data.TryGetValue("title", out t) || 
-                Data.TryGetValue("Name", out t) || Data.TryGetValue("name", out t))
+            return titleField.Value switch
             {
-                if (t is System.Text.Json.JsonElement el && el.ValueKind == System.Text.Json.JsonValueKind.String)
-                    return el.GetString() ?? Id;
-                return t.ToString() ?? Id;
-            }
-            return Id;
+                System.Text.Json.JsonElement el when el.ValueKind == System.Text.Json.JsonValueKind.String => el.GetString() ?? Id,
+                _ => titleField.Value.ToString() ?? Id
+            };
         }
 
-        return UseAsTitle!;
+        return Id;
     }
 
     public override bool Equals(object? obj)

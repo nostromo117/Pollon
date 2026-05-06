@@ -555,7 +555,7 @@ else
         // optionally clear data when switching content types in creation mode
         if (!IsEdit)
         {
-            item.Data = new Dictionary<string, object>();
+            item.Data = new();
         }
     }
 
@@ -591,8 +591,10 @@ else
 
     private string GetStringValue(string fieldName)
     {
-        if (item.Data.TryGetValue(fieldName, out var value) && value != null)
+        var field = item.Data.FirstOrDefault(x => x.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
+        if (field?.Value != null)
         {
+            var value = field.Value;
             // System.Text.Json JsonElement parsing if coming from API
             if (value is JsonElement el) {
                 if (el.ValueKind == JsonValueKind.String) return el.GetString() ?? "";
@@ -606,8 +608,10 @@ else
 
     private bool GetBoolValue(string fieldName)
     {
-        if (item.Data.TryGetValue(fieldName, out var value) && value != null)
+        var field = item.Data.FirstOrDefault(x => x.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
+        if (field?.Value != null)
         {
+            var value = field.Value;
             if (value is JsonElement el && el.ValueKind == JsonValueKind.True) return true;
             if (value is bool b) return b;
             if (bool.TryParse(value.ToString(), out bool parsed)) return parsed;
@@ -618,9 +622,18 @@ else
     private void SetValue(string fieldName, object? value)
     {
         _hasUnsavedChanges = true;
+        var field = item.Data.FirstOrDefault(x => x.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
+
         if (value != null)
         {
-            item.Data[fieldName] = value;
+            if (field != null)
+            {
+                field.Value = value;
+            }
+            else
+            {
+                item.Data.Add(new FieldItem { Name = fieldName, Value = value });
+            }
             
             // Auto-generate slug from title/name if slug is currently empty
             if (string.IsNullOrWhiteSpace(item.Slug) && 
@@ -632,7 +645,10 @@ else
         }
         else
         {
-            item.Data.Remove(fieldName);
+            if (field != null)
+            {
+                item.Data.Remove(field);
+            }
         }
     }
 

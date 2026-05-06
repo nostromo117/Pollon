@@ -46,9 +46,13 @@ public partial class ContentPublicationSaga : Saga
             var filteredData = new Dictionary<string, object>();
             foreach (var field in contentType.Fields)
             {
-                if (field.FieldType != ContentFieldType.Image && item.Data.TryGetValue(field.Name, out var value))
+                if (field.FieldType != ContentFieldType.Image)
                 {
-                    filteredData[field.Name] = value;
+                    var dataField = item.Data.FirstOrDefault(d => d.Name.Equals(field.Name, StringComparison.OrdinalIgnoreCase));
+                    if (dataField != null)
+                    {
+                        filteredData[field.Name] = dataField.Value!;
+                    }
                 }
             }
             contentJson = JsonSerializer.Serialize(filteredData);

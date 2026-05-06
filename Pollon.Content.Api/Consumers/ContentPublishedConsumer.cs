@@ -75,7 +75,11 @@ public partial class ContentPublishedConsumer
 
             LogRetrievedContentType(_logger, contentType.SystemName, contentType.PublishMode);
 
-            var json = JsonSerializer.Serialize(contentItem.Data);
+            var dictionaryData = contentItem.Data
+                .Where(x => x.Value != null)
+                .GroupBy(x => x.Name)
+                .ToDictionary(g => g.Key, g => g.First().Value!);
+            var json = JsonSerializer.Serialize(dictionaryData);
             LogSerializedData(_logger, json);
 
             // Determine publication mode (Item override takes precedence over ContentType default)

@@ -15,7 +15,10 @@ namespace Pollon.Content.Api.Templates
             MediaGallery? gallery,
             ContentTemplate? contentTemplate = null)
         {
-            var templateData = new Dictionary<string, object>(contentItem.Data);
+            var templateData = contentItem.Data
+                .Where(x => x.Value != null)
+                .GroupBy(x => x.Name)
+                .ToDictionary(g => g.Key, g => g.First().Value!);
 
             // Metadata
             templateData["id"] = contentItem.Id;

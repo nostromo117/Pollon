@@ -74,7 +74,7 @@ public class ContentItemService : IContentItemService
         if (item != null)
         {
             var children = await _repository.Query().Where(x => x.ParentId == id).ToListAsync();
-            item.Children = children.ToList();
+            item.Children = [.. children];
         }
         return item;
     }
@@ -82,7 +82,7 @@ public class ContentItemService : IContentItemService
     public async Task<ContentItem> CreateAndPublishAsync(ContentItem item)
     {
         // Non salvare i figli annidati
-        item.Children = new();
+        item.Children = [];
         // Validation: Verify ContentType exists
         var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
         if (contentType == null)
@@ -97,7 +97,11 @@ public class ContentItemService : IContentItemService
         }
 
         var titleField = contentType.Fields.FirstOrDefault(f => f.UseAsTitle);
-        item.UseAsTitle = titleField != null ? titleField.Name : contentType.SystemName;
+        if (titleField != null)
+        {
+            var dataField = item.Data.FirstOrDefault(d => d.Name.Equals(titleField.Name, StringComparison.OrdinalIgnoreCase));
+            if (dataField != null) dataField.IsTitle = true;
+        }
 
         // Auto-generate Slug if missing
         if (string.IsNullOrWhiteSpace(item.Slug))
@@ -141,9 +145,9 @@ public class ContentItemService : IContentItemService
     {
         if (item.Data != null && item.Data.Count > 0)
         {
-            var values = item.Data.Values
-                .Where(v => v != null)
-                .Select(v => v!.ToString())
+            var values = item.Data
+                .Where(f => f.Value != null)
+                .Select(f => f.Value!.ToString())
                 .Where(s => !string.IsNullOrWhiteSpace(s));
             item.SearchText = string.Join(" ", values);
         }
@@ -156,7 +160,7 @@ public class ContentItemService : IContentItemService
     public async Task<ContentItem?> UpdateAndPublishAsync(string id, ContentItem item)
     {
         // Non salvare i figli annidati
-        item.Children = new();
+        item.Children = [];
 
         var existingItem = await _repository.GetByIdAsync(id);
         if (existingItem == null)
@@ -169,7 +173,11 @@ public class ContentItemService : IContentItemService
         }
 
         var titleField = contentType.Fields.FirstOrDefault(f => f.UseAsTitle);
-        item.UseAsTitle = titleField != null ? titleField.Name : contentType.SystemName;
+        if (titleField != null)
+        {
+            var dataField = item.Data.FirstOrDefault(d => d.Name.Equals(titleField.Name, StringComparison.OrdinalIgnoreCase));
+            if (dataField != null) dataField.IsTitle = true;
+        }
 
         item.Id = id;
         item.UpdatedAt = DateTime.UtcNow;

@@ -84,11 +84,8 @@ public class ContentItemService : IContentItemService
         // Non salvare i figli annidati
         item.Children = [];
         // Validation: Verify ContentType exists
-        var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
-        if (contentType == null)
-        {
-            throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
-        }
+        var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId)
+            ?? throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
 
         item.CreatedAt = DateTime.UtcNow;
         if (item.Status == "Published" && !item.PublishedAt.HasValue)
@@ -166,11 +163,8 @@ public class ContentItemService : IContentItemService
         if (existingItem == null)
             return null;
 
-        var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId);
-        if (contentType == null)
-        {
-            throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
-        }
+        var contentType = await _contentTypeRepository.GetByIdAsync(item.ContentTypeId)
+            ?? throw new ArgumentException($"ContentType with ID {item.ContentTypeId} not found.");
 
         var titleField = contentType.Fields.FirstOrDefault(f => f.UseAsTitle);
         if (titleField != null)

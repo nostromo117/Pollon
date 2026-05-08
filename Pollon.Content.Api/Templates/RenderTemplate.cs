@@ -31,11 +31,12 @@ namespace Pollon.Content.Api.Templates
 
             if (gallery != null && gallery.AssetIds.Any())
             {
-                templateData["images"] = gallery.AssetIds.Select(id => new Dictionary<string, string>
+                List<Dictionary<string, string>> images = [.. gallery.AssetIds.Select(id => new Dictionary<string, string>
                 {
                     { "url", $"/api/media/{id}" },
                     { "alt", "Gallery Image" }
-                }).ToList();
+                })];
+                templateData["images"] = images;
             }
 
             var inlineContent = contentTemplate?.TemplateContent;

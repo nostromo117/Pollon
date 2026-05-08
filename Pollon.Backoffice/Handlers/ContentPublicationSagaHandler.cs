@@ -58,7 +58,7 @@ public partial class ContentPublicationSaga : Saga
             contentJson = JsonSerializer.Serialize(filteredData);
         }
 
-        var messages = new List<object>();
+        List<object> messages = [];
 
         if (targetPlugins.Any())
         {

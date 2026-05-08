@@ -78,7 +78,7 @@ galleries.MapPost("/", async (HttpRequest request, IMediaStorageService mediaSer
     var isPublished = bool.TryParse(form["isPublished"], out var published) && published;
     
     var files = form.Files;
-    var assets = new List<MediaAsset>();
+    List<MediaAsset> assets = [];
     
     foreach (var file in files)
     {
@@ -92,7 +92,7 @@ galleries.MapPost("/", async (HttpRequest request, IMediaStorageService mediaSer
         Id = Guid.NewGuid().ToString(),
         Name = name,
         IsPublished = isPublished,
-        AssetIds = assets.Select(a => a.Id).ToList()
+        AssetIds = [.. assets.Select(a => a.Id)]
     };
     
     await repository.CreateAsync(gallery);

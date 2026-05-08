@@ -8,9 +8,9 @@ namespace Pollon.Backoffice.Web.Services
     {
         public List<TreeItemData<ContentItem>> BuildTree(IEnumerable<ContentItem> items)
         {
-            var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
+            List<TreeItemData<ContentItem>> allItems = [.. items.Select(i => new TreeItemData<ContentItem> { Value = i })];
             var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
-            var roots = new List<TreeItemData<ContentItem>>();
+            List<TreeItemData<ContentItem>> roots = [];
 
             foreach (var it in allItems)
             {
@@ -21,7 +21,7 @@ namespace Pollon.Backoffice.Web.Services
                 }
                 else
                 {
-                    if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
+                    parent.Children ??= [];
                     ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
                 }
             }
@@ -30,7 +30,7 @@ namespace Pollon.Backoffice.Web.Services
 
         public List<TreeItemData<ContentItem>> BuildParentTree(IEnumerable<ContentItem> items, string? excludedId)
         {
-            var allItems = items.Select(i => new TreeItemData<ContentItem> { Value = i }).ToList();
+            List<TreeItemData<ContentItem>> allItems = [.. items.Select(i => new TreeItemData<ContentItem> { Value = i })];
             var itemLookup = allItems.ToDictionary(i => i.Value!.Id, StringComparer.OrdinalIgnoreCase);
             
             var excludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -40,7 +40,7 @@ namespace Pollon.Backoffice.Web.Services
                 AddDescendants(excludedId, allItems, excludedIds);
             }
 
-            var roots = new List<TreeItemData<ContentItem>>();
+            List<TreeItemData<ContentItem>> roots = [];
             foreach (var it in allItems)
             {
                 if (excludedIds.Contains(it.Value!.Id)) continue;
@@ -52,7 +52,7 @@ namespace Pollon.Backoffice.Web.Services
                 }
                 else
                 {
-                    if (parent.Children == null) parent.Children = new List<TreeItemData<ContentItem>>();
+                    parent.Children ??= [];
                     ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
                 }
             }
@@ -61,10 +61,10 @@ namespace Pollon.Backoffice.Web.Services
 
         public List<TreeItemData<ContentItem>> ApplySearch(IEnumerable<TreeItemData<ContentItem>>? roots, string search)
         {
-            if (roots == null) return new();
-            if (string.IsNullOrWhiteSpace(search)) return roots.ToList();
+            if (roots == null) return [];
+            if (string.IsNullOrWhiteSpace(search)) return [.. roots];
 
-            var filtered = new List<TreeItemData<ContentItem>>();
+            List<TreeItemData<ContentItem>> filtered = [];
             foreach (var root in roots)
             {
                 var match = MatchAndClone(root, search);
@@ -108,7 +108,7 @@ namespace Pollon.Backoffice.Web.Services
 
         private void AddDescendants(string parentId, List<TreeItemData<ContentItem>> allItems, HashSet<string> excludedIds)
         {
-            var children = allItems.Where(i => i.Value?.ParentId == parentId).ToList();
+            List<TreeItemData<ContentItem>> children = [.. allItems.Where(i => i.Value?.ParentId == parentId)];
             foreach (var child in children)
             {
                 excludedIds.Add(child.Value!.Id);
@@ -120,7 +120,7 @@ namespace Pollon.Backoffice.Web.Services
         {
             bool nameMatch = node.Value!.GetTitle().Contains(search, StringComparison.OrdinalIgnoreCase);
             
-            var filteredChildren = new List<TreeItemData<ContentItem>>();
+            List<TreeItemData<ContentItem>> filteredChildren = [];
             if (node.Children != null)
             {
                 foreach (var child in node.Children)

@@ -85,7 +85,8 @@ public partial class PluginRegistrationService : BackgroundService
                     _consulServiceId, 
                     $"{healthCheckUrl}/health",
                     token,
-                    SupportedContentTypes: new List<string> { "blog-post", "page" })); // Supportiamo questi tipi
+                    SupportedContentTypes: ["blog-post", "page"], // Supportiamo questi tipi
+                    IsFireAndForget: true)); 
 
                 if (response.Success)
                 {

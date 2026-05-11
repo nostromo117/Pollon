@@ -8,6 +8,7 @@ public record RegisterPlugin(
     string? AccessToken = null,
     string Version = "1.0.0", 
     string? Description = null,
-    List<string>? SupportedContentTypes = null);
+    List<string>? SupportedContentTypes = null,
+    bool IsFireAndForget = false);
 
 public record RegisterPluginResponse(bool Success, string? ErrorMessage = null);

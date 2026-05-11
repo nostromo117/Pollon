@@ -87,6 +87,7 @@ public partial class PluginHandler
         plugin.Description = message.Description;
         plugin.LastSeen = DateTime.UtcNow;
         plugin.Status = "Online";
+        plugin.IsFireAndForget = message.IsFireAndForget;
         plugin.SupportedContentTypes = message.SupportedContentTypes ?? [];
         // EnabledContentTypes is managed by the user via UI and should not be overwritten by registration
 

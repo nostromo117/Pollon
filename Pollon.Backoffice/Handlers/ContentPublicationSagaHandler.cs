@@ -64,22 +64,36 @@ public partial class ContentPublicationSaga : Saga
         {
             foreach (var plugin in targetPlugins)
             {
-                this.PendingPlugins.Add(plugin.Id);
+                if (!plugin.IsFireAndForget)
+                {
+                    this.PendingPlugins.Add(plugin.Id);
+                }
+                
                 // Targeted validation request using Routing Key (TopicName)
                 var request = new PluginValidationRequest(command.Id, contentJson, command.ContentType, plugin.Id);
                 messages.Add(new Envelope(request) { TopicName = plugin.Id });
             }
             
-            LogWaitingForPlugins(logger, targetPlugins.Count, string.Join(", ", this.PendingPlugins));
-            
-            // Schedule timeout in 20 seconds using the bus
-            await bus.ScheduleAsync(new PublicationTimeout(command.Id), TimeSpan.FromSeconds(20));
+            if (this.PendingPlugins.Count > 0)
+            {
+                LogWaitingForPlugins(logger, targetPlugins.Count, string.Join(", ", this.PendingPlugins));
+                
+                // Schedule timeout in 20 seconds using the bus
+                await bus.ScheduleAsync(new PublicationTimeout(command.Id), TimeSpan.FromSeconds(20));
+            }
+            else
+            {
+                // All plugins are fire-and-forget, finalize immediately
+                var finalMessages = await FinalizePublication(logger);
+                messages.AddRange(finalMessages);
+            }
         }
         else
         {
             LogNoPluginsFound(logger, command.ContentType);
             // Finalize directly to avoid race condition with Saga persistence
-            return await FinalizePublication(logger);
+            var finalMessages = await FinalizePublication(logger);
+            messages.AddRange(finalMessages);
         }
 
         return messages.ToArray();

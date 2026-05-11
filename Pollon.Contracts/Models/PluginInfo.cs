@@ -12,5 +12,6 @@ public class PluginInfo
     public List<string> EnabledContentTypes { get; set; } = new();
     public DateTime LastSeen { get; set; }
     public string Status { get; set; } = "Offline";
+    public bool IsFireAndForget { get; set; } = false;
 }
 

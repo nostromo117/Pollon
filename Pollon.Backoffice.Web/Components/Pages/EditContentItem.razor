@@ -123,25 +123,35 @@ else
                             <MudDivider Class="my-6" />
                             <MudText Typo="Typo.h6" Class="mb-4">Content Data</MudText>
 
+                            @if (selectedContentType.IsInteractive)
+                            {
+                                <MudAlert Severity="Severity.Info" Class="mt-2 mb-4" Variant="Variant.Outlined">
+                                    Questo è un contenuto interattivo. I campi non richiedono valorizzazione in questa interfaccia, ma verranno compilati dagli utenti finali. Di seguito un'anteprima dei dati richiesti:
+                                </MudAlert>
+                            }
+
                             <MudGrid>
                                 @foreach (var field in selectedContentType.Fields)
                                 {
+                                    var isPreview = selectedContentType.IsInteractive;
+                                    var isRequired = !isPreview && field.IsRequired;
+
                                     <MudItem xs="12">
                                         @if (field.FieldType == ContentFieldType.Boolean)
                                         {
-                                            <MudSwitch T="bool" Value="@GetBoolValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Color="Color.Primary" Label="@field.Name" Class="mt-2" />
+                                            <MudSwitch T="bool" Value="@GetBoolValue(field.Name)" ValueChanged="@(v => { if(!isPreview) SetValue(field.Name, v); })" Color="Color.Primary" Label="@field.Name" Class="mt-2" Disabled="@isPreview" />
                                         }
                                         else if (field.FieldType == ContentFieldType.Number)
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Number" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => { if(!isPreview) SetValue(field.Name, v); })" Immediate="true" Required="@isRequired" Variant="Variant.Outlined" InputType="InputType.Number" Disabled="@isPreview" />
                                         }
                                         else if (field.FieldType == ContentFieldType.Date)
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" InputType="InputType.Date" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => { if(!isPreview) SetValue(field.Name, v); })" Immediate="true" Required="@isRequired" Variant="Variant.Outlined" InputType="InputType.Date" Disabled="@isPreview" />
                                         }
                                         else if (field.FieldType == ContentFieldType.RichText)
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" Lines="5" HelperText="Supports HTML content" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => { if(!isPreview) SetValue(field.Name, v); })" Immediate="true" Required="@isRequired" Variant="Variant.Outlined" Lines="5" HelperText="Supports HTML content" Disabled="@isPreview" />
                                         }
                                         else if (field.FieldType == ContentFieldType.Image)
                                         {
@@ -167,10 +177,10 @@ else
                                                         <MudText Typo="Typo.caption">Caricamento in corso: @(_uploadProgress.ToString("0"))%</MudText>
                                                     }
                                                     
-                                                    <div style="@(_isUploading ? "display: none;" : "")">
-                                                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                                    <div style="@(_isUploading || isPreview ? "display: none;" : "")">
+                                                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@isPreview">
                                                             Upload Image
-                                                            <InputFile @key="@($"input_{field.Name}")" OnChange="@(e => UploadImageAsync(field.Name, e.File))" accept=".jpg,.jpeg,.png,.webp,.gif" style="display:none;" />
+                                                            <InputFile @key="@($"input_{field.Name}")" OnChange="@(e => { if(!isPreview) UploadImageAsync(field.Name, e.File); })" accept=".jpg,.jpeg,.png,.webp,.gif" style="display:none;" disabled="@isPreview" />
                                                         </MudButton>
                                                     </div>
                                                 </div>
@@ -178,7 +188,7 @@ else
                                         }
                                         else
                                         {
-                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => SetValue(field.Name, v))" Immediate="true" Required="@field.IsRequired" Variant="Variant.Outlined" />
+                                            <MudTextField T="string" Label="@field.Name" Value="@GetStringValue(field.Name)" ValueChanged="@(v => { if(!isPreview) SetValue(field.Name, v); })" Immediate="true" Required="@isRequired" Variant="Variant.Outlined" Disabled="@isPreview" />
                                         }
                                     </MudItem>
                                 }

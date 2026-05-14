@@ -20,4 +20,10 @@ public class ContentApiClient(HttpClient httpClient)
     {
         return await httpClient.GetFromJsonAsync<PublishedContent>($"/api/content/item/{id}", ct);
     }
+
+    public async Task<bool> SubmitInteractiveContentAsync(string id, object data, CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"/api/content/submit/{id}", data, ct);
+        return response.IsSuccessStatusCode;
+    }
 }

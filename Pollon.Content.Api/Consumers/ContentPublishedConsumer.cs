@@ -7,26 +7,27 @@ using Pollon.Content.Api.Templates;
 using Pollon.Contracts.Events;
 using Pollon.Publication.Models;
 using System.Text.Json;
+using Pollon.Content.Api.Domain.Interfaces;
 using Wolverine;
 
 namespace Pollon.Content.Api.Consumers;
 
 public partial class ContentPublishedConsumer
 {
-    private readonly ApiDbContext _dbContext;
+    private readonly IPublishedContentRepository _repository;
     private readonly BackofficeApiClient _apiClient;
     private readonly ITemplateRenderer _renderer;
     private readonly IStaticStorage _staticStorage;
     private readonly ILogger<ContentPublishedConsumer> _logger;
 
     public ContentPublishedConsumer(
-        ApiDbContext dbContext,
+        IPublishedContentRepository repository,
         BackofficeApiClient apiClient,
         ITemplateRenderer renderer,
         IStaticStorage staticStorage,
         ILogger<ContentPublishedConsumer> logger)
     {
-        _dbContext = dbContext;
+        _repository = repository;
         _apiClient = apiClient;
         _renderer = renderer;
         _staticStorage = staticStorage;
@@ -123,42 +124,27 @@ public partial class ContentPublishedConsumer
                 }
             }
 
-            var existingContent = await _dbContext.PublishedContents.FirstOrDefaultAsync(c => c.Id == contentItemId);
+            var existingContent = await _repository.GetByIdAsync(contentItemId);
 
-            if (existingContent == null)
+            var publishedContent = new PublishedContent
             {
-                LogContentAction(_logger, "Creating new", contentItemId);
-                var newContent = new PublishedContent
-                {
-                    Id = contentItem.Id,
-                    ContentTypeId = contentItem.ContentTypeId,
-                    SystemName = contentType.SystemName,
-                    Slug = publishedSlug,
-                    Icon = contentItem.Icon,
-                    PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
-                    JsonData = json,
-                    HtmlContent = html,
-                    PublishMode = effectiveMode.ToString(),
-                    SearchText = contentItem.SearchText
-                };
-                _dbContext.PublishedContents.Add(newContent);
-            }
-            else
-            {
-                LogContentAction(_logger, "Updating existing", contentItemId);
-                existingContent.ContentTypeId = contentItem.ContentTypeId;
-                existingContent.SystemName = contentType.SystemName;
-                existingContent.Slug = publishedSlug;
-                existingContent.Icon = contentItem.Icon;
-                existingContent.PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow;
-                existingContent.JsonData = json;
-                existingContent.HtmlContent = html;
-                existingContent.PublishMode = effectiveMode.ToString();
-                existingContent.SearchText = contentItem.SearchText;
-                _dbContext.PublishedContents.Update(existingContent);
-            }
+                Id = contentItem.Id,
+                ContentTypeId = contentItem.ContentTypeId,
+                SystemName = contentType.SystemName,
+                Slug = publishedSlug,
+                Icon = contentItem.Icon,
+                PublishedAt = contentItem.PublishedAt ?? DateTime.UtcNow,
+                JsonData = json,
+                HtmlContent = html,
+                PublishMode = effectiveMode.ToString(),
+                IsInteractive = contentType.IsInteractive,
+                SchemaJson = JsonSerializer.Serialize(contentType.Fields),
+                SearchText = contentItem.SearchText
+            };
 
-            await _dbContext.SaveChangesAsync();
+            LogContentAction(_logger, existingContent == null ? "Creating new" : "Updating existing", contentItemId);
+            await _repository.AddOrUpdateAsync(publishedContent);
+
             LogProcessingSuccess(_logger, contentItemId);
         }
         catch (Exception ex)

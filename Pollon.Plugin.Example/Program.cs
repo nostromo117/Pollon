@@ -22,7 +22,10 @@ builder.Host.UseWolverine(opts =>
     {
         Console.WriteLine($"[Plugin] Configuring RabbitMQ from Consul: {connectionString}");
         var rabbit = opts.UseRabbitMq(new Uri(connectionString)).AutoProvision()
-            .UseConventionalRouting();
+            .UseConventionalRouting(convention =>
+            {
+                convention.QueueNameForListener(type => $"plugin-example-{type.Name.ToLower()}");
+            });
 
         // Targeted validation queue using Routing Key
         var pluginId = builder.Configuration["Plugin:Id"] ?? "plugin-example-01";

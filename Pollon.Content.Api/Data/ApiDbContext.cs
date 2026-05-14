@@ -3,13 +3,11 @@ using Pollon.Publication.Models;
 
 namespace Pollon.Content.Api.Data;
 
-public class ApiDbContext : DbContext
+public class ApiDbContext(DbContextOptions<ApiDbContext> options) : DbContext(options)
 {
-    public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options)
-    {
-    }
 
     public DbSet<PublishedContent> PublishedContents => Set<PublishedContent>();
+    public DbSet<ContentSubmission> ContentSubmissions => Set<ContentSubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,5 +33,11 @@ public class ApiDbContext : DbContext
         entity.HasIndex(x => x.SystemName);
 
         entity.HasIndex(x => x.Slug);
+
+        var submission = modelBuilder.Entity<ContentSubmission>();
+        submission.ToTable("contentsubmissions");
+        submission.HasKey(x => x.Id);
+        submission.Property(x => x.JsonData).HasColumnType("jsonb");
+        submission.HasIndex(x => x.ContentItemId);
     }
 }

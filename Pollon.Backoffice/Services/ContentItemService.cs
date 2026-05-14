@@ -202,8 +202,6 @@ public class ContentItemService : IContentItemService
 
         if (item.Status == "Published")
         {
-            // Se prima era Draft/Archived e ora vogliamo pubblicare, impostiamo lo stato a quello precedente
-            // e avviamo la Saga. Il PublicationCompletedHandler lo metterà a "Published".
             if (existingItem.Status != "Published")
             {
                 item.Status = existingItem.Status; 

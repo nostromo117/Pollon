@@ -25,6 +25,15 @@ namespace Pollon.Content.Api.Templates
             templateData["slug"] = contentItem.Slug;
             templateData["published_at"] = contentItem.PublishedAt ?? DateTime.UtcNow;
             templateData["content_type"] = contentType.DisplayName;
+            templateData["content_type_is_interactive"] = contentType.IsInteractive;
+            
+            // Pass fields structure to template for form generation
+            templateData["content_type_fields"] = contentType.Fields.OrderBy(f => f.Position).Select(f => new Dictionary<string, object>
+            {
+                { "name", f.Name },
+                { "type", f.FieldType.ToString() },
+                { "is_required", f.IsRequired }
+            }).ToList();
 
             if (!templateData.ContainsKey("title") && !templateData.ContainsKey("Title"))
                 templateData["title"] = contentItem.GetTitle();

@@ -11,6 +11,7 @@ public class ContentType
     public string Description { get; set; } = string.Empty;
 
     public PublishMode PublishMode { get; set; } = PublishMode.Headless;
+    public bool IsInteractive { get; set; }
     public string? TemplateName { get; set; }
 
     public List<ContentField> Fields { get; set; } = new();

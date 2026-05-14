@@ -41,6 +41,9 @@ else
                             <MudItem xs="12">
                                 <MudTextField T="string" Label="Description" @bind-Value="contentType.Description" Variant="Variant.Outlined" Lines="2" For="@(() => contentType.Description)" />
                             </MudItem>
+                            <MudItem xs="12">
+                                <MudSwitch T="bool" @bind-Value="contentType.IsInteractive" Color="Color.Primary" Label="Is Interactive (Users can submit data for this content)" />
+                            </MudItem>
                             <MudItem xs="12" sm="6">
                                 <MudSelect T="PublishMode" Label="Publish Mode" @bind-Value="contentType.PublishMode" Required="true" Variant="Variant.Outlined" For="@(() => contentType.PublishMode)">
                                     @foreach (var mode in Enum.GetValues<PublishMode>())

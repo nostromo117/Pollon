@@ -21,7 +21,7 @@ namespace Pollon.Backoffice.Web.Services
                 }
                 else
                 {
-                    parent.Children ??= [];
+                    parent.Children ??= new List<TreeItemData<ContentItem>>();
                     ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
                 }
             }
@@ -52,7 +52,7 @@ namespace Pollon.Backoffice.Web.Services
                 }
                 else
                 {
-                    parent.Children ??= [];
+                    parent.Children ??= new List<TreeItemData<ContentItem>>();
                     ((List<TreeItemData<ContentItem>>)parent.Children).Add(it);
                 }
             }

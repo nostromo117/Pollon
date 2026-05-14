@@ -13,5 +13,7 @@ public class PublishedContent
     public string JsonData { get; set; } = "{}";
     public string? HtmlContent { get; set; }
     public string PublishMode { get; set; } = "Headless";
+    public bool IsInteractive { get; set; }
+    public string SchemaJson { get; set; } = "[]";
     public string SearchText { get; set; } = string.Empty;
 }

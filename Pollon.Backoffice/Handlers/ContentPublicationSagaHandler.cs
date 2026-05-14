@@ -20,7 +20,7 @@ public partial class ContentPublicationSaga : Saga
 
     // 1. START the Saga
     public async Task<object[]> Start(
-        StartContentPublication command, 
+        StartContentPublication command,
         IRepository<ContentItem> itemRepo,
         IRepository<ContentType> typeRepo,
         IRepository<PluginInfo> pluginRepo,
@@ -68,16 +68,16 @@ public partial class ContentPublicationSaga : Saga
                 {
                     this.PendingPlugins.Add(plugin.Id);
                 }
-                
+
                 // Targeted validation request using Routing Key (TopicName)
                 var request = new PluginValidationRequest(command.Id, contentJson, command.ContentType, plugin.Id);
                 messages.Add(new Envelope(request) { TopicName = plugin.Id });
             }
-            
+
             if (this.PendingPlugins.Count > 0)
             {
                 LogWaitingForPlugins(logger, targetPlugins.Count, string.Join(", ", this.PendingPlugins));
-                
+
                 // Schedule timeout in 20 seconds using the bus
                 await bus.ScheduleAsync(new PublicationTimeout(command.Id), TimeSpan.FromSeconds(20));
             }
@@ -101,22 +101,22 @@ public partial class ContentPublicationSaga : Saga
 
     // 2. Handle Plugin Responses
     public async Task<object[]> Handle(
-        PluginValidationResponse response, 
+        PluginValidationResponse response,
         ILogger<ContentPublicationSaga> logger)
     {
         if (response.PluginId != "System")
         {
-             LogReceivedResponse(logger, response.PluginId, response.Id, response.Success);
-                
-             this.PendingPlugins.Remove(response.PluginId);
-             
-             if (!response.Success || !string.IsNullOrEmpty(response.Warning))
-             {
-                 var msg = !string.IsNullOrEmpty(response.Warning) 
-                    ? $"Plugin {response.PluginId}: {response.Warning}"
-                    : $"Plugin {response.PluginId} validation failed.";
-                 this.Warnings.Add(msg);
-             }
+            LogReceivedResponse(logger, response.PluginId, response.Id, response.Success);
+
+            this.PendingPlugins.Remove(response.PluginId);
+
+            if (!response.Success || !string.IsNullOrEmpty(response.Warning))
+            {
+                var msg = !string.IsNullOrEmpty(response.Warning)
+                   ? $"Plugin {response.PluginId}: {response.Warning}"
+                   : $"Plugin {response.PluginId} validation failed.";
+                this.Warnings.Add(msg);
+            }
         }
 
         if (this.PendingPlugins.Count == 0)
@@ -129,7 +129,7 @@ public partial class ContentPublicationSaga : Saga
 
     // 3. Handle Timeout
     public async Task<object[]> Handle(
-        PublicationTimeout timeout, 
+        PublicationTimeout timeout,
         ILogger<ContentPublicationSaga> logger)
     {
         if (this.PendingPlugins.Count > 0)
@@ -153,7 +153,7 @@ public partial class ContentPublicationSaga : Saga
         LogFinalizingPublication(logger, this.Id, this.Warnings.Count);
 
         this.MarkCompleted();
-        
+
         return new object[] { new PublicationCompleted(this.Id!, this.Warnings) };
     }
 }

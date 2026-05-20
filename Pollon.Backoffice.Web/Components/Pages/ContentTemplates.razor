@@ -70,6 +70,16 @@ else
                             <MudChip T="string" Icon="@Icons.Material.Filled.Code" Color="Color.Default" Size="Size.Small">
                                 @template.FileName
                             </MudChip>
+                            @if (!string.IsNullOrEmpty(template.AssociatedContentTypeId) && contentTypes != null)
+                            {
+                                var ct = contentTypes.FirstOrDefault(c => c.Id == template.AssociatedContentTypeId);
+                                if (ct != null)
+                                {
+                                    <MudChip T="string" Icon="@Icons.Material.Filled.Link" Color="Color.Info" Variant="Variant.Filled" Size="Size.Small">
+                                        @ct.DisplayName
+                                    </MudChip>
+                                }
+                            }
                             @foreach (var tag in template.Tags)
                             {
                                 <MudChip T="string" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">@tag</MudChip>
@@ -119,6 +129,18 @@ else
                             <MudTextField T="string" Label="Nome visualizzato" @bind-Value="_editingTemplate.DisplayName"
                                 Required="true" Variant="Variant.Outlined"
                                 HelperText="Es: Article Modern, Blog Classic..." />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudSelect T="string" Label="Content Type Associato (Opzionale)" @bind-Value="_editingTemplate.AssociatedContentTypeId"
+                                Variant="Variant.Outlined" Clearable="true" HelperText="Collega il template a un Content Type specifico per vederne i campi nell'editor">
+                                @if (contentTypes != null)
+                                {
+                                    @foreach (var ct in contentTypes)
+                                    {
+                                        <MudSelectItem T="string" Value="@ct.Id">@ct.DisplayName (@ct.SystemName)</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
                         </MudItem>
                         <MudItem xs="12">
                             <MudTextField T="string" Label="Nome file template" @bind-Value="_editingTemplate.FileName"
@@ -210,6 +232,20 @@ else
                         <code>@("{{ images }}")</code> &nbsp;
                         <code>@("{{ vars.chiave }}")</code>
                     </MudAlert>
+                    @if (SelectedContentType != null)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-2">
+                            <strong>Campi disponibili per @SelectedContentType.DisplayName:</strong><br />
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                @foreach (var field in SelectedContentType.Fields.OrderBy(f => f.Position))
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace;">
+                                        @($"{{{{ {field.Name} }}}}")
+                                    </MudChip>
+                                }
+                            </div>
+                        </MudAlert>
+                    }
                 </MudTabPanel>
 
             </MudTabs>
@@ -229,9 +265,13 @@ else
 
 @code {
     private ContentTemplate[]? templates;
+    private ContentType[]? contentTypes;
     private bool _dialogVisible;
     private bool _isSaving;
     private ContentTemplate? _editingTemplate;
+
+    private ContentType? SelectedContentType => 
+        contentTypes?.FirstOrDefault(ct => ct.Id == _editingTemplate?.AssociatedContentTypeId);
 
     private readonly DialogOptions _dialogOptions = new()
     {
@@ -248,6 +288,7 @@ else
     private async Task LoadDataAsync()
     {
         templates = await ApiClient.GetContentTemplatesAsync();
+        contentTypes = await ApiClient.GetContentTypesAsync();
     }
 
     private void OpenCreateDialog()
@@ -270,6 +311,7 @@ else
             Variables = new Dictionary<string, string>(template.Variables),
             Tags = new List<string>(template.Tags),
             IsActive = template.IsActive,
+            AssociatedContentTypeId = template.AssociatedContentTypeId,
             CreatedAt = template.CreatedAt
         };
         _dialogVisible = true;

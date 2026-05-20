@@ -26,6 +26,11 @@ public class ContentTemplate
     /// </summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// ID del Content Type associato a questo template (opzionale).
+    /// </summary>
+    public string? AssociatedContentTypeId { get; set; }
+
     public List<string> Tags { get; set; } = [];
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

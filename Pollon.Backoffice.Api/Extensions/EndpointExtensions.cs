@@ -40,7 +40,7 @@ public static partial class EndpointExtensions
             return item is not null ? Results.Ok(item) : Results.NotFound();
         });
 
-        group.MapPost("/", async (ContentTemplate item, IRepository<ContentTemplate> repo) =>
+        group.MapPost("/", async (ContentTemplate item, IRepository<ContentTemplate> repo, Wolverine.IMessageBus bus) =>
         {
             if (string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.FileName))
                 return Results.BadRequest("DisplayName and FileName are required.");
@@ -50,10 +50,27 @@ public static partial class EndpointExtensions
             item.CreatedAt = DateTime.UtcNow;
             item.UpdatedAt = DateTime.UtcNow;
             await repo.CreateAsync(item);
+
+            await bus.PublishAsync(new Pollon.Contracts.Events.TemplatePublishedEvent(
+                item.Id,
+                item.Name,
+                item.DisplayName,
+                item.Description,
+                item.FileName,
+                item.PreviewImageUrl,
+                item.TemplateContent,
+                item.Variables,
+                item.IsActive,
+                item.AssociatedContentTypeId,
+                item.Tags,
+                item.CreatedAt,
+                item.UpdatedAt
+            ));
+
             return Results.Created($"/api/content-templates/{item.Id}", item);
         });
 
-        group.MapPut("/{id}", async (string id, ContentTemplate item, IRepository<ContentTemplate> repo) =>
+        group.MapPut("/{id}", async (string id, ContentTemplate item, IRepository<ContentTemplate> repo, Wolverine.IMessageBus bus) =>
         {
             if (!await repo.ExistsAsync(id)) return Results.NotFound();
 
@@ -64,14 +81,34 @@ public static partial class EndpointExtensions
             item.Name = item.DisplayName.ToLowerInvariant().Replace(" ", "-");
             item.UpdatedAt = DateTime.UtcNow;
             await repo.UpdateAsync(id, item);
+
+            await bus.PublishAsync(new Pollon.Contracts.Events.TemplatePublishedEvent(
+                item.Id,
+                item.Name,
+                item.DisplayName,
+                item.Description,
+                item.FileName,
+                item.PreviewImageUrl,
+                item.TemplateContent,
+                item.Variables,
+                item.IsActive,
+                item.AssociatedContentTypeId,
+                item.Tags,
+                item.CreatedAt,
+                item.UpdatedAt
+            ));
+
             return Results.NoContent();
         });
 
-        group.MapDelete("/{id}", async (string id, IRepository<ContentTemplate> repo) =>
+        group.MapDelete("/{id}", async (string id, IRepository<ContentTemplate> repo, Wolverine.IMessageBus bus) =>
         {
             if (!await repo.ExistsAsync(id)) return Results.NotFound();
 
             await repo.DeleteAsync(id);
+
+            await bus.PublishAsync(new Pollon.Contracts.Events.TemplateDeletedEvent(id));
+
             return Results.NoContent();
         });
 

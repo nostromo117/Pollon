@@ -52,5 +52,11 @@ public partial class ContentPublishedConsumer
     [LoggerMessage(Level = LogLevel.Error, Message = "Error processing content {ContentItemId}")]
     static partial void LogProcessingError(ILogger logger, Exception ex, string contentItemId);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "[DEBUG-PUBS] Resolved ContentTemplate '{TemplateName}' from local replicated DB.")]
+    static partial void LogResolvedTemplateFromDb(ILogger logger, string templateName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "[DEBUG-PUBS] ContentTemplate '{TemplateName}' not found in local DB. Falling back to HTTP call to Backoffice API.")]
+    static partial void LogTemplateDbFallback(ILogger logger, string templateName);
+
     #endregion
 }

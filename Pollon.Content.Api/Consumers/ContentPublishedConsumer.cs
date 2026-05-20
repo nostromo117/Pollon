@@ -5,7 +5,6 @@ using Pollon.Content.Api.Data;
 using Pollon.Content.Api.Services;
 using Pollon.Content.Api.Templates;
 using Pollon.Contracts.Events;
-using Pollon.Publication.Models;
 using System.Text.Json;
 using Pollon.Content.Api.Domain.Interfaces;
 using Wolverine;
@@ -15,6 +14,7 @@ namespace Pollon.Content.Api.Consumers;
 public partial class ContentPublishedConsumer
 {
     private readonly IPublishedContentRepository _repository;
+    private readonly IContentTemplateRepository _templateRepository;
     private readonly BackofficeApiClient _apiClient;
     private readonly ITemplateRenderer _renderer;
     private readonly IStaticStorage _staticStorage;
@@ -22,12 +22,14 @@ public partial class ContentPublishedConsumer
 
     public ContentPublishedConsumer(
         IPublishedContentRepository repository,
+        IContentTemplateRepository templateRepository,
         BackofficeApiClient apiClient,
         ITemplateRenderer renderer,
         IStaticStorage staticStorage,
         ILogger<ContentPublishedConsumer> logger)
     {
         _repository = repository;
+        _templateRepository = templateRepository;
         _apiClient = apiClient;
         _renderer = renderer;
         _staticStorage = staticStorage;
@@ -107,7 +109,22 @@ public partial class ContentPublishedConsumer
                     // Resolve the ContentTemplate record (for inline content and variables)
                     ContentTemplate? contentTemplate = null;
                     if (!string.IsNullOrEmpty(contentType.TemplateName))
-                        contentTemplate = await _apiClient.GetContentTemplateByFileNameAsync(contentType.TemplateName);
+                    {
+                        // 1. First try to load from the local replicated repository
+                        contentTemplate = await _templateRepository
+                            .GetByFileNameAsync(contentType.TemplateName);
+
+                        if (contentTemplate != null)
+                        {
+                            LogResolvedTemplateFromDb(_logger, contentType.TemplateName);
+                        }
+                        else
+                        {
+                            // 2. Fallback to API call in case of replica lag / race condition
+                            LogTemplateDbFallback(_logger, contentType.TemplateName);
+                            contentTemplate = await _apiClient.GetContentTemplateByFileNameAsync(contentType.TemplateName);
+                        }
+                    }
 
                     html = await RenderTemplate.RenderContent(contentItem, contentType, _renderer, gallery, contentTemplate);
 

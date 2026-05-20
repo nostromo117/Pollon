@@ -44,6 +44,7 @@ builder.Services.AddSingleton<IStaticStorage, MinioStaticStorage>();
 // Register Repositories
 builder.Services.AddScoped<IPublishedContentRepository, PublishedContentRepository>();
 builder.Services.AddScoped<IContentSubmissionRepository, ContentSubmissionRepository>();
+builder.Services.AddScoped<IContentTemplateRepository, ContentTemplateRepository>();
 
 
 

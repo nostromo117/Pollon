@@ -29,3 +29,7 @@ Queste regole definiscono gli standard di stile e le preferenze per il refactori
   - Il Core non deve dipendere da dettagli di implementazione (es. `MartenRepository`), ma solo da astrazioni (es. `IRepository<T>`).
   - L'Infrastruttura implementerà queste interfacce (Adapter) assecondando i requisiti (Port) imposti dal dominio.
   - Sfruttare pienamente l'Inversion of Control (IoC) e la Dependency Injection (DI) fornita da ASP.NET Core per iniettare i dettagli di implementazione nei servizi.
+- **Repository Pattern per l'accesso ai dati**:
+  - Non accedere mai direttamente al `DbContext` (EF Core) o alle sessioni dei database (es. Marten) all'interno di controller, endpoint minimal api, consumer di Wolverine/RabbitMQ o servizi di business logic.
+  - Incapsulare tutte le query di lettura e le operazioni di persistenza (inserimenti, aggiornamenti, cancellazioni) all'interno di astrazioni di Repository definite nel Core (es. `IRepository<T>`, `IContentTemplateRepository`).
+  - Questo garantisce la testabilità del codice, la separazione dei compiti e facilita l'eventuale sostituzione della tecnologia di persistenza sottostante.

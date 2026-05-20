@@ -4,6 +4,7 @@
 @inject BackofficeApiClient ApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 @attribute [StreamRendering]
 
 <PageTitle>Content Templates</PageTitle>
@@ -219,27 +220,42 @@ else
                         rispetto al file <code>.sbn</code> su disco.
                         Lascia vuoto per usare il file fisico indicato nel campo "Nome file template".
                     </MudText>
-                    <MudTextField T="string" @bind-Value="_editingTemplate.TemplateContent"
+                    <MudTextField id="template-editor" T="string" @bind-Value="_editingTemplate.TemplateContent"
                         Lines="22" Variant="Variant.Outlined"
                         Placeholder="Scrivi qui il codice HTML/Scriban del template..."
                         Style="font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px;" />
                     <MudAlert Severity="Severity.Normal" Class="mt-2">
-                        <strong>Variabili disponibili:</strong>
-                        <code>@("{{ title }}")</code> &nbsp;
-                        <code>@("{{ slug }}")</code> &nbsp;
-                        <code>@("{{ published_at }}")</code> &nbsp;
-                        <code>@("{{ content_type }}")</code> &nbsp;
-                        <code>@("{{ images }}")</code> &nbsp;
-                        <code>@("{{ vars.chiave }}")</code>
+                        <strong>Variabili globali disponibili (clicca per inserire):</strong>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable("title")'>@("{{ title }}")</MudChip>
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable("slug")'>@("{{ slug }}")</MudChip>
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable("published_at")'>@("{{ published_at }}")</MudChip>
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable("content_type")'>@("{{ content_type }}")</MudChip>
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable("images")'>@("{{ images }}")</MudChip>
+                        </div>
                     </MudAlert>
+                    @if (_editingTemplate.Variables.Any())
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mt-2">
+                            <strong>Variabili personalizzate configurate (clicca per inserire):</strong><br />
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                @foreach (var key in _editingTemplate.Variables.Keys)
+                                {
+                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Style="font-family: monospace; cursor: pointer;" OnClick='async () => await InsertVariable($"vars.{key}")'>
+                                        @($"{{{{ vars.{key} }}}}")
+                                    </MudChip>
+                                }
+                            </div>
+                        </MudAlert>
+                    }
                     @if (SelectedContentType != null)
                     {
                         <MudAlert Severity="Severity.Info" Class="mt-2">
-                            <strong>Campi disponibili per @SelectedContentType.DisplayName:</strong><br />
+                            <strong>Campi disponibili per @SelectedContentType.DisplayName (clicca per inserire):</strong><br />
                             <div class="d-flex flex-wrap gap-1 mt-1">
                                 @foreach (var field in SelectedContentType.Fields.OrderBy(f => f.Position))
                                 {
-                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Text" Style="font-family: monospace;">
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled" Style="font-family: monospace; cursor: pointer;" OnClick="async () => await InsertVariable(field.Name)">
                                         @($"{{{{ {field.Name} }}}}")
                                     </MudChip>
                                 }
@@ -323,6 +339,28 @@ else
         _editingTemplate.Tags = value
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToList();
+    }
+
+    private async Task InsertVariable(string name)
+    {
+        if (_editingTemplate == null) return;
+        var token = $"{{{{ {name} }}}}";
+        try
+        {
+            var newValue = await JSRuntime.InvokeAsync<string>("insertTextAtCursor", "template-editor", token);
+            if (newValue != null)
+            {
+                _editingTemplate.TemplateContent = newValue;
+            }
+            else
+            {
+                _editingTemplate.TemplateContent = (_editingTemplate.TemplateContent ?? string.Empty) + token;
+            }
+        }
+        catch
+        {
+            _editingTemplate.TemplateContent = (_editingTemplate.TemplateContent ?? string.Empty) + token;
+        }
     }
 
     private void AddVariable()

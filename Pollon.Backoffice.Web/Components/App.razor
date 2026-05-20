@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 @using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
 @inject TokenProvider TokenProvider
 
 <head>
@@ -22,6 +24,33 @@
     <Routes @rendermode="InteractiveServer" />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        window.insertTextAtCursor = function (elementId, text) {
+            var el = document.getElementById(elementId);
+            if (el && el.tagName !== 'TEXTAREA' && el.tagName !== 'INPUT') {
+                el = el.querySelector('textarea') || el.querySelector('input');
+            }
+            if (!el) return null;
+
+            var startPos = el.selectionStart;
+            var endPos = el.selectionEnd;
+            var val = el.value;
+            
+            // Insert the text at the cursor position
+            el.value = val.substring(0, startPos) + text + val.substring(endPos, val.length);
+            
+            // Put cursor after the inserted text
+            el.selectionStart = el.selectionEnd = startPos + text.length;
+            
+            // Trigger Blazor change event
+            var event = new Event('input', { bubbles: true });
+            el.dispatchEvent(event);
+            
+            el.focus();
+            
+            return el.value;
+        };
+    </script>
     <PersistComponentState />
 </body>
 
